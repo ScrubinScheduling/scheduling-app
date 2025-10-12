@@ -1,4 +1,5 @@
-import React from "react";
+"use client";
+import React, { useState } from "react";
 import {
   Calendar,
   LayoutDashboard,
@@ -11,6 +12,7 @@ import {
   ChevronRight,
   Plus,
 } from "lucide-react";
+import { start } from "repl";
 
 const DAYS = [
   "Sunday",
@@ -23,6 +25,66 @@ const DAYS = [
 ];
 
 const page = () => {
+
+  const [currentWeek, setCurrentWeek] = useState(new Date());
+
+  const [members, setMemvbers] = useState([
+    {
+      id: 1,
+      name: "Alice",
+      role: "Admin",
+      startTime: "09:00",
+      endTime: "17:00",
+      day: "Monday",
+    },
+    {
+      id: 2,
+      name: "Bob",
+      role: "User",
+      startTime: "10:00",
+      endTime: "18:00",
+      day: "Tuesday",
+    },
+    {
+      id: 3,
+      name: "Charlie",
+      role: "User",
+      startTime: "08:00",
+      endTime: "16:00",
+      day: "Wednesday",
+    },
+    {
+      id: 4,
+      name: "David",
+      role: "User",
+      startTime: "11:00",
+      endTime: "19:00",
+      day: "Thursday",
+    },
+    {
+      id: 5,
+      name: "Eve",
+      role: "Admin",
+      startTime: "07:00",
+      endTime: "15:00",
+      day: "Friday",
+    },
+  ]);
+
+  const getWeekRange = () => {
+    const start = new Date(currentWeek);
+    start.setDate(start.getDate() - start.getDay()); // Set to Sunday
+    const end = new Date(start);
+    end.setDate(end.getDate() + 6);
+    return `${start.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    })} - ${end.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    })}`;
+  };
   return (
     <div className="flex h-full flex-col bg-white">
       <div className="w-full bg-white p-4 shadow flex-row justify-between items-center flex border-b-gray-500 border-b">
@@ -33,7 +95,9 @@ const page = () => {
           </div>
           <div>
             <h1 className="text-xl font-bold text-black">Scrubez</h1>
-            <p className="text-gray-500 text-sm">Fairlight Veterinary Services</p>
+            <p className="text-gray-500 text-sm">
+              Fairlight Veterinary Services
+            </p>
           </div>
           <div className="flex flex-row gap-4 ml-5">
             <button className="flex flex-row gap-2 items-center bg-gray-100 p-2 rounded-lg cursor-pointer">
@@ -73,17 +137,25 @@ const page = () => {
         {/* Left */}
         <div className="flex flex-row gap-4">
           <div className="flex flex-row gap-10 items-center shadow-md border p-2 rounded-lg">
-            <button>
+            <button onClick={() => {
+              const newDate = new Date(currentWeek);
+              newDate.setDate(newDate.getDate() - 7);
+              setCurrentWeek(newDate);
+            }}>
               <ChevronLeft size={24} color="black" />
             </button>
             <button>
-              <text className="text-xl text-black "> October 25, 2025</text>
+              <text className="text-xl text-black ">{getWeekRange()}</text>
             </button>
-            <button>
+            <button onClick={() => {
+              const newDate = new Date(currentWeek);
+              newDate.setDate(newDate.getDate() + 7);
+              setCurrentWeek(newDate);
+            }}>
               <ChevronRight size={24} color="black" />
             </button>
           </div>
-          <button>
+          <button onClick={() => setCurrentWeek(new Date())} className="cursor-pointer">
             <text className="text-md text-white shadow-md p-3 rounded-lg text-lg font-semibold bg-[#F72585]">
               Today
             </text>
