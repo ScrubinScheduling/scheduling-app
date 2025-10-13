@@ -36,6 +36,7 @@ const DAYS = [
 
 const page = () => {
   const [currentWeek, setCurrentWeek] = useState(new Date());
+  const [isLoading, setIsLoading] = useState(false);
 
   const [shift, setShift] = useState<Shift[]>([
     {
@@ -189,29 +190,47 @@ const page = () => {
 
       {/* View for shifts */}
       <div className="flex-1 overflow-auto p-6">
-        <div className="grid grid-cols-7 border-x border-gray-200 divide-x divide-gray-200">
-          {DAYS.map((day) => (
-            <div className="min-h-[600px]">
-              <div
-                key={day}
-                className="flex flex-col items-center justify-center p-4"
-              >
-                <text className="text-black">{day}</text>
-              </div>
-
-              {shift.filter((shift) => shift.day === day).map((shift) => (
-                <div className="bg-white m-2 p-2 rounded-lg shadow-md flex flex-col gap-1  border-l-4 border-[#F72585]">
-                    <text className="text-black text-sm font-bold">{shift.name}</text>
-                    <text className="text-gray-500 text-sm">{shift.role}</text>
-                    <text className="text-gray-500 text-sm flex flex-row">
-                      <Clock size={16} className="mr-1" />
-                      {shift.startTime} - {shift.endTime}
-                    </text>
+        {!isLoading ? (
+          <div className="grid grid-cols-7 border-x border-gray-200 divide-x divide-gray-200">
+            {DAYS.map((day, index) => (
+              <div className="min-h-[600px]">
+                <div
+                  key={day}
+                  className="flex flex-col items-center justify-center p-4"
+                >
+                  <text className="text-black text-lg">{day}</text>
+                  <text className="text-gray-500 text-lg ">
+                    {new Date(
+                      currentWeek.getTime() +
+                        (index - currentWeek.getDay()) * 86400000
+                    ).toLocaleDateString("en-US", { day: "numeric" })}
+                  </text>
                 </div>
-              ))}
-            </div>
-          ))}
-        </div>
+
+                {shift
+                  .filter((shift) => shift.day === day)
+                  .map((shift) => (
+                    <div className="bg-white m-2 p-2 rounded-lg shadow-md flex flex-col gap-1  border-l-4 border-[#F72585]">
+                      <text className="text-black text-sm font-semibold">
+                        {shift.name}
+                      </text>
+                      <text className="text-gray-500 text-sm">
+                        {shift.role}
+                      </text>
+                      <text className="text-gray-500 text-sm flex flex-row items-center">
+                        <Clock size={16} className="mr-1" />
+                        {shift.startTime} - {shift.endTime}
+                      </text>
+                    </div>
+                  ))}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex justify-center items-center h-full">
+            <text className="text-black">Loading...</text>
+          </div>
+        )}
       </div>
     </div>
   );
