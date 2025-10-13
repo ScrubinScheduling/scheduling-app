@@ -11,8 +11,18 @@ import {
   ChevronLeft,
   ChevronRight,
   Plus,
+  Clock,
 } from "lucide-react";
 import { start } from "repl";
+
+type Shift = {
+  id: number;
+  name: string;
+  role: string;
+  startTime: string;
+  endTime: string;
+  day: string;
+};
 
 const DAYS = [
   "Sunday",
@@ -25,46 +35,45 @@ const DAYS = [
 ];
 
 const page = () => {
-
   const [currentWeek, setCurrentWeek] = useState(new Date());
 
-  const [members, setMemvbers] = useState([
+  const [shift, setShift] = useState<Shift[]>([
     {
       id: 1,
-      name: "Alice",
-      role: "Admin",
+      name: "Alice Cartel",
+      role: "Vet Tech",
       startTime: "09:00",
       endTime: "17:00",
       day: "Monday",
     },
     {
       id: 2,
-      name: "Bob",
-      role: "User",
+      name: "Bob Itsaboy",
+      role: "Receptionist",
       startTime: "10:00",
       endTime: "18:00",
       day: "Tuesday",
     },
     {
       id: 3,
-      name: "Charlie",
-      role: "User",
+      name: "Jonny Bravo",
+      role: "Veterinarian",
       startTime: "08:00",
       endTime: "16:00",
       day: "Wednesday",
     },
     {
       id: 4,
-      name: "David",
-      role: "User",
+      name: "David Suzuki",
+      role: "Kennel Attendant",
       startTime: "11:00",
       endTime: "19:00",
       day: "Thursday",
     },
     {
       id: 5,
-      name: "Eve",
-      role: "Admin",
+      name: "Adam Eve",
+      role: "Vetrinarian",
       startTime: "07:00",
       endTime: "15:00",
       day: "Friday",
@@ -137,25 +146,32 @@ const page = () => {
         {/* Left */}
         <div className="flex flex-row gap-4">
           <div className="flex flex-row gap-10 items-center shadow-md border p-2 rounded-lg">
-            <button onClick={() => {
-              const newDate = new Date(currentWeek);
-              newDate.setDate(newDate.getDate() - 7);
-              setCurrentWeek(newDate);
-            }}>
+            <button
+              onClick={() => {
+                const newDate = new Date(currentWeek);
+                newDate.setDate(newDate.getDate() - 7);
+                setCurrentWeek(newDate);
+              }}
+            >
               <ChevronLeft size={24} color="black" />
             </button>
-            <button>
+            <button className="w-60">
               <text className="text-xl text-black ">{getWeekRange()}</text>
             </button>
-            <button onClick={() => {
-              const newDate = new Date(currentWeek);
-              newDate.setDate(newDate.getDate() + 7);
-              setCurrentWeek(newDate);
-            }}>
+            <button
+              onClick={() => {
+                const newDate = new Date(currentWeek);
+                newDate.setDate(newDate.getDate() + 7);
+                setCurrentWeek(newDate);
+              }}
+            >
               <ChevronRight size={24} color="black" />
             </button>
           </div>
-          <button onClick={() => setCurrentWeek(new Date())} className="cursor-pointer">
+          <button
+            onClick={() => setCurrentWeek(new Date())}
+            className="cursor-pointer"
+          >
             <text className="text-md text-white shadow-md p-3 rounded-lg text-lg font-semibold bg-[#F72585]">
               Today
             </text>
@@ -175,11 +191,24 @@ const page = () => {
       <div className="flex-1 overflow-auto p-6">
         <div className="grid grid-cols-7 border-x border-gray-200 divide-x divide-gray-200">
           {DAYS.map((day) => (
-            <div
-              key={day}
-              className="flex flex-col items-center justify-center p-4"
-            >
-              <text className="text-black">{day}</text>
+            <div className="min-h-[600px]">
+              <div
+                key={day}
+                className="flex flex-col items-center justify-center p-4"
+              >
+                <text className="text-black">{day}</text>
+              </div>
+
+              {shift.filter((shift) => shift.day === day).map((shift) => (
+                <div className="bg-white m-2 p-2 rounded-lg shadow-md flex flex-col gap-1  border-l-4 border-[#F72585]">
+                    <text className="text-black text-sm font-bold">{shift.name}</text>
+                    <text className="text-gray-500 text-sm">{shift.role}</text>
+                    <text className="text-gray-500 text-sm flex flex-row">
+                      <Clock size={16} className="mr-1" />
+                      {shift.startTime} - {shift.endTime}
+                    </text>
+                </div>
+              ))}
             </div>
           ))}
         </div>
