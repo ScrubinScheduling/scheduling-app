@@ -2,6 +2,8 @@
   "name": "scheduling-app",
   "version": "1.0.0",
   "main": "index.js",
+  "packageManager": "pnpm@10.0.0",
+
   "scripts": {
     "dev:web": "pnpm -F web dev",
     "dev:mobile": "pnpm -F mobile start",
@@ -17,5 +19,8 @@
   "private": "true",
   "engines": {
     "node": ">=22.0.0"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.8"
   }
 }
