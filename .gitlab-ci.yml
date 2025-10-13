@@ -13,6 +13,7 @@ deploy:api:preview:
 
   script:
     - npm install --global vercel
+    - npm install -- global pnpm
     - vercel pull --yes --environment=preview --token="$TOKEN"
     - vercel build --token="$TOKEN"
     - vercel deploy --prebuilt --token="$TOKEN"
@@ -27,6 +28,7 @@ deploy:web:preview:
 
   script:
     - npm install --global vercel
+    - npm install -- global pnpm
     - vercel pull --yes --environment=preview --token="$TOKEN"
     - vercel build --token="$TOKEN"
     - vercel deploy --prebuilt --token="$TOKEN"
