@@ -47,7 +47,7 @@ deploy:web:preview:
       echo "WEB_PREVIEW_URL=$WEB_HOST" > "$CI_PROJECT_DIR/web.env"
   artifacts:
     reports:
-      dotenv: appsweb.env   # exposes $WEB_PREVIEW_URL to downstream jobs
+      dotenv: web.env   # exposes $WEB_PREVIEW_URL to downstream jobs
     expire_in: 7 days
 
 
