@@ -3,87 +3,91 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  phoneNumber String @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                      Int                       @id @default(autoincrement())
+  email                   String                    @unique
+  phoneNumber             String                    @unique
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  UserWorkspaceMembership UserWorkspaceMembership[]
+  UserRoleMembership      UserRoleMembership[]
 }
 
 model UserWorkspaceMembership {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  workSpaceId Int 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  workspace      Workspace     @relation(fields: [workSpaceId], references: [id], onDelete: Cascade)
-
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  workspaceId Int
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 }
 
 model Workspace {
-  id        Int      @id @default(autoincrement())
-  adminId   Int
-  location  String 
+  id                      Int                       @id @default(autoincrement())
+  adminId                 Int
+  location                String
+  UserWorkspaceMembership UserWorkspaceMembership[]
+  UserRoleMembership      UserRoleMembership[]
 }
 
 model Shift {
-  id        Int      @id @default(autoincrement())
-  startTime DateTime 
-  endTime DateTime 
-  clockInTime  DateTime @default(null)
-  clockOutTime  DateTime @default(null)
-  userId Int 
-  startBreakTime DateTime @default(null)
-  endBreakTime DateTime @default(null)
-  breakDuration Int
-  workspaceId Int
+  id             Int       @id @default(autoincrement())
+  startTime      DateTime
+  endTime        DateTime
+  clockInTime    DateTime?
+  clockOutTime   DateTime?
+  userId         Int
+  startBreakTime DateTime?
+  endBreakTime   DateTime?
+  breakDuration  Int
+  workspaceId    Int
 }
 
 model Role {
-  id           Int   @id @default(uuid())
+  id          Int    @id @default(autoincrement())
   workspaceId Int
-  name   String
-  permissions BigInt @default(0)
+  name        String
+  permissions Int    @default(0)
 
+  UserRoleMembership UserRoleMembership[]
 }
 
 model Permissions {
-  bitkey SmallInt
-  name String 
+  bitkey      Int    @unique
+  name        String
   description String
 }
 
 model UserRoleMembership {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  workSpaceId Int 
-  roleId Int
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  workspace      Workspace     @relation(fields: [workSpaceId], references: [id], onDelete: Cascade)
-  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  workSpaceId Int
+  roleId      Int
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workSpaceId], references: [id], onDelete: Cascade)
+  role        Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
 }
 
 model ShiftRequest {
-  id        Int      @id @default(autoincrement())
-  requestorId Int
-  workspaceId Int
-  lendedShiftId Int 
-  requestedShiftId @default(null)
-  status SmallInt 
+  id               Int  @id @default(autoincrement())
+  requestorId      Int
+  workspaceId      Int
+  lendedShiftId    Int
+  requestedShiftId Int?
+  status           Int
 }
 
-Invitation {
-  id        Int      @id @default(uuid())
+model Invitation {
+  id          String    @id @default(uuid())
   workspaceId Int
-  expiresAt    DateTime? @db.Timestamptz(6) @default(dbgenerated("now() + interval '1 day'"))
+  expiresAt   DateTime? @default(dbgenerated("now() + interval '1 day'")) @db.Timestamptz(6)
 }
 
 model Meeting {
-  id        Int      @id @default(autoincrement())
+  id          Int @id @default(autoincrement())
   workspaceId Int
 }
