@@ -13,6 +13,7 @@ import {
   Plus,
   Clock,
 } from "lucide-react";
+import { UserButton } from "@clerk/nextjs";
 
 type Shift = {
   id: number;
@@ -33,7 +34,7 @@ const DAYS = [
   "Saturday",
 ];
 
-const page = () => {
+export default function Page() {
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [isLoading, setIsLoading] = useState(false);
 
@@ -136,9 +137,7 @@ const page = () => {
           <button>
             <Bolt size={24} color="gray" />
           </button>
-          <div className="flex flex-row gap-2 items-center bg-[#03045e] p-2 rounded-full cursor-pointer">
-            <text className="text-white">AD</text>
-          </div>
+          <UserButton />
         </div>
       </div>
 
@@ -233,6 +232,4 @@ const page = () => {
       </div>
     </div>
   );
-};
-
-export default page;
+}
