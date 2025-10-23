@@ -191,7 +191,7 @@ export default function Page() {
         {!isLoading ? (
           <div className="grid grid-cols-7 border-x border-gray-200 divide-x divide-gray-200">
             {DAYS.map((day, index) => (
-              <div className="min-h-[600px]">
+              <div key={index} className="min-h-[600px]">
                 <div
                   key={day}
                   className="flex flex-col items-center justify-center p-4"
@@ -207,8 +207,8 @@ export default function Page() {
 
                 {shift
                   .filter((shift) => shift.day === day)
-                  .map((shift) => (
-                    <div className="bg-white m-2 p-2 rounded-lg shadow-md flex flex-col gap-1  border-l-4 border-[#F72585]">
+                  .map((shift, index) => (
+                    <div key={index} className="bg-white m-2 p-2 rounded-lg shadow-md flex flex-col gap-1  border-l-4 border-[#F72585]">
                       <text className="text-black text-sm font-semibold">
                         {shift.name}
                       </text>
