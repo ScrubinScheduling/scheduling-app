@@ -22,7 +22,7 @@ export default function AppHeader() {
           <p className="text-gray-500 text-sm">Fairlight Veterinary Services</p>
         </div>
         <div className="flex flex-row gap-4 ml-5">
-          <Link href="/" className="flex flex-row gap-2 items-center bg-gray-100 p-2 rounded-lg cursor-pointer">
+          <Link href="/dashboard" className="flex flex-row gap-2 items-center bg-gray-100 p-2 rounded-lg cursor-pointer">
             <LayoutDashboard size={20} color="gray" />
             <h1 className="text-gray-500 text-md">Dashboard</h1>
           </Link>
