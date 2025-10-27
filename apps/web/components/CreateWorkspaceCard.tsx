@@ -19,6 +19,9 @@ import { Button } from "@/components/ui/button";
 export default function CreateWorkspaceCard() {
     const [isOpen, setIsOpen] = useState(false);
     const [name, setName] = useState("");
+    const [location, setLocation] = useState("");
+    
+
     return (
         <>
             <Card onClick={() => setIsOpen(true)} className="hover:bg-gray-50 hover:cursor-pointer border border-dashed">
@@ -46,6 +49,16 @@ export default function CreateWorkspaceCard() {
                                 onChange={(e) => setName(e.target.value)} 
                             />
                         </div>
+
+                        <div className="grid gap-2">
+                            <Label>Location</Label>
+                            <Input
+                                id="location"
+                                placeholder="Location"
+                                value={location}
+                                onChange={(e) => setLocation(e.target.value)} 
+                            />
+                        </div>
                     </div>
 
                     <DialogFooter>
@@ -53,7 +66,7 @@ export default function CreateWorkspaceCard() {
                             Cancel
                         </Button>
 
-                        <Button onClick={()=>console.log(5)} disabled={!name.trim()}>Create</Button>
+                        <Button onClick={()=>console.log(5)} disabled={!name.trim() || !location.trim()}>Create</Button>
                     </DialogFooter>
 
                 </DialogContent>
