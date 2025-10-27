@@ -1,5 +1,6 @@
 import React from "react";
 import WorkspaceCard from "./WorkspaceCard";
+import CreateWorkspaceCard from "./CreateWorkspaceCard";
 
 export default function WorkspaceList({ workspaces }) {
 
@@ -8,6 +9,8 @@ export default function WorkspaceList({ workspaces }) {
             {workspaces.map((workspace, index) => {
                return  <WorkspaceCard key={index}/>
             })}
+            <CreateWorkspaceCard/>
         </div>
+
     )
 }
