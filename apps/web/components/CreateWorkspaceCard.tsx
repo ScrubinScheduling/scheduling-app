@@ -1,24 +1,66 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import {
     Card,
     CardHeader,
-    CardTitle,
 } from "@/components/ui/card"
-import { useRouter } from "next/navigation";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
 import { Plus } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 export default function CreateWorkspaceCard() {
-    const router = useRouter();
-
+    const [isOpen, setIsOpen] = useState(false);
+    const [name, setName] = useState("");
     return (
-        <Card className="hover:bg-gray-50 hover:cursor-pointer border border-dashed" onClick={() => router.push('/dashboard')}>
-            <CardHeader className="flex items-center">
-                <Plus className="h-4 w-4 text-gray-600" />
+        <>
+            <Card onClick={() => setIsOpen(true)} className="hover:bg-gray-50 hover:cursor-pointer border border-dashed">
+                <CardHeader className="flex items-center">
+                    <Plus className="h-4 w-4 text-gray-600" />
 
-                <span className="text-md font-medium text-gray-600 text-left">Create Workspace</span>
-            </CardHeader>
+                    <span className="text-md font-medium text-gray-600 text-left">Create Workspace</span>
+                </CardHeader>
 
-        </Card >
+            </Card>
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                <DialogContent className="sm:max-w-[600px]">
+                    <DialogHeader>
+                        <DialogTitle>Create a New Workspace</DialogTitle>
+                        <DialogDescription>Set up a new workspace for your team.</DialogDescription>
+                    </DialogHeader>
+
+                    <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                            <Label>Workspace Name</Label>
+                            <Input
+                                id="name"
+                                placeholder="Workspace Name"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)} 
+                            />
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsOpen(false)}>
+                            Cancel
+                        </Button>
+
+                        <Button onClick={()=>console.log(5)} disabled={!name.trim()}>Create</Button>
+                    </DialogFooter>
+
+                </DialogContent>
+            </Dialog>
+
+        </>
+
     );
 
 }
