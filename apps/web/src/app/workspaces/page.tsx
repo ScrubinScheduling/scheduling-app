@@ -12,7 +12,7 @@ export default function Page() {
         (async () => {
             const token = await getToken();
 
-            const res = await fetch("http://localhost:4000/workspace", {
+            const res = await fetch("http://localhost:4000/workspaces", {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }

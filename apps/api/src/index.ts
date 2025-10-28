@@ -16,11 +16,9 @@ app.use(express.json())
 app.use(morgan('dev'))
 app.use(clerkMiddleware())
 
-app.get('/health', (req, res) => {
-    res.json({ status: 'ok' })
-})
 
-app.get('/workspace', async (req, res) => {
+
+app.get('/workspaces', async (req, res) => {
     const { userId } = getAuth(req)
 
     const user = await prisma.user.findFirst({
@@ -40,9 +38,9 @@ app.get('/workspace', async (req, res) => {
     })
 
     res.json({ workspaces }).status(200);
-})
+});
 
-app.post('/workspace', async (req, res) => {
+app.post('/workspaces', async (req, res) => {
     const { userId } = getAuth(req)
 
     const user = await prisma.user.findFirst({
@@ -67,7 +65,7 @@ app.post('/workspace', async (req, res) => {
     })
 
     res.json(workspace).status(200)
-})
+});
 
 app.post('/clerk/webhook', async (req, res) => {
     const evt = await verifyWebhook(req)
@@ -80,7 +78,7 @@ app.post('/clerk/webhook', async (req, res) => {
             },
         })
     }
-})
+});
 
 const port = process.env.PORT ?? 4000
 app.listen(port, () => {
