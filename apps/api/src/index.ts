@@ -20,6 +20,28 @@ app.get('/health', (req, res) => {
     res.json({ status: 'ok' })
 })
 
+app.get('/workspace', async (req, res) => {
+    const { userId } = getAuth(req)
+
+    const user = await prisma.user.findFirst({
+        where: {
+            clerkId: userId,
+        },
+    })
+
+    if (!user) {
+        return res.json({ error: 'User not found in db' }).status(404)
+    }
+
+    const workspaces = await prisma.workspace.findMany({
+        where: {
+            memberships: { some: { user } },
+        },
+    })
+
+    res.json({ workspaces }).status(200);
+})
+
 app.post('/workspace', async (req, res) => {
     const { userId } = getAuth(req)
 
@@ -30,8 +52,9 @@ app.post('/workspace', async (req, res) => {
     })
 
     if (!user) {
-        return res.json({ error: 'User not found in db' }).status(404);
+        return res.json({ error: 'User not found in db' }).status(404)
     }
+
     const workspace = await prisma.workspace.create({
         data: {
             name: req.body.name,
@@ -41,28 +64,22 @@ app.post('/workspace', async (req, res) => {
                 create: [{ user: { connect: { id: user.id } } }],
             },
         },
-    });
+    })
 
-    res.json(workspace).status(200);
-});
+    res.json(workspace).status(200)
+})
 
-app.post("/clerk/webhook", async (req, res) => {
-    const evt = await verifyWebhook(req);
-    const { id } = evt.data;
-    
+app.post('/clerk/webhook', async (req, res) => {
+    const evt = await verifyWebhook(req)
+    const { id } = evt.data
+
     if (evt.type === 'user.created') {
         await prisma.user.create({
             data: {
-                clerkId: id
-            }
-        });
-
+                clerkId: id,
+            },
+        })
     }
-
-}); 
-
-app.get('/workspace', (req, res) => {
-    res.json(getAuth(req))
 })
 
 const port = process.env.PORT ?? 4000
