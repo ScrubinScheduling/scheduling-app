@@ -1,7 +1,7 @@
 "use client";
-import { useAuth, SignedIn, UserButton } from "@clerk/nextjs";
+import { SignedIn } from "@clerk/nextjs";
 import React, { useState } from "react";
-import { Spin, Alert } from "antd";
+import { Spin } from "antd";
 import {
   Calendar,
   LayoutDashboard,
@@ -49,7 +49,6 @@ const page = () => {
     setIsModalOpen(true);
   };
 
- 
   const [shift, setShift] = useState<Shift[]>([
     {
       id: 1,
@@ -107,7 +106,6 @@ const page = () => {
       year: "numeric",
     })}`;
   };
-
 
   return (
     <SignedIn>
