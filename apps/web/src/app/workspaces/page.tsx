@@ -21,7 +21,7 @@ export default function Page() {
             const data = await res.json();
 
 
-            setWorkspaces((prev) => [...prev, ...data.workspaces])
+            setWorkspaces(data.workspaces)
         })();
     }, [])
     return (
