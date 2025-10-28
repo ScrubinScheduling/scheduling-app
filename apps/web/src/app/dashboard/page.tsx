@@ -1,7 +1,7 @@
 "use client";
-import { useAuth, SignedIn, UserButton} from "@clerk/nextjs";
+import { SignedIn } from "@clerk/nextjs";
 import React, { useState } from "react";
-import { Spin, Modal, Select, TimePicker, DatePicker } from "antd";
+import { Spin } from "antd";
 import {
   Calendar,
   LayoutDashboard,
@@ -15,6 +15,7 @@ import {
   Plus,
   Clock,
 } from "lucide-react";
+import AddShiftModal from "../../../components/AddShiftModal";
 
 type Shift = {
   id: number;
@@ -35,27 +36,19 @@ const DAYS = [
   "Saturday",
 ];
 
-const {RangePicker} = DatePicker;
-
 const page = () => {
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [isLoading, setIsLoading] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  {/* Modal Selections */}
-  const [employee, setEmployee] = useState("");
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
-  const [startTime, setStartTime] = useState<string>("");
-  const [endTime, setEndTime] = useState<string>("");
+  {
+    /* Modal Selections */
+  }
 
   const showModal = () => {
     setIsModalOpen(true);
   };
 
-  const handleCancel = () => {
-    setIsModalOpen(false);
-  };
   const [shift, setShift] = useState<Shift[]>([
     {
       id: 1,
@@ -114,8 +107,6 @@ const page = () => {
     })}`;
   };
 
-  const { isSignedIn } = useAuth();
-
   return (
     <SignedIn>
       <div className="flex h-full flex-col bg-white">
@@ -159,7 +150,9 @@ const page = () => {
             <button>
               <Bolt size={24} color="gray" />
             </button>
-            <UserButton />
+            <div className="flex flex-row gap-2 items-center bg-[#03045e] p-2 rounded-full cursor-pointer">
+              <span className="text-white">AD</span>
+            </div>
           </div>
         </div>
 
@@ -177,7 +170,7 @@ const page = () => {
                 <ChevronLeft size={24} color="black" />
               </button>
               <button className="w-60">
-                <text className="text-xl text-black ">{getWeekRange()}</text>
+                <span className="text-xl text-black ">{getWeekRange()}</span>
               </button>
               <button
                 onClick={() => {
@@ -211,61 +204,16 @@ const page = () => {
           </div>
         </div>
 
-        <Modal
-          open={isModalOpen}
-          onCancel={handleCancel}
-          footer={null}
-          width={"full"}
-        >
-          <div className="flex flex-col items-center gap-4">
-            <text className="text-xl font-bold">Add Shift</text>
-            {/* Container */}
-            <div className="flex flex-row w-full justify-evenly ">
-                {/* Employee Selection */}
-                <div className="flex flex-col">
-                  <text className="text-md font-semibold">Employee</text>
-                  <Select
-                    showSearch
-                    style={{ width: 200 }}
-                    placeholder="Select Employee"
-                    onChange={(value) => setEmployee(value)}
-                    options={[
-                      { value: "Alice Cartel", label: "Alice Cartel" },
-                      { value: "Bob Itsaboy", label: "Bob Itsaboy" },
-                      { value: "Jonny Bravo", label: "Jonny Bravo" },
-                      { value: "David Suzuki", label: "David Suzuki" },
-                      { value: "Adam Eve", label: "Adam Eve" },
-                    ]}
-                  />
-                </div>
-                {/* Time Selection */}
-                <div className="flex flex-col">
-                  <text className="font-semibold">Time</text>
-                  <TimePicker.RangePicker
-                  format={"HH:mm"}
-                  />
-                </div>
-
-                <div className="flex flex-col">
-                  <text className="font-semibold">Date</text>
-                  <RangePicker
-                  format={"HH:mm"}
-                  />
-                </div>
-            </div>
-          </div>
-        </Modal>
+        {/* Adding Shifts Modal */}
+        <AddShiftModal open={isModalOpen} setOpen={setIsModalOpen} />
 
         {/* View for shifts */}
         <div className="flex-1 overflow-auto p-6">
           {!isLoading ? (
             <div className="grid grid-cols-7 border-x border-gray-200 divide-x divide-gray-200">
               {DAYS.map((day, index) => (
-                <div className="min-h-[600px]">
-                  <div
-                    key={day}
-                    className="flex flex-col items-center justify-center p-4"
-                  >
+                <div key={index} className="min-h-[600px]">
+                  <div className="flex flex-col items-center justify-center p-4">
                     <text className="text-black text-lg">{day}</text>
                     <text className="text-gray-500 text-lg ">
                       {new Date(
@@ -277,8 +225,11 @@ const page = () => {
 
                   {shift
                     .filter((shift) => shift.day === day)
-                    .map((shift) => (
-                      <div className="bg-white m-2 p-2 rounded-lg shadow-md flex flex-col gap-1  border-l-4 border-[#F72585]">
+                    .map((shift, index) => (
+                      <div
+                        key={index}
+                        className="bg-white m-2 p-2 rounded-lg shadow-md flex flex-col gap-1  border-l-4 border-[#F72585]"
+                      >
                         <text className="text-black text-sm font-semibold">
                           {shift.name}
                         </text>
