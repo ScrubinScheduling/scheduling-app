@@ -4,9 +4,9 @@ import cors from 'cors'
 import helmet from 'helmet'
 import morgan from 'morgan'
 import { prisma } from './db'
-import { randomInt, randomUUID } from 'crypto'
 import { clerkMiddleware, getAuth } from '@clerk/express'
 import { verifyWebhook } from '@clerk/express/webhooks'
+import { getWorkspaceMembership } from './utils/authz'
 
 const app = express()
 
@@ -15,8 +15,6 @@ app.use(cors({ origin: '*' }))
 app.use(express.json())
 app.use(morgan('dev'))
 app.use(clerkMiddleware())
-
-
 
 app.get('/workspaces', async (req, res) => {
     const { userId } = getAuth(req)
@@ -28,7 +26,7 @@ app.get('/workspaces', async (req, res) => {
     })
 
     if (!user) {
-        return res.json({ error: 'User not found in db' }).status(404)
+        return res.status(404).json({ error: 'User not found' })
     }
 
     const workspaces = await prisma.workspace.findMany({
@@ -37,8 +35,26 @@ app.get('/workspaces', async (req, res) => {
         },
     })
 
-    res.json({ workspaces }).status(200);
-});
+    res.status(200).json({ workspaces })
+})
+
+app.get('/workspaces/:id', async (req, res) => {
+    try {
+        const { userId } = getAuth(req)
+        const membership = await getWorkspaceMembership(userId, Number(req.params.id))
+
+        if (!membership) {
+            return res.status(403).json({ error: 'Unauthorized to Access Workspace' });
+        }   
+
+        console.log(membership)
+
+        res.status(200).json(membership.workspace);
+    } catch (err) {
+        console.error(err)
+        res.status(500).json({ error: err });
+    }
+})
 
 app.post('/workspaces', async (req, res) => {
     const { userId } = getAuth(req)
@@ -50,7 +66,7 @@ app.post('/workspaces', async (req, res) => {
     })
 
     if (!user) {
-        return res.json({ error: 'User not found in db' }).status(404)
+        return res.status(404).json({ error: 'User not found in db' })
     }
 
     const workspace = await prisma.workspace.create({
@@ -64,8 +80,8 @@ app.post('/workspaces', async (req, res) => {
         },
     })
 
-    res.json(workspace).status(200)
-});
+    res.status(200).json(workspace)
+})
 
 app.post('/clerk/webhook', async (req, res) => {
     const evt = await verifyWebhook(req)
@@ -78,7 +94,7 @@ app.post('/clerk/webhook', async (req, res) => {
             },
         })
     }
-});
+})
 
 const port = process.env.PORT ?? 4000
 app.listen(port, () => {
