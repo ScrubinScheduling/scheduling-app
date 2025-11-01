@@ -91,33 +91,31 @@ app.post('/dummy-setup', async (req, res) => {
 
 
 app.post('/dummy-create-shift', async(req,res) => {
-  const {startTime, endTime, breakDuration, workspaceId, userId} = req.body;
+  
   try {
-    const result = await prisma.$transaction(async(tx) => {
-      const user = await tx.user.findUnique({where: {id: Number(userId)}});
-      if (!user) return {status: 404, error: `User ${userId} not found`}; 
-
-      const workspace = await tx.workspace.findUnique({where : {id: Number(workspaceId)}});
-      if (!workspace) return {status: 404, error: `Workspace ${workspaceId} not found`}; 
-
-      if (!breakDuration) return {status: 404, error: `Break duration was not set`}; 
-      if (!startTime || !endTime) return {status: 404, error: `startTime or endTime was not set`}; 
-
-      const shift = await tx.shift.create({
-        data: {
-          userId: user.id,
-          workspaceId: workspace.id,
-          breakDuration,
-          startTime,
-          endTime,
-        }
-      });
-
-      return {status: 201, payload: shift}; 
+    const {worspaceId, employee, shifts, breakDuration} = req.body;
+  
+  
+    const rows = shifts.map(({startTime, endTime}: {startTime: string, endTime: string}) => {
+      const start = new Date(startTime);
+      const end = new Date(endTime); 
+    
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) throw new Error("Invalid ISO time"); 
+      if (end <= start) throw new Error("endTime must be after startTime");
+    
+      return {
+        userId: employee,
+        worspaceId: Number(worspaceId),
+        breakDuration: Number(worspaceId) || 30,
+        startTime: start,
+        endTime: end
+      }
     });
 
-    if ("error" in result) return res.status(result.status).json({error: result.error});
-    return res.status(result.status).json(result.payload);  
+    const result = await prisma.shift.createMany({data: rows});
+    console.log(result.count);  
+    res.status(201).json({inserted: result.count}); 
+    
 
   } catch(err) {
     console.log("Error in index route", err); 

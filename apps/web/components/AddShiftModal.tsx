@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { startTransition, useState } from "react";
 import { Dayjs } from "dayjs";
+
 import {
   Modal,
   Select,
@@ -9,6 +10,7 @@ import {
   Flex,
   Alert,
 } from "antd";
+import { json } from "stream/consumers";
 
 type AddShiftModalProps = {
   open: boolean;
@@ -16,16 +18,17 @@ type AddShiftModalProps = {
 };
 
 const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen }) => {
-  const [employee, setEmployee] = useState<string | undefined>(undefined);
+  const [employee, setEmployee] = useState<Number | undefined>(undefined);
   const [dates, setDates] = useState<Dayjs[] | null>(null);
   const [timeRange, setTimeRange] = useState<[Dayjs, Dayjs] | null>(null);
-   const [alertDesc, setAlertDesc] = useState<string | null>(null);
+  const [alertDesc, setAlertDesc] = useState<string | null>(null);
   const [openAlert, setOpenAlert] = useState(false);
+
   const handleCancel = () => {
     setOpen(false);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
 
     if (!employee || !dates || !timeRange) {
       setAlertDesc("Please fill in all fields.");
@@ -33,13 +36,28 @@ const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen }) => {
       return;
     }
 
+    const shifts = buildShift(dates, timeRange);
+
     const payload = {
       employee,
-      startTime: timeRange?.[0]?.format("HH:mma") ?? null,
-      endTime: timeRange?.[1]?.format("HH:mma") ?? null,
-      dates: (dates ?? []).map((d) => d.format("YYYY-MM-DD")),
+      workspaceId: 1,
+      breakDuration: 30,
+      shifts,
     };
 
+    const res = await fetch(`${process.env.API_URL}/dummy-create-shift`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) throw new Error((await res.json()) || `HTTP ${res.status}`);
+    const data = await res.json(); 
+
+    console.log(data.inserted);
     console.log("Submitting shift:", payload);
     setAlertDesc(null);
     setOpenAlert(false);
@@ -47,6 +65,24 @@ const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen }) => {
     setDates(null);
     setTimeRange(null);
     setOpen(false);
+  };
+
+  const withTime = (d: Dayjs, t: Dayjs) =>
+    d
+      .set("hour", t.hour())
+      .set("minute", t.minute())
+      .set("millisecond", t.millisecond());
+
+  const buildShift = (dates: Dayjs[], [startT, endT]: [Dayjs, Dayjs]) => {
+    return dates.map((d) => {
+      const start = withTime(d, startT);
+      const end = withTime(d, endT);
+
+      return {
+        startTime: start.toDate().toISOString(),
+        endTime: end.toDate().toISOString(),
+      };
+    });
   };
 
   return (
@@ -59,23 +95,25 @@ const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen }) => {
         centered
       >
         <div className="flex flex-col items-center gap-4">
-          {openAlert ? <Alert 
-          message={alertDesc || "Please fill in all fields."}
-          type="warning"
-          showIcon
-          />: null}
+          {openAlert ? (
+            <Alert
+              message={alertDesc || "Please fill in all fields."}
+              type="warning"
+              showIcon
+            />
+          ) : null}
           <span className="text-xl font-bold">Add Shift</span>
           {/* Container */}
           <div className="flex flex-row gap-5 w-full justify-evenly ">
             {/* Employee Selection */}
             <div className="flex flex-col">
-              <text className="text-md font-semibold">Employee</text>
+              <span className="text-md font-semibold">Employee</span>
               <Select
                 showSearch
                 value={employee}
                 style={{ width: 200 }}
                 placeholder="Select Employee"
-                onChange={(value) => setEmployee(value)}
+                onChange={(value) => setEmployee(1)}
                 options={[
                   { value: "Alice Cartel", label: "Alice Cartel" },
                   { value: "Bob Itsaboy", label: "Bob Itsaboy" },
@@ -88,9 +126,9 @@ const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen }) => {
             </div>
             {/* Time Selection */}
             <div className="flex flex-col">
-              <text className="font-semibold">Time</text>
+              <span className="font-semibold">Time</span>
               <TimePicker.RangePicker
-                format={"HH:mma"}
+                format={"HH:mm"}
                 value={timeRange}
                 onChange={(vals) => {
                   setTimeRange(vals as [Dayjs, Dayjs]);
@@ -100,14 +138,14 @@ const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen }) => {
             </div>
             {/* Date Selection */}
             <div className="flex flex-col min-w-[200px]">
-              <text className="font-semibold">Date</text>
+              <span className="font-semibold">Date</span>
               <Flex>
                 <DatePicker
                   multiple
                   value={dates}
                   format={"YYYY-MM-DD"}
                   maxTagCount={"responsive"}
-                  onChange={(vals, strs) => {
+                  onChange={(vals) => {
                     setDates(vals as Dayjs[] | null);
                   }}
                   allowClear
