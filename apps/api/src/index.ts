@@ -199,6 +199,50 @@ app.post('/clerk/webhook', async (req, res) => {
     }
 })
 
+/*
+  Will need checks in the future for duplicate shifts.
+  If userId is switched as well need to check for duplicates.
+*/
+app.put('/shift/:id', async (req, res) => {
+    try {
+        const id = Number(req.params.id)
+        if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invlaid Id' })
+
+        const shift = prisma.shift.findUnique({ where: { id: id } })
+
+        if (!shift) return res.status(404).json({ error: `shift: ${id} was not found` })
+
+        const { startTime, endTime, userId, breakDuration } = req.body as {
+            startTime: string
+            endTime: string
+            userId: number
+            breakDuration: number
+        }
+
+        if (!startTime || !endTime || !userId || !breakDuration) {
+            return res.status(400).json({ error: 'Not all feilds were provided' })
+        }
+
+        // Could do an additional check to see if userId breakDuration or workSpaceId are integers
+
+        const updated = prisma.shift.update({
+            where: { id: id },
+            data: {
+                startTime,
+                endTime,
+                breakDuration,
+            },
+        })
+
+        return res.status(200).json({ updated })
+    } catch (error) {
+        console.log('Error in index route', error)
+        res.status(500).json({ message: 'Internal server error' })
+    }
+})
+
+
+
 const port = process.env.PORT ?? 4000
 app.listen(port, () => {
     // eslint-disable-next-line no-console
