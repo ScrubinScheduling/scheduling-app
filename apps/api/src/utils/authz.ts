@@ -1,6 +1,5 @@
 import { prisma } from '../db'
 
-
 export async function getWorkspaceMembership(clerkId: string | null, workspaceId: number) {
     const membership = await prisma.userWorkspaceMembership.findFirst({
         where: { workspaceId, user: { clerkId } },
@@ -9,7 +8,7 @@ export async function getWorkspaceMembership(clerkId: string | null, workspaceId
             workspace: true,
             user: true,
         },
-    });
+    })
 
     return membership
 }

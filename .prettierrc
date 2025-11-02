@@ -1,0 +1,33 @@
+{
+	"useTabs": true,
+	"singleQuote": true,
+	"trailingComma": "none",
+	"printWidth": 100,
+	"plugins": ["prettier-plugin-tailwindcss"],
+	"overrides": [
+		{
+			"files": ["apps/web/**/*.{js,jsx,ts,tsx,mdx}"],
+			"options": {
+				"tailwindConfig": "apps/web/tailwind.config.ts",
+				"tailwindFunctions": ["clsx", "cn", "cva", "twMerge"]
+			}
+		},
+		{
+			"files": ["apps/mobile/**/*.{js,jsx,ts,tsx}"],
+			"options": {
+				"tailwindConfig": "apps/mobile/tailwind.config.js",
+				"tailwindFunctions": ["clsx", "cn", "cva", "twMerge"]
+			}
+		},
+		{
+			"files": ["apps/svelte/**/*.svelte"],
+			"options": {
+				"parser": "svelte"
+			}
+		},
+		{
+			"files": ["**/schema.prisma"],
+			"options": {}
+		}
+	]
+}

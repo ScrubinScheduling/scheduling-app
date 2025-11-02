@@ -1,0 +1,25 @@
+node_modules
+dist
+build
+coverage
+.tmp
+.temp
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Next.js
+.next
+out
+
+# React Native
+android
+ios
+.expo
+expo
+
+# Common
+**/.turbo
+**/.cache
+**/.gradle
+**/.DS_Store
