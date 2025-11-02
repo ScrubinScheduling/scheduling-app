@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import { prisma } from './db';
 import { randomInt, randomUUID } from 'crypto';
 import testRoutes from './routes/test'
+import shiftRoutes from './routes/shifts'
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.get('/health', (_req, res) => {
 });
 
 app.use('/api', testRoutes);
+app.use('/api/shifts', shiftRoutes);
 
 
 const port = process.env.PORT ?? 4000
