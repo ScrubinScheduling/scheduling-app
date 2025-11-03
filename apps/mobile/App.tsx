@@ -8,6 +8,9 @@ import { ClerkProvider, SignedIn, SignedOut, useAuth } from '@clerk/clerk-expo';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import '@/global.css';
 
+import HomePage from './pages/HomePage';
+import LoginPage from './pages/LoginPage';
+
 const Stack = createNativeStackNavigator();
 
 const tokenCache = {
@@ -36,18 +39,26 @@ export default function App() {
 	return (
 		<GluestackUIProvider mode="dark">
 			<ClerkProvider publishableKey={PUBLISHABLE_KEY} tokenCache={tokenCache}>
+				<NavigationContainer>
 				<View style={styles.container}>
 					<SignedIn>
-						<Text>Signed in</Text>
-						<AuthDebug />
+						<Stack.Navigator>
+							<Stack.Screen name="Home" component={HomePage} />
+							<Text>Signed in</Text>
+							<AuthDebug />
+						</Stack.Navigator>
 					</SignedIn>
 					<SignedOut>
-						<Text>
-							You're signed out. Add <Text style={{ fontWeight: 'bold' }}>SignIn</Text> flow here.
-						</Text>
+						<Stack.Navigator>
+							<Stack.Screen name="Login" component={LoginPage} />
+							<Text>
+								You're signed out. Add <Text style={{ fontWeight: 'bold' }}>SignIn</Text> flow here.
+							</Text>
+						</Stack.Navigator>
 					</SignedOut>
 					<StatusBar style="auto" />
 				</View>
+				</NavigationContainer>
 			</ClerkProvider>
 		</GluestackUIProvider>
 	);
