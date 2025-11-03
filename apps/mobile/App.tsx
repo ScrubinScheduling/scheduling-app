@@ -40,24 +40,19 @@ export default function App() {
 		<GluestackUIProvider mode="dark">
 			<ClerkProvider publishableKey={PUBLISHABLE_KEY} tokenCache={tokenCache}>
 				<NavigationContainer>
-				<View style={styles.container}>
 					<SignedIn>
 						<Stack.Navigator>
 							<Stack.Screen name="Home" component={HomePage} />
-							<Text>Signed in</Text>
-							<AuthDebug />
 						</Stack.Navigator>
 					</SignedIn>
+
 					<SignedOut>
 						<Stack.Navigator>
 							<Stack.Screen name="Login" component={LoginPage} />
-							<Text>
-								You're signed out. Add <Text style={{ fontWeight: 'bold' }}>SignIn</Text> flow here.
-							</Text>
 						</Stack.Navigator>
 					</SignedOut>
+
 					<StatusBar style="auto" />
-				</View>
 				</NavigationContainer>
 			</ClerkProvider>
 		</GluestackUIProvider>
