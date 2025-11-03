@@ -4,11 +4,10 @@ import cors from 'cors'
 import helmet from 'helmet'
 import morgan from 'morgan'
 import { prisma } from './db'
-import { clerkMiddleware, getAuth } from '@clerk/express'
+import { clerkClient, clerkMiddleware, getAuth } from '@clerk/express'
 import { verifyWebhook } from '@clerk/express/webhooks'
 import { getWorkspaceMembership } from './utils/authz'
 import { randomUUID } from 'node:crypto'
-import { error } from 'node:console'
 
 const app = express()
 
@@ -225,6 +224,54 @@ app.post('/invitations', async (req, res) => {
     }
 })
 
+app.get('/invitations/:id', async (req, res) => {
+    const { isAuthenticated, userId: clerkId } = getAuth(req)
+    
+    console.log(clerkId)
+    if (!isAuthenticated) {
+        return res.status(401).json({ error: 'Unauthenicated' })
+    }
+
+    const invitation = await prisma.invitation.findFirst({
+        where: {
+            id: req.params.id,
+        },
+    })
+
+    if (!invitation) {
+        return res.status(404).json({ error: 'Invitation Not Found' })
+    }
+
+    const workspace = await prisma.workspace.findFirst({
+        where: {
+            id: invitation.workspaceId,
+        },
+    })
+
+    if (!workspace) {
+        return res.status(404).json({ error: 'Workspace Not Found' })
+    }
+
+    const user = await prisma.user.findFirst({
+        where: {
+            id: workspace.adminId,
+        },
+    })
+
+    if (!user) {
+        return res.status(404).json({ error: 'User Not Found' })
+    }
+
+    const { fullName, primaryEmailAddress } = await clerkClient.users.getUser(clerkId)
+
+    res.status(200).json({
+        workspaceName: workspace.name,
+        workspaceOwnerName: fullName,
+        workspaceOwnerEmail: primaryEmailAddress?.emailAddress,
+        invitationId: invitation.id,
+    })
+})
+
 app.post('/invitations/:id/accept', async (req, res) => {
     const { id: invitationId } = req.params
     const { userId } = getAuth(req)
@@ -244,13 +291,12 @@ app.post('/invitations/:id/accept', async (req, res) => {
             user: { connect: { clerkId: userId } },
             workspace: { connect: { id: invitation.workspaceId } },
         },
-    });
-});
+    })
+})
 
 app.post('/clerk/webhook', async (req, res) => {
-    const evt = await verifyWebhook(req)
+    const evt  = await verifyWebhook(req)
     const { id } = evt.data
-
     if (evt.type === 'user.created') {
         await prisma.user.create({
             data: {

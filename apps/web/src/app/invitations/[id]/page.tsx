@@ -1,76 +1,38 @@
 import React from "react";
-import {
-    Card,
-    CardAction,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card"
-import { Building2, CheckCircle2 } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-export default function Page() {
+import { redirect } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
+import InvitationCard from "../../../../components/InvitationCard";
+
+export default async function Page({ params }) {
+
+    const { getToken } = await auth();
+    const token = await getToken();
+
+    const { id } = await params;
+
+    const res = await fetch(`http://localhost:4000/invitations/${id}`, {
+        headers: {
+            "Authorization": `Bearer ${token}`
+        }
+    });
+
+    if (!res.ok) {
+        return redirect("/not-found");
+    }
+
+    const { workspaceOwnerName, workspaceOwnerEmail, workspaceName } = await res.json();
+
+
     return (
         <main className="min-h-screen flex flex-col bg-white">
             <div className="flex flex-1 items-center justify-center px-4">
                 <div className="w-full max-w-md">
+                    <InvitationCard
+                        workspaceName={workspaceName}
+                        workspaceOwnerEmail={workspaceOwnerEmail}
+                        workspaceOwnerName={workspaceOwnerName}
+                    />
 
-                    <Card className="bg-white rounded-2xl shadow-lg p-4 space-y-2">
-                        <CardHeader className="mt-2">
-                            <div className="flex justify-center">
-                                <div className="flex items-center justify-center bg-indigo-100 rounded-full h-16 w-16 ">
-                                    <CheckCircle2 className="text-indigo-600 w-8 h-8" />
-
-                                </div>
-                            </div>
-
-                            <div className="text-center space-y-2">
-                                <CardTitle className="text-2xl">You have been invited</CardTitle>
-                                <CardDescription>Join the team and start collaborating</CardDescription>
-                            </div>
-
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex bg-slate-50 rounded-lg p-4 gap-3 items-center">
-
-                                <div className="flex items-center justify-center rounded-lg h-12 w-12 bg-indigo-600 flex-shrink-0">
-                                    <Building2 className="w-6 h-6 text-white" />
-                                </div>
-
-                                <div className="min-w-0 space-y-1">
-                                    <div className="text-xs font-medium block text-slate-500">WORKSPACE</div>
-                                    <div className="font-semibold block text-slate-900 truncate">something</div>
-                                </div>
-
-
-                            </div>
-
-                            <div className="space-y-4">
-
-                                <div className="text-xs font-medium block text-slate-500">INVITED BY</div>
-                                <div className="flex items-center gap-3">
-                                    <Avatar className="w-12 h-12">
-                                        <AvatarFallback>KA</AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <div className="font-semibold text-slate-900 truncate">Karar Al-Shanoon</div>
-                                        <div className="text-xs font-medium text-slate-500 truncate">alkarar975@gmail.com</div>
-                                    </div>
-
-                                </div>
-                            </div>
-
-                            <div className="h-px bg-slate-200" />
-                            <Button className="hover:cursor-pointer w-full bg-indigo-600 rounded-lg px-4 py-3 transition-colors duration-200">
-                                <span className="text-white">Accept</span>
-                            </Button>
-                        </CardContent>
-                        <CardFooter className="">
-                            <p className="w-full text-xs text-center text-slate-400">This invitation expires in 1 day</p>
-                        </CardFooter>
-                    </Card>
                 </div>
             </div>
         </main>
