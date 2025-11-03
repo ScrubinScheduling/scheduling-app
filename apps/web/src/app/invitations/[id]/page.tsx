@@ -20,7 +20,7 @@ export default async function Page({ params }) {
         return redirect("/not-found");
     }
 
-    const { workspaceOwnerName, workspaceOwnerEmail, workspaceName } = await res.json();
+    const { workspaceOwnerName, workspaceOwnerEmail, workspaceName, invitationId } = await res.json();
 
 
     return (
@@ -31,6 +31,7 @@ export default async function Page({ params }) {
                         workspaceName={workspaceName}
                         workspaceOwnerEmail={workspaceOwnerEmail}
                         workspaceOwnerName={workspaceOwnerName}
+                        invitationId={invitationId}
                     />
 
                 </div>
