@@ -286,12 +286,21 @@ app.post('/invitations/:id/accept', async (req, res) => {
         return res.status(404).json({ error: 'Invitation not Found' })
     }
 
-    prisma.userWorkspaceMembership.create({
+    const membership = await prisma.userWorkspaceMembership.create({
         data: {
             user: { connect: { clerkId: userId } },
             workspace: { connect: { id: invitation.workspaceId } },
         },
-    })
+    });
+
+
+    res.status(200).json(membership);
+
+    await prisma.invitation.delete({
+        where: {
+            id: invitation.id
+        }
+    });
 })
 
 app.post('/clerk/webhook', async (req, res) => {

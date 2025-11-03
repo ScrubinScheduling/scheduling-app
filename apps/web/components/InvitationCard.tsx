@@ -1,5 +1,5 @@
 "use client"
-import React from "react";
+import React, { useState } from "react";
 import {
     Card,
     CardContent,
@@ -11,8 +11,33 @@ import {
 import { Building2, CheckCircle2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { useAuth } from "@clerk/nextjs";
+import { redirect } from "next/navigation";
 
-export default function InvitationCard({ workspaceName, workspaceOwnerName, workspaceOwnerEmail }) {
+export default function InvitationCard({ workspaceName, workspaceOwnerName, workspaceOwnerEmail, invitationId }) {
+
+    const [isLoading, setIsLoading] = useState(false);
+    const { getToken } = useAuth();
+    const clickHandler = async () => {
+        setIsLoading(true);
+        const token = await getToken();
+
+        const res = await fetch(`http://localhost:4000/invitations/${invitationId}/accept`, {
+            method: "POST",
+            headers: {Authorization: `Bearer ${token}`}
+        });
+
+        if (res.ok) {
+            return redirect("/workspaces");
+        } else {
+            console.error("Something went wrong");
+        }
+
+        
+
+
+    }
     return (
         <div>
             <Card className="bg-white rounded-2xl shadow-lg p-4 space-y-2">
@@ -61,7 +86,8 @@ export default function InvitationCard({ workspaceName, workspaceOwnerName, work
                     </div>
 
                     <div className="h-px bg-slate-200" />
-                    <Button className="hover:cursor-pointer w-full bg-indigo-600 rounded-lg px-4 py-3 transition-colors duration-200">
+                    <Button onClick={clickHandler} disabled={isLoading} className="hover:cursor-pointer w-full bg-indigo-600 rounded-lg px-4 py-3 transition-colors duration-200">
+                        {isLoading && <Spinner className="text-white" />}
                         <span className="text-white">Accept</span>
                     </Button>
                 </CardContent>
