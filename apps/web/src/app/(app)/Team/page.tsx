@@ -138,14 +138,14 @@ export default function TeamPage() {
                   <tr id={detailsRowId} className="border-t border-gray-300 ">
                       {/* Email */}
                       <td className="p-3">
-                        <div className="text-sm font-medium text-gray-700">
+                        <div className="text-sm font-medium text-gray-500">
                           Email: <span className="font-normal">{m.email}</span>
                         </div>
                       </td>
 
                       {/* Phone */}
                       <td className="p-3">
-                        <div className="text-sm font-medium text-gray-700">
+                        <div className="text-sm font-medium text-gray-500">
                           Phone: <span className="font-normal">{m.phone}</span>
                         </div>
                       </td>
