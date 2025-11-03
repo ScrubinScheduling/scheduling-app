@@ -1,6 +1,6 @@
 "use client";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
-import AppHeader from "../../../components/AppHeader";
+import AppHeader from "../../../../components/AppHeader";
 
 export default function AppLayout({
   children,
