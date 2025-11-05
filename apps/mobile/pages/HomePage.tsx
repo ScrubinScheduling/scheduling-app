@@ -2,18 +2,59 @@ import { View, Text, Button, StyleSheet, TouchableOpacity, Image } from 'react-n
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@clerk/clerk-expo';
 import { IconButton } from 'react-native-paper';
+import { useState, useEffect } from 'react';
 
 export default function HomePage() {
   const { signOut } = useAuth();
+  const [notificationsOn, setNotificationsOn] = useState(false); // used ai for toggle on off clock feature
+  const [isClockedIn, setIsClockedIn] = useState(false); // used ai for tracking clocked in time
+  const [seconds, setSeconds] = useState(0);
+
+  useEffect(() => {
+    let timer: number | null = null;
+    if (isClockedIn) {
+      timer = setInterval(() => {
+        setSeconds((prevSeconds) => prevSeconds + 1);
+      }, 1000);
+    } else if (!isClockedIn && timer) {
+      clearInterval(timer);
+    }
+    return () => {
+      if (timer) {
+        clearInterval(timer);
+      }
+    };
+  }, [isClockedIn]);
+
+  const formatTime = (totalSeconds: number) => {
+    const minutes = Math.floor(totalSeconds / 60)
+      .toString()
+      .padStart(2, '0');
+    const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+    return `${minutes}:${seconds}`;
+  };
+
+  const handleClockInOut = () => {
+    if (isClockedIn) {
+      setIsClockedIn(false);
+    } else {
+      setSeconds(0);
+      setIsClockedIn(true);
+    }
+  };
+
   return (
     <View style={styles.background}>
       <View style={styles.topContainer}>
         <View style={styles.topTopContainer}>
           <View style={styles.titleContainer}>
             <Text style={styles.title}>Good morning, Terry!</Text>
-            <TouchableOpacity>
-            <IconButton iconColor="#ffc802" icon="bell" mode="contained" containerColor='#fff' size={20} />
-            <IconButton iconColor="#fff" icon="bell" mode="contained" containerColor='#ffc802' size={20} />
+            <TouchableOpacity onPress={() => setNotificationsOn(!notificationsOn)}>
+              {notificationsOn ? (
+                <IconButton iconColor="#ffc802" icon="bell" mode="contained" containerColor='#fff' size={20} />
+              ) : (
+                <IconButton iconColor="#fff" icon="bell" mode="contained" containerColor='#ffc802' size={20} />
+              )}
             </TouchableOpacity>
           </View>
           <View style={styles.shiftContainer}>
@@ -38,9 +79,9 @@ export default function HomePage() {
           </View>
         </View>
         <View style={styles.bottomTopContainer}>
-          <Text style={styles.clockText}>00:00</Text>
-          <TouchableOpacity style={styles.mainButtons} onPress={() => signOut()}>
-            <Text style={styles.standardText}>Clock In</Text>
+          <Text style={styles.clockText}>{formatTime(seconds)}</Text>
+          <TouchableOpacity style={styles.mainButtons} onPress={handleClockInOut}>
+            <Text style={styles.standardText}>{isClockedIn ? 'Clock Out': 'Clock In'}</Text>
           </TouchableOpacity>
         </View>
       </View>
