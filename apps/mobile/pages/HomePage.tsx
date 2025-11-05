@@ -1,4 +1,5 @@
-import { View, Text, Button, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Button, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@clerk/clerk-expo';
 import { IconButton } from 'react-native-paper';
 
@@ -12,21 +13,40 @@ export default function HomePage() {
             <Text style={styles.title}>Good morning, Terry!</Text>
             <TouchableOpacity>
             <IconButton iconColor="#ffc802" icon="bell" mode="contained" containerColor='#fff' size={20} />
+            <IconButton iconColor="#fff" icon="bell" mode="contained" containerColor='#ffc802' size={20} />
             </TouchableOpacity>
           </View>
           <View style={styles.shiftContainer}>
+            <Image style={{height: 40, width: 40, borderRadius: '50%'}} source={require('assets/example-vet.png')}/>
+            <View style={styles.shiftTextContainer}>
+              <View style={styles.shiftRowTextContainer}>
+                <Text style={styles.standardText}>Today</Text>
+                <View style={styles.shiftButtonLeft}>
+                  <Text style={[styles.standardText, {fontSize: 10, fontWeight: 'normal'}]}>Vet Tech</Text>
+                </View>
+                <View style={styles.shiftButtonRight}>
+                  <Text style={[styles.standardText, {fontSize: 10, fontWeight: 'normal'}]}>Stay Late</Text>
+                </View>
+              </View>
+              <View style={styles.shiftRowTextContainer}>
+                <Ionicons name="time-outline" size={12} color="#fff" />
+                <Text style={[styles.standardText, {fontWeight: 'normal'}]}>8am - 6pm</Text>
+                <Ionicons name="location-outline" size={12} color="#fff" />
+                <Text style={[styles.standardText, {fontWeight: 'normal'}]}>3315 Fairlight Drive</Text>
+              </View>
+            </View>
           </View>
         </View>
         <View style={styles.bottomTopContainer}>
           <Text style={styles.clockText}>00:00</Text>
           <TouchableOpacity style={styles.mainButtons} onPress={() => signOut()}>
-            <Text style={[styles.title, {fontSize: 20}]}>Clock In</Text>
+            <Text style={styles.standardText}>Clock In</Text>
           </TouchableOpacity>
         </View>
       </View>
       
       <View style={styles.bottomContainer}>
-        <Text style={[styles.title, {color: 'black'}]}>Upcoming</Text>
+        <Text style={[styles.standardText, {color: 'black'}]}>Upcoming</Text>
       </View>
     </View>
   );
@@ -78,6 +98,20 @@ const styles = StyleSheet.create({
     flex: 0.5,
     backgroundColor: '#ffc802',
     borderRadius: 10,
+    padding: 10,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    flexDirection: 'row',
+  },
+  shiftTextContainer: {
+    paddingLeft: 10,
+    justifyContent: 'center',
+    flexDirection: 'column',
+  },
+  shiftRowTextContainer: {
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexDirection: 'row',
   },
   clockText: {
     fontSize: 40,
@@ -93,10 +127,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#f72485',
     borderRadius: 10,
   },
+  standardText: {
+    fontSize: 15,
+    color: '#fff',
+    fontWeight: 'bold',
+  },
   shiftButtonLeft: {
-    color: '#08837f'
+    backgroundColor: '#08837f',
+    width: '30%',
+    height: '75%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 3,
   },
   shiftButtonRight: {
-    color: '#e63a46'
+    backgroundColor: '#e63a46',
+    width: '30%',
+    height: '75%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 3,
   }
 });
