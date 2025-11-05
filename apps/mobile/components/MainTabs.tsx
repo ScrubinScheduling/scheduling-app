@@ -46,7 +46,7 @@ export default TabBar;
 
 const styles = StyleSheet.create({
     tabBar: {
-        height: '9%',
+        height: 80,
         backgroundColor: '#f8f8f8',
         borderTopWidth: 1,
         borderTopColor: '#ddd',
