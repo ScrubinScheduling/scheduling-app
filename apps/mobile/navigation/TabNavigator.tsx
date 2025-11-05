@@ -13,9 +13,9 @@ export default function TabNavigator() {
     return (
         <Tab.Navigator tabBar={(props) => <TabBar {...props} />}>
             <Tab.Screen name="Home" component={HomePage} options={{ 
-                title: '', headerTitleAlign: 'center', headerStyle: { backgroundColor: '#3f37c9', borderBottomWidth: 0 }, headerTintColor: '#fff', headerTitleStyle: { fontWeight: 'bold', fontSize: 30 }}} />
+                title: '', headerTitleAlign: 'center', headerStyle: { backgroundColor: '#3f37c9', shadowColor: 'transparent', borderBottomWidth: 0 }, headerTintColor: '#fff', headerTitleStyle: { fontWeight: 'bold', fontSize: 30 }}} />
             <Tab.Screen name="ViewShift" component={ViewShiftPage} options={{
-                title: 'View Shifts', headerTitleAlign: 'center', headerStyle: { backgroundColor: '#3f37c9', shadowColor: 'transparent', borderBottomWidth: 0 }, headerTintColor: '#fff', headerTitleStyle: { fontWeight: 'bold', fontSize: 30 }}} />
+                title: '', headerTitleAlign: 'center', headerStyle: { backgroundColor: '#3f37c9', shadowColor: 'transparent', borderBottomWidth: 0 }, headerTintColor: '#fff', headerTitleStyle: { fontWeight: 'bold', fontSize: 30 }}} />
             <Tab.Screen name="TradeShift" component={TradeShiftPage} options={{
                 title: 'Trade Shifts', headerTitleAlign: 'center', headerStyle: { backgroundColor: '#3f37c9', shadowColor: 'transparent', borderBottomWidth: 0 }, headerTintColor: '#fff', headerTitleStyle: { fontWeight: 'bold', fontSize: 30 }}} />
             <Tab.Screen name="DaysOff" component={DaysOffPage} options={{

@@ -1,8 +1,11 @@
 import { View, Text, Button, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@clerk/clerk-expo';
 import { IconButton } from 'react-native-paper';
 import { useState, useEffect } from 'react';
+
+const { height } = Dimensions.get('window');
 
 export default function HomePage() {
   const { signOut } = useAuth();
@@ -51,9 +54,9 @@ export default function HomePage() {
             <Text style={styles.title}>Good morning, Terry!</Text>
             <TouchableOpacity onPress={() => setNotificationsOn(!notificationsOn)}>
               {notificationsOn ? (
-                <IconButton iconColor="#ffc802" icon="bell" mode="contained" containerColor='#fff' size={20} />
+                <IconButton iconColor="#ffc802" icon="bell" mode="contained" containerColor='#fff' size={16} />
               ) : (
-                <IconButton iconColor="#fff" icon="bell" mode="contained" containerColor='#ffc802' size={20} />
+                <IconButton iconColor="#fff" icon="bell" mode="contained" containerColor='#ffc802' size={16} />
               )}
             </TouchableOpacity>
           </View>
@@ -70,10 +73,14 @@ export default function HomePage() {
                 </View>
               </View>
               <View style={styles.shiftRowTextContainer}>
-                <Ionicons name="time-outline" size={12} color="#fff" />
-                <Text style={[styles.standardText, {fontWeight: 'normal'}]}>8am - 6pm</Text>
-                <Ionicons name="location-outline" size={12} color="#fff" />
-                <Text style={[styles.standardText, {fontWeight: 'normal'}]}>3315 Fairlight Drive</Text>
+                <View style={styles.shiftRowTextContainer}>
+                  <Ionicons name="time-outline" size={12} color="#fff" />
+                  <Text style={[styles.standardText, {fontWeight: 'normal'}]}>8am - 6pm</Text>
+                </View>
+                <View style={styles.shiftRowTextContainer}>
+                  <Ionicons name="location-outline" size={12} color="#fff" />
+                  <Text style={[styles.standardText, {fontWeight: 'normal'}]}>3315 Fairlight Drive</Text>
+                </View>
               </View>
             </View>
           </View>
@@ -148,6 +155,7 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
     justifyContent: 'center',
     flexDirection: 'column',
+    flex: 1,
   },
   shiftRowTextContainer: {
     justifyContent: 'space-between',
