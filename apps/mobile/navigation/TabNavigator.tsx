@@ -17,7 +17,7 @@ export default function TabNavigator() {
             <Tab.Screen name="ViewShift" component={ViewShiftPage} options={{
                 title: '', headerTitleAlign: 'center', headerStyle: { backgroundColor: '#3f37c9', shadowColor: 'transparent', borderBottomWidth: 0 }, headerTintColor: '#fff', headerTitleStyle: { fontWeight: 'bold', fontSize: 30 }}} />
             <Tab.Screen name="TradeShift" component={TradeShiftPage} options={{
-                title: 'Trade Shifts', headerTitleAlign: 'center', headerStyle: { backgroundColor: '#3f37c9', shadowColor: 'transparent', borderBottomWidth: 0 }, headerTintColor: '#fff', headerTitleStyle: { fontWeight: 'bold', fontSize: 30 }}} />
+                title: '', headerTitleAlign: 'center', headerStyle: { backgroundColor: '#3f37c9', shadowColor: 'transparent', borderBottomWidth: 0 }, headerTintColor: '#fff', headerTitleStyle: { fontWeight: 'bold', fontSize: 30 }}} />
             <Tab.Screen name="DaysOff" component={DaysOffPage} options={{
                 title: 'Days Off', headerTitleAlign: 'center', headerStyle: { backgroundColor: '#3f37c9', shadowColor: 'transparent', borderBottomWidth: 0 }, headerTintColor: '#fff', headerTitleStyle: { fontWeight: 'bold', fontSize: 30 }}} />
             <Tab.Screen name="Settings" component={SettingsPage} options={{
