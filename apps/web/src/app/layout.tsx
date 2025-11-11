@@ -24,10 +24,16 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const publishableKey = "pk_test_ZXhjaXRpbmctcGFycm90LTQxLmNsZXJrLmFjY291bnRzLmRldiQ";
-  return (
-    <ClerkProvider publishableKey={publishableKey}>
+  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY as string;
 
+  return (
+    <ClerkProvider
+      publishableKey={publishableKey}
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+      afterSignInUrl="/workspaces"
+      afterSignUpUrl="/workspaces"
+    >
       <html lang="en">
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -36,6 +42,5 @@ export default function RootLayout({
         </body>
       </html>
     </ClerkProvider>
-
   );
 }
