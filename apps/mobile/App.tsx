@@ -12,6 +12,7 @@ import EntryPage from './pages/EntryPage';
 import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
 import HomePage from './pages/HomePage';
+import TabNavigator from '@/navigation/TabNavigator';
 
 const Stack = createNativeStackNavigator();
 
@@ -44,7 +45,7 @@ export default function App() {
 				<NavigationContainer>
 					<SignedIn>
 						<Stack.Navigator>
-							<Stack.Screen name="Home" component={HomePage} />
+							<Stack.Screen name="Main" component={TabNavigator} options={{headerShown: false}}/>
 						</Stack.Navigator>
 					</SignedIn>
 

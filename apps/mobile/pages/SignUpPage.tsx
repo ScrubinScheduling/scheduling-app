@@ -25,9 +25,7 @@ export default function SignUpPage({ navigation }: Props) {
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
-  const [username, setUsername] = useState('');
   const [role, setRole] = useState('');
-  const [pendingVerification, setPendingVerification] = useState(false);
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState<string | null>(null);
 
@@ -35,34 +33,17 @@ export default function SignUpPage({ navigation }: Props) {
     if (!isLoaded) return;
 
     try {
-      await signUp.create({
+      const signUpAttempt = await signUp.create({
         emailAddress,
         password,
         firstName,
-        username,
-      });
-
-      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
-      setPendingVerification(true);
-    } catch (err: any) {
-      console.error(JSON.stringify(err, null, 2));
-      Alert.alert('Error', err.errors?.[0]?.message || 'Something went wrong');
-    }
-  };
-
-  const onVerifyPress = async () => {
-    if (!isLoaded) return;
-
-    try {
-      const signUpAttempt = await signUp.attemptEmailAddressVerification({
-        code,
       });
 
       if (signUpAttempt.status === 'complete') {
         await setActive({ session: signUpAttempt.createdSessionId });
       } else {
         console.error(JSON.stringify(signUpAttempt, null, 2));
-        Alert.alert('Error', 'Verification failed. Please try again.');
+        Alert.alert('Error', 'Sign up failed. Please try again.');
       }
     } catch (err: any) {
       console.error(JSON.stringify(err, null, 2));
@@ -94,21 +75,6 @@ export default function SignUpPage({ navigation }: Props) {
     { id: 'oauth_google', name: 'Google' },
   ];
 
-  if (pendingVerification) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Verify Your Email</Text>
-        <Text style={styles.subtitle}>Check your email for the verification code</Text>
-
-        <TextInput style={styles.input} placeholder="Enter verification code" placeholderTextColor="#888" value={code} onChangeText={setCode} autoCapitalize="none"/>
-        
-        <TouchableOpacity style={styles.primaryButton} onPress={onVerifyPress}>
-          <Text style={styles.primaryButtonText}>Verify Email</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
     <View style={styles.container}>
@@ -117,11 +83,10 @@ export default function SignUpPage({ navigation }: Props) {
       </View>
       <View style={styles.signUpContainer}>
         <Text style={styles.title}>Sign Up</Text>
-        <TextInput style={styles.input} placeholder="Full Name" placeholderTextColor="#888" value={firstName} onChangeText={setFirstName} autoCapitalize='words' />
-        <TextInput style={styles.input} placeholder="Username" placeholderTextColor="#888" value={username} onChangeText={setUsername} autoCapitalize="none" />
-        <TextInput style={styles.input} placeholder="Role" placeholderTextColor="#888" value={role} onChangeText={setRole} />
-        <TextInput style={styles.input} placeholder="Email" placeholderTextColor="#888" value={emailAddress} onChangeText={setEmailAddress} autoCapitalize="none" keyboardType="email-address" />
-        <TextInput style={styles.input} placeholder="Password" placeholderTextColor="#888" value={password} onChangeText={setPassword} secureTextEntry />
+        <TextInput style={styles.input} placeholder="Full Name" placeholderTextColor="#b3b3b3" value={firstName} onChangeText={setFirstName} autoCapitalize='words' />
+        <TextInput style={styles.input} placeholder="Role" placeholderTextColor="#b3b3b3" value={role} onChangeText={setRole} />
+        <TextInput style={styles.input} placeholder="Email" placeholderTextColor="#b3b3b3" value={emailAddress} onChangeText={setEmailAddress} autoCapitalize="none" keyboardType="email-address" />
+        <TextInput style={styles.input} placeholder="Password" placeholderTextColor="#b3b3b3" value={password} onChangeText={setPassword} secureTextEntry />
         
         <TouchableOpacity style={styles.primaryButton} onPress={onSignUpPress}>
             <Text style={styles.primaryButtonText}>Register</Text>
@@ -181,7 +146,7 @@ const styles = StyleSheet.create({
     },
     input: {
       backgroundColor: '#fff',
-      color: '#fff',
+      color: 'black',
       borderColor: '#b3b3b3',
       borderWidth: 1,
       padding: 15,

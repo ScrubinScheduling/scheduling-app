@@ -79,7 +79,7 @@ export default function SignInPage({ navigation }: Props) {
       </View>
       <View style={styles.signInContainer}>
         <Text style={styles.title}>Sign In</Text>
-        <TextInput style={styles.input} placeholder="Username or Email" placeholderTextColor="#b3b3b3" value={emailAddress} onChangeText={setEmailAddress} autoCapitalize="none" />
+        <TextInput style={styles.input} placeholder="Email" placeholderTextColor="#b3b3b3" value={emailAddress} onChangeText={setEmailAddress} autoCapitalize="none" />
         <TextInput style={styles.input} placeholder="Password" placeholderTextColor="#b3b3b3" value={password} onChangeText={setPassword} secureTextEntry />
         
         <TouchableOpacity style={styles.primaryButton} onPress={onSignInPress}>
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: '#fff',
-    color: '#fff',
+    color: 'black',
     borderColor: '#b3b3b3',
     borderWidth: 1,
     padding: 15,
