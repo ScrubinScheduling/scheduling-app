@@ -1,10 +1,20 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, Button } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as SecureStore from 'expo-secure-store';
 import { ClerkProvider, SignedIn, SignedOut, useAuth } from '@clerk/clerk-expo';
 
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import '@/global.css';
+
+import EntryPage from './pages/EntryPage';
+import SignInPage from './pages/SignInPage';
+import SignUpPage from './pages/SignUpPage';
+import HomePage from './pages/HomePage';
+import TabNavigator from '@/navigation/TabNavigator';
+
+const Stack = createNativeStackNavigator();
 
 const tokenCache = {
 	async getToken(key: string) {
@@ -32,18 +42,23 @@ export default function App() {
 	return (
 		<GluestackUIProvider mode="dark">
 			<ClerkProvider publishableKey={PUBLISHABLE_KEY} tokenCache={tokenCache}>
-				<View style={styles.container}>
+				<NavigationContainer>
 					<SignedIn>
-						<Text>Signed in</Text>
-						<AuthDebug />
+						<Stack.Navigator>
+							<Stack.Screen name="Main" component={TabNavigator} options={{headerShown: false}}/>
+						</Stack.Navigator>
 					</SignedIn>
+
 					<SignedOut>
-						<Text>
-							You're signed out. Add <Text style={{ fontWeight: 'bold' }}>SignIn</Text> flow here.
-						</Text>
+						<Stack.Navigator screenOptions={{headerShown: false}}>
+							<Stack.Screen name="Entry" component={EntryPage} />
+							<Stack.Screen name="SignIn" component={SignInPage} />
+							<Stack.Screen name="SignUp" component={SignUpPage} />
+						</Stack.Navigator>
 					</SignedOut>
+
 					<StatusBar style="auto" />
-				</View>
+				</NavigationContainer>
 			</ClerkProvider>
 		</GluestackUIProvider>
 	);
