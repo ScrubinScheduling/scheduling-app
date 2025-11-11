@@ -19,7 +19,7 @@ export default function AppHeader() {
           <Calendar size={30} color="white" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-black">Scrubez</h1>
+          <h1 className="text-xl font-bold text-black">Scrubin</h1>
           <p className="text-gray-500 text-sm">Fairlight Veterinary Services</p>
         </div>
         <div className="flex flex-row gap-4 ml-5">
