@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, Keyboard, TouchableWithoutFeedback, Touchable } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSignIn, useSSO } from '@clerk/clerk-expo';
 import { ActivityIndicator } from 'react-native-paper';
@@ -72,63 +72,84 @@ export default function SignInPage({ navigation }: Props) {
   ];
 
   return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
     <View style={styles.container}>
-      <Text style={styles.title}>Sign In</Text>
-      <TextInput style={styles.input} placeholder="Username or Email" placeholderTextColor="#888" value={emailAddress} onChangeText={setEmailAddress} autoCapitalize="none" />
-      <TextInput style={styles.input} placeholder="Password" placeholderTextColor="#888" value={password} onChangeText={setPassword} secureTextEntry />
-      
-      <TouchableOpacity style={styles.primaryButton} onPress={onSignInPress}>
-        <Text style={styles.primaryButtonText}>Log In</Text>
-      </TouchableOpacity>
-
-      <View style={styles.socialContainer}>
-        <Text style={styles.socialText}>Or sign in with</Text>
-
-        {availableProviders.map((provider) => (
-        <TouchableOpacity style={styles.socialButton} key={provider.id} onPress={() => onSocialSignIn('oauth_google')} disabled={!!loading} >
-            {loading === provider.id ? (
-                <ActivityIndicator color="#fff" />
-            ) : (
-                <Text style={styles.socialButtonText}>{provider.name}</Text>
-            )}
-        </TouchableOpacity>
-        ))}
+      <View style={styles.imageContainer}>
+        <Image style={{height: '80%', width: '54%'}} source={require('assets/signin-page.png')}/>
       </View>
-
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>Don't have an account? </Text>
-        <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-          <Text style={styles.footerLink}>Sign Up</Text>
+      <View style={styles.signInContainer}>
+        <Text style={styles.title}>Sign In</Text>
+        <TextInput style={styles.input} placeholder="Username or Email" placeholderTextColor="#b3b3b3" value={emailAddress} onChangeText={setEmailAddress} autoCapitalize="none" />
+        <TextInput style={styles.input} placeholder="Password" placeholderTextColor="#b3b3b3" value={password} onChangeText={setPassword} secureTextEntry />
+        
+        <TouchableOpacity style={styles.primaryButton} onPress={onSignInPress}>
+            <Text style={styles.primaryButtonText}>Log In</Text>
         </TouchableOpacity>
+
+        <View style={styles.socialContainer}>
+            <Text style={styles.socialText}>Or sign in with</Text>
+
+            {availableProviders.map((provider) => (
+            <TouchableOpacity style={styles.socialButton} key={provider.id} onPress={() => onSocialSignIn('oauth_google')} disabled={!!loading} >
+                {loading === provider.id ? (
+                    <ActivityIndicator color="#fff" />
+                ) : (
+                    <Text style={styles.socialButtonText}>{provider.name}</Text>
+                )}
+            </TouchableOpacity>
+            ))}
+        </View>
+
+        <View style={styles.footer}>
+            <Text style={styles.footerText}>Don't have an account? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+            <Text style={styles.footerLink}>Sign Up</Text>
+            </TouchableOpacity>
+        </View>
       </View>
     </View>
+    </TouchableWithoutFeedback>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: '#3f37c9',
+  },
+  imageContainer: {
+    height: '30%',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  signInContainer: {
+    height: '70%',
+    backgroundColor: '#fff',
     padding: 20,
-    justifyContent: 'center',
-    backgroundColor: '#000',
+    paddingTop: 40,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#fff',
+    color: 'black',
     marginBottom: 30,
     textAlign: 'center',
   },
   input: {
-    backgroundColor: '#1C1C1E',
+    backgroundColor: '#fff',
     color: '#fff',
+    borderColor: '#b3b3b3',
+    borderWidth: 1,
     padding: 15,
     borderRadius: 10,
     marginBottom: 15,
     fontSize: 16,
   },
   primaryButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#f72485',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
@@ -144,7 +165,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   socialText: {
-    color: '#888',
+    color: '#b3b3b3',
     marginBottom: 15,
   },
   socialButton: {
@@ -164,10 +185,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   footerText: {
-    color: '#888',
+    color: 'black',
   },
   footerLink: {
-    color: '#007AFF',
+    color: '#f72485',
     fontWeight: '600',
   },
 });
