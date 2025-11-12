@@ -1,7 +1,14 @@
 "use client";
 import { SignedIn } from "@clerk/nextjs";
-import React, { useState } from "react";
-import { Spin } from "antd";
+import React, { useState, useMemo } from "react";
+import AddShiftModal from "../../../../../components/AddShiftModal";
+import dayjs from "dayjs";
+import { Spin, Button, DatePicker } from "antd";
+import { 
+  getToday, 
+  makeWeek, 
+  moveWeek, 
+  weekLabel } from '../../../../../helpers/time'; 
 import {
   Calendar,
   LayoutDashboard,
@@ -15,147 +22,58 @@ import {
   Plus,
   Clock,
 } from "lucide-react";
-import AddShiftModal from "../../../../../components/AddShiftModal";
 
-type Shift = {
-  id: number;
-  name: string;
-  role: string;
-  startTime: string;
-  endTime: string;
-  day: string;
-};
+import {
+  addWeeks, 
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
+  format
+} from "date-fns"; 
 
-const DAYS = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
+
 
 const page = () => {
-  const [currentWeek, setCurrentWeek] = useState(new Date());
-  const [isLoading, setIsLoading] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [anchor, setAnchor] = useState<Date>(getToday());
+  const week = useMemo(() => makeWeek(anchor), [anchor]);
+  const currentWeek = weekLabel(week); 
 
-  {
-    /* Modal Selections */
+  const nextWeek = () => setAnchor(w => moveWeek(w,1).anchor); // Moves 1 week forwards
+  const prevWeek = () => setAnchor(w => moveWeek(w,-1).anchor); // Moves 1 week backwards
+  
+  // Could be moved into the helper folder
+  // Used to make it so when using datePicker the value
+  // By it is in the right format instead of day.js format
+  const onPickWeek = (value: dayjs.Dayjs | null) => {
+    if (!value) return; 
+    const picked = value.toDate();
+    setAnchor(picked); 
   }
 
-  const showModal = () => {
-    setIsModalOpen(true);
-  };
-
-  const [shift, setShift] = useState<Shift[]>([
-    {
-      id: 1,
-      name: "Alice Cartel",
-      role: "Vet Tech",
-      startTime: "09:00",
-      endTime: "17:00",
-      day: "Monday",
-    },
-    {
-      id: 2,
-      name: "Bob Itsaboy",
-      role: "Receptionist",
-      startTime: "10:00",
-      endTime: "18:00",
-      day: "Tuesday",
-    },
-    {
-      id: 3,
-      name: "Jonny Bravo",
-      role: "Veterinarian",
-      startTime: "08:00",
-      endTime: "16:00",
-      day: "Wednesday",
-    },
-    {
-      id: 4,
-      name: "David Suzuki",
-      role: "Kennel Attendant",
-      startTime: "11:00",
-      endTime: "19:00",
-      day: "Thursday",
-    },
-    {
-      id: 5,
-      name: "Adam Eve",
-      role: "Vetrinarian",
-      startTime: "07:00",
-      endTime: "15:00",
-      day: "Friday",
-    },
-  ]);
-
-  const getWeekRange = () => {
-    const start = new Date(currentWeek);
-    start.setDate(start.getDate() - start.getDay()); // Set to Sunday
-    const end = new Date(start);
-    end.setDate(end.getDate() + 6);
-    return `${start.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    })} - ${end.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    })}`;
-  };
-
   return (
-      <div className="flex h-full flex-col bg-white">
-          
-        {/* Adding Shifts Modal */}
-        <AddShiftModal open={isModalOpen} setOpen={setIsModalOpen} />
-
-        {/* View for shifts */}
-        <div className="flex-1 overflow-auto p-6">
-          {!isLoading ? (
-            <div className="grid grid-cols-7 border-x border-gray-200 divide-x divide-gray-200">
-              {DAYS.map((day, index) => (
-                <div key={index} className="min-h-[600px]">
-                  <div className="flex flex-col items-center justify-center p-4">
-                    <text className="text-black text-lg">{day}</text>
-                    <text className="text-gray-500 text-lg ">
-                      {new Date(
-                        currentWeek.getTime() +
-                          (index - currentWeek.getDay()) * 86400000
-                      ).toLocaleDateString("en-US", { day: "numeric" })}
-                    </text>
-                  </div>
-
-                  {shift
-                    .filter((shift) => shift.day === day)
-                    .map((shift, index) => (
-                      <div
-                        key={index}
-                        className="bg-white m-2 p-2 rounded-lg shadow-md flex flex-col gap-1  border-l-4 border-[#F72585]"
-                      >
-                        <text className="text-black text-sm font-semibold">
-                          {shift.name}
-                        </text>
-                        <text className="text-gray-500 text-sm">
-                          {shift.role}
-                        </text>
-                        <text className="text-gray-500 text-sm flex flex-row items-center">
-                          <Clock size={16} className="mr-1" />
-                          {shift.startTime} - {shift.endTime}
-                        </text>
-                      </div>
-                    ))}
-                </div>
-              ))}
+      <div className="min-h-screen border-b border-border bg-card px-6 py-4">
+        {/* Navigation */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Button onClick={prevWeek} size="large">
+                <ChevronLeft className="h-4 w-4"/>
+              </Button>
+              <DatePicker
+              value={dayjs(anchor)}
+              picker="week"
+              onChange={onPickWeek}
+              format={() => format(week.start, "yyyy MMMM d")}
+              size="large"
+              />
+              <Button onClick={nextWeek} size="large">
+                <ChevronRight className="h-4 w-4"/>
+              </Button>
             </div>
-          ) : (
-            <div className="flex  flex-row justify-center items-center h-full">
-              <Spin size="large" />
-            </div>
-          )}
+            <Button size="large" onClick={() => setAnchor(getToday())}>
+              Today
+            </Button>
+          </div>
         </div>
       </div>
   );

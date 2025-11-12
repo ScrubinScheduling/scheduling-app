@@ -62,3 +62,4 @@ export function weekLabel(w: Week): String {
     if (sameYear) return `${format(w.start, "MMM d")} , ${format(w.end, "MMM d")} , ${format(w.end, "yyyy")}`;
     return `${format(w.start, "MMM d, yyyy")} , ${format(w.end, "MMM d, yyyy")}`;
 }
+
