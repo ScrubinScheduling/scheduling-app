@@ -37,7 +37,7 @@ export default function Page() {
                 <div className="flex flex-1 items-center justify-center px-4">
                     <div className="w-full max-w-md">
                         <h1 className="mb-8 text-center text-3xl font-semibold">Workspaces</h1>
-                        <WorkspaceList workspaces={workspaces} />
+                        <WorkspaceList workspaces={workspaces ?? []} />
                     </div>
                 </div>
 

@@ -195,44 +195,7 @@ app.post('/dummy-create-shift', async (req, res) => {
     }
 })
 
-app.post('/clerk/webhook', async (req, res) => {
-    const evt = await verifyWebhook(req)
-    const {id, first_name, last_name} = evt.data as UserJSON
 
-    const workspaceId = req.body.workspaceId
-
-    const user = await prisma.user.findFirst({
-        where: {
-            clerkId: userId,
-        },
-    })
-
-    if (!user) {
-        return res.status(404).json({ error: 'User not found' })
-    }
-
-    const workspace = await prisma.workspace.findFirst({
-        where: {
-            id: workspaceId,
-        },
-    })
-
-    if (!workspace) {
-        return res.status(404).json({ error: 'User not found' })
-    }
-
-    if (workspace.adminId === user.id) {
-        const invitation = await prisma.invitation.create({
-            data: {
-                workspaceId,
-            },
-        })
-
-        res.status(200).json(invitation)
-    } else {
-        res.status(403).json({ error: 'Unauthorized to create invitations for this workspace' })
-    }
-})
 
 app.get('/invitations/:id', async (req, res) => {
     const { isAuthenticated, userId: clerkId } = getAuth(req)
@@ -315,7 +278,7 @@ app.post('/invitations/:id/accept', async (req, res) => {
 
 app.post('/clerk/webhook', async (req, res) => {
     const evt  = await verifyWebhook(req)
-    const { id } = evt.data
+    const { id, first_name, last_name } = evt.data
     if (evt.type === 'user.created') {
         
         await prisma.user.create({
