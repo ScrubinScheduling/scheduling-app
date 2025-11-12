@@ -212,7 +212,7 @@ export default function TeamPage() {
                                 className="inline-flex items-center rounded-lg px-3 py-2 bg-red-600 hover:bg-red-700"
                               >
                                 <div className="text-white">
-                                Remove
+                                <Trash2 size={16} /> Remove
                                 </div>
                               </button>
                             </AlertDialogTrigger>

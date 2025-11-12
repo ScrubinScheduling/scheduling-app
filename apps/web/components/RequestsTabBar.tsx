@@ -5,11 +5,7 @@ import { useParams, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import React from "react";
 
-type Props = {
-  sticky?: boolean;
-};
-
-export default function RequestsTabBar({ sticky = false }: Props) {
+export default function RequestsTabBar() {
   const { id } = useParams<{ id: string }>();
   const pathname = usePathname();
   const base = `/workspace/${id}/requests`;
@@ -24,10 +20,9 @@ export default function RequestsTabBar({ sticky = false }: Props) {
     <div
       className={[
         "w-full bg-white border-b border-black",
-        sticky ? "sticky top-14 z-30" : "", // assumes main header is 56px (h-14)
       ].join(" ")}
     >
-      <div className="mx-auto max-w-6xl px-4 py-3">
+      <div className="mx-auto max-w-6xl px-4 py-3 flex justify-center">
         <div role="tablist" aria-label="Requests tabs"
              className="relative inline-flex rounded-full bg-gray-100 p-1">
           {tabs.map((t) => {
