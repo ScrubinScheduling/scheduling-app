@@ -15,16 +15,16 @@ import { json } from "stream/consumers";
 type AddShiftModalProps = {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  users: any; 
 };
 
-const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen }) => {
-  const [employee, setEmployee] = useState<Number | undefined>(undefined);
+const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen, users }) => {
+  const [employee, setEmployee] = useState<any | undefined>(undefined);
   const [dates, setDates] = useState<Dayjs[] | null>(null);
   const [timeRange, setTimeRange] = useState<[Dayjs, Dayjs] | null>(null);
   const [alertDesc, setAlertDesc] = useState<string | null>(null);
   const [openAlert, setOpenAlert] = useState(false);
-  const [isLoading, setIsloading] = useState(false);
-
+  // const [isLoading, setIsloading] = useState(false);
   const handleCancel = () => {
     setOpen(false);
   };
@@ -40,7 +40,7 @@ const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen }) => {
 
     const payload = {
       employee,
-      workspaceId: 1,
+      workspaceId: 2,
       breakDuration: 30,
       shifts,
     };
@@ -116,14 +116,11 @@ const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen }) => {
                 value={employee}
                 style={{ width: 200 }}
                 placeholder="Select Employee"
-                onChange={(value) => setEmployee(1)}
-                options={[
-                  { value: "Alice Cartel", label: "Alice Cartel" },
-                  { value: "Bob Itsaboy", label: "Bob Itsaboy" },
-                  { value: "Jonny Bravo", label: "Jonny Bravo" },
-                  { value: "David Suzuki", label: "David Suzuki" },
-                  { value: "Adam Eve", label: "Adam Eve" },
-                ]}
+                onChange={(value) => setEmployee(value)}
+                options={users?.map(user => ({
+                value: user.id,
+                label: user.firstName,
+                })) ?? []}
                 allowClear
               />
             </div>
