@@ -14,29 +14,35 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useAuth } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
+import { createApiClient } from "@scrubin/api-client";
 
-export default function InvitationCard({ workspaceName, workspaceOwnerName, workspaceOwnerEmail, invitationId }) {
+type InvitationCardProps = {
+	workspaceName: string;
+	workspaceOwnerName: string;
+	workspaceOwnerEmail: string;
+	invitationId: string;
+	workspaceId: number;
+};
+
+export default function InvitationCard({ workspaceName, workspaceOwnerName, workspaceOwnerEmail, invitationId, workspaceId }: InvitationCardProps) {
 
     const [isLoading, setIsLoading] = useState(false);
     const { getToken } = useAuth();
+    
+    const apiClient = createApiClient({
+        baseUrl: "http://localhost:4000",
+        getToken
+    });
+
     const clickHandler = async () => {
         setIsLoading(true);
-        const token = await getToken();
-
-        const res = await fetch(`http://localhost:4000/invitations/${invitationId}/accept`, {
-            method: "POST",
-            headers: {Authorization: `Bearer ${token}`}
-        });
-
-        if (res.ok) {
-            return redirect("/workspaces");
-        } else {
-            console.error("Something went wrong");
+        try {
+            await apiClient.acceptInvitation(invitationId);
+            redirect("/workspaces");
+        } catch (error) {
+            console.error("Something went wrong", error);
+            setIsLoading(false);
         }
-
-        
-
-
     }
     return (
         <div>
