@@ -91,19 +91,19 @@ export function createApiClient({ baseUrl, getToken }) {
 				body: { at }
 			}),
 
-		// Invitations
-		getInvitationsByWorkspace: (workspaceId, params?) =>
-			request({ method: 'GET', path: `/workspaces/${workspaceId}/invitations`, params }),
-		getInvitation: (workspaceId, id) =>
-			request({ method: 'GET', path: `/workspaces/${workspaceId}/invitations/${id}` }),
-		createInvitation: (workspaceId, data) =>
-			request({ method: 'POST', path: `/workspaces/${workspaceId}/invitations`, body: data }),
-		deleteInvitation: (workspaceId, id) =>
-			request({ method: 'DELETE', path: `/workspaces/${workspaceId}/invitations/${id}` }),
-		acceptInvitation: (workspaceId, id) =>
+		// Invitations 
+		getInvitations: (params?) =>
+			request({ method: 'GET', path: '/invitations', params }),
+		getInvitation: (id) =>
+			request({ method: 'GET', path: `/invitations/${id}` }),
+		createInvitation: (data) =>
+			request({ method: 'POST', path: '/invitations', body: data }),
+		deleteInvitation: (id) =>
+			request({ method: 'DELETE', path: `/invitations/${id}` }),
+		acceptInvitation: (id) =>
 			request({
 				method: 'POST',
-				path: `/workspaces/${workspaceId}/invitations/${id}/accept`,
+				path: `/invitations/${id}/accept`,
 				body: {}
 			}),
 
