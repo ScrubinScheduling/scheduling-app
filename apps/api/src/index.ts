@@ -30,10 +30,10 @@ app.use(clerkMiddleware())
 app.use('/users', usersRouter)
 app.use('/workspaces', workspacesRouter)
 app.use('/permissions', permissionsRouter)
+app.use('/invitations', invitationsRouter)
 
 // Mount nested workspace routes
 app.use('/workspaces/:workspaceId/shifts', shiftsRouter)
-app.use('/workspaces/:workspaceId/invitations', invitationsRouter)
 app.use('/workspaces/:workspaceId/users', workspaceUsersRouter)
 app.use('/workspaces/:workspaceId/memberships', workspaceMembershipsRouter)
 app.use('/workspaces/:workspaceId/roles', rolesRouter)

@@ -3,15 +3,27 @@ import { getAuth } from '@clerk/express';
 import { clerkClient } from '@clerk/express';
 import { prisma } from '../db';
 
-const router = express.Router({ mergeParams: true });
+const router = express.Router();
 
-// GET /workspaces/:workspaceId/invitations
+// GET /invitations?workspaceId=:workspaceId (optional filter)
 router.get('/', async (req, res) => {
-	// TODO: Implement get invitations by workspace
-	res.status(501).json({ error: 'Not implemented' });
+	const { workspaceId } = req.query;
+	
+	if (workspaceId) {
+		// Get invitations by workspace
+		const invitations = await prisma.invitation.findMany({
+			where: {
+				workspaceId: Number(workspaceId),
+			},
+		});
+		res.status(200).json(invitations);
+	} else {
+		// TODO: Implement get all invitations (if needed)
+		res.status(501).json({ error: 'Not implemented' });
+	}
 });
 
-// GET /workspaces/:workspaceId/invitations/:id
+// GET /invitations/:id
 router.get('/:id', async (req, res) => {
 	const { isAuthenticated, userId: clerkId } = getAuth(req);
 
@@ -59,14 +71,18 @@ router.get('/:id', async (req, res) => {
 	});
 });
 
-// POST /workspaces/:workspaceId/invitations
+// POST /invitations
 router.post('/', async (req, res) => {
 	const { userId } = getAuth(req);
-	const workspaceId = Number(req.params.workspaceId);
+	const { workspaceId } = req.body;
+
+	if (!workspaceId) {
+		return res.status(400).json({ error: 'workspaceId is required' });
+	}
 
 	const user = await prisma.user.findFirst({
 		where: {
-			clerkId: userId,
+			clerkId: userId || undefined,
 		},
 	});
 
@@ -76,7 +92,7 @@ router.post('/', async (req, res) => {
 
 	const workspace = await prisma.workspace.findFirst({
 		where: {
-			id: workspaceId,
+			id: Number(workspaceId),
 		},
 	});
 
@@ -87,7 +103,7 @@ router.post('/', async (req, res) => {
 	if (workspace.adminId === user.id) {
 		const invitation = await prisma.invitation.create({
 			data: {
-				workspaceId,
+				workspaceId: Number(workspaceId),
 			},
 		});
 
@@ -97,13 +113,13 @@ router.post('/', async (req, res) => {
 	}
 });
 
-// DELETE /workspaces/:workspaceId/invitations/:id
+// DELETE /invitations/:id
 router.delete('/:id', async (req, res) => {
 	// TODO: Implement delete invitation
 	res.status(501).json({ error: 'Not implemented' });
 });
 
-// POST /workspaces/:workspaceId/invitations/:id/accept
+// POST /invitations/:id/accept
 router.post('/:id/accept', async (req, res) => {
 	const { id: invitationId } = req.params;
 	const { userId } = getAuth(req);
@@ -116,6 +132,10 @@ router.post('/:id/accept', async (req, res) => {
 
 	if (!invitation) {
 		return res.status(404).json({ error: 'Invitation not Found' });
+	}
+
+	if (!userId) {
+		return res.status(401).json({ error: 'Unauthenticated' });
 	}
 
 	const membership = await prisma.userWorkspaceMembership.create({
