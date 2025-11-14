@@ -57,8 +57,7 @@ const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen }) => {
 
       if (!res.ok) throw new Error((await res.json()) || `HTTP ${res.status}`);
       const data = await res.json();
-
-      console.log(data.inserted);
+      console.log(data); 
       console.log("Submitting shift:", payload);
       setAlertDesc(null);
       setOpenAlert(false);

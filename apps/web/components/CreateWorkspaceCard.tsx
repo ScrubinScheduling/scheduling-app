@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@clerk/nextjs";
+import { createApiClient } from "@scrubin/api-client";
 
 export default function CreateWorkspaceCard() {
     const [isOpen, setIsOpen] = useState(false);
@@ -24,29 +25,24 @@ export default function CreateWorkspaceCard() {
     const [location, setLocation] = useState("");
     const { getToken } = useAuth();
 
-    const handleWorkspaceCreation = async () => {
+    const apiClient = createApiClient({
+        baseUrl: "http://localhost:4000",
+        getToken
+    });
 
-        const token = await getToken();
-        const res = await fetch("http://localhost:4000/workspaces", {
-            method: 'POST',
-            headers: { "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-             }, 
-            body: JSON.stringify({
+    const handleWorkspaceCreation = async () => {
+        try {
+            await apiClient.createWorkspace({
                 name,
                 location
-            })
-        });
+            });
 
-
-        if (!res.ok) {
-            console.error("Workspace Not Created");
-            return;
+            setName("");
+            setLocation("");
+            setIsOpen(false);
+        } catch (error) {
+            console.error("Workspace Not Created", error);
         }
-
-        setName("");
-        setLocation("");
-        setIsOpen(false);
     }
 
     return (

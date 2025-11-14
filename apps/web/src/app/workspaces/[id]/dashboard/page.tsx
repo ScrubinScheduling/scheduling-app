@@ -44,7 +44,6 @@ const page = () => {
   {
     /* Modal Selections */
   }
-
   const showModal = () => {
     setIsModalOpen(true);
   };

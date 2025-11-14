@@ -4,37 +4,42 @@ import { prisma } from '../db';
 const router = express.Router({ mergeParams: true });
 
 router.get('/', async (req, res) => {
-	// TODO: Implement get shift requests by workspace
+	// TODO: Implement get roles
 	res.status(501).json({ error: 'Not implemented' });
 });
 
 router.get('/:id', async (req, res) => {
-	// TODO: Implement get shift request
+	// TODO: Implement get role
 	res.status(501).json({ error: 'Not implemented' });
 });
 
 router.post('/', async (req, res) => {
-	// TODO: Implement create shift request
+	// TODO: Implement create role
 	res.status(501).json({ error: 'Not implemented' });
 });
 
 router.patch('/:id', async (req, res) => {
-	// TODO: Implement update shift request
+	// TODO: Implement update role
 	res.status(501).json({ error: 'Not implemented' });
 });
 
 router.delete('/:id', async (req, res) => {
-	// TODO: Implement delete shift request
+	// TODO: Implement delete role
 	res.status(501).json({ error: 'Not implemented' });
 });
 
-router.post('/:id/approve', async (req, res) => {
-	// TODO: Implement approve shift request
+router.get('/:roleId/members', async (req, res) => {
+	// TODO: Implement get role members
 	res.status(501).json({ error: 'Not implemented' });
 });
 
-router.post('/:id/reject', async (req, res) => {
-	// TODO: Implement reject shift request
+router.put('/:roleId/members/:userId', async (req, res) => {
+	// TODO: Implement assign user to role
+	res.status(501).json({ error: 'Not implemented' });
+});
+
+router.delete('/:roleId/members/:userId', async (req, res) => {
+	// TODO: Implement revoke user from role
 	res.status(501).json({ error: 'Not implemented' });
 });
 
