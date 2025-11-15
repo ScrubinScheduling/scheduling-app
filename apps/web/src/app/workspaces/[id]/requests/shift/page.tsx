@@ -27,7 +27,6 @@ type RequestStatus = "pending" | "approved" | "denied";
 
 type RequestBase = {
   id: string;
-  createdAt: string; // ISO
   status: RequestStatus;
 };
 
@@ -238,7 +237,7 @@ export default function ShiftRequestsPage() {
                               Trade: {req.from.name} ↔ {req.to.name}
                             </div>
                             <div className="text-xs text-gray-600">
-                              {req.from.date} ({req.from.start}-{req.from.end}) ↔ {req.to.date} ({req.to.start}-{req.to.end})
+                              {req.from.date} ↔ {req.to.date}
                             </div>
                           </>
                         )}
@@ -274,8 +273,8 @@ export default function ShiftRequestsPage() {
                     <ArrowLeftRight size={18} />
                   )}
                 </div>
-                <div className="text-sm text-gray-500">
-                  Created {new Date(selected.createdAt).toLocaleString()}
+                <div className="text-sm font-semibold text-gray-800">
+                  {selected.kind === "timeoff" ? "Time Off Request" : "Trade Request"}
                 </div>
               </div>
               {statusChip(selected.status)}
