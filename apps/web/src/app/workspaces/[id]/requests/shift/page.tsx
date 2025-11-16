@@ -66,43 +66,71 @@ export default function ShiftRequestsPage() {
   );
 
   React.useEffect(() => {
-    let alive = true;
-    (async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const token = await getToken();
-        const res = await fetch(
-          `${API}/workspaces/${id}/shift-requests?status=pending`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
-        const data = await res.json();
-        // Expecting { requests: AnyRequest[] } from the skeleton route.
-        const list: AnyRequest[] = data.requests ?? [];
-        if (!alive) return;
-        setRequests(list);
-        setSelectedId(list[0]?.id ?? "");
-      } catch (e: any) {
-        if (!alive) return;
-        setError(e?.message ?? "Failed to load requests");
-      } finally {
-        if (!alive) return;
-        setLoading(false);
-      }
-    })();
+  let alive = true;
 
-    return () => {
-      alive = false;
-    };
-  }, [id, getToken]);
-  
+  (async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const token = await getToken();
+      const headers: HeadersInit = {
+        Authorization: `Bearer ${token}`,
+      };
+
+      // Fetch trade requests (shift-requests) and time off requests in parallel
+      const [tradeRes, timeoffRes] = await Promise.all([
+        fetch(`${API}/workspaces/${id}/shift-requests?status=pending`, {
+          headers,
+        }),
+        fetch(`${API}/workspaces/${id}/timeoff-requests?status=pending`, {
+          headers,
+        }),
+      ]);
+
+      if (!tradeRes.ok) {
+        throw new Error(`Shift requests HTTP ${tradeRes.status}`);
+      }
+      if (!timeoffRes.ok) {
+        throw new Error(`Time off requests HTTP ${timeoffRes.status}`);
+      }
+
+      const tradeData = await tradeRes.json();
+      const timeoffData = await timeoffRes.json();
+
+      const tradeList: AnyRequest[] = (tradeData.requests ?? []).map(
+        (r: AnyRequest) => ({
+          ...r,
+          id: `trade-${r.id}`,
+        })
+      );
+
+      const timeoffList: AnyRequest[] = (timeoffData.requests ?? []).map(
+        (r: AnyRequest) => ({
+          ...r,
+          id: `timeoff-${r.id}`,
+        })
+      );
+
+      const combined: AnyRequest[] = [...timeoffList, ...tradeList];
+
+      if (!alive) return;
+      setRequests(combined);
+      setSelectedId(combined[0]?.id ?? "");
+    } catch (e: any) {
+      if (!alive) return;
+      setError(e?.message ?? "Failed to load requests");
+    } finally {
+      if (!alive) return;
+      setLoading(false);
+    }
+  })();
+
+  return () => {
+    alive = false;
+  };
+}, [id, getToken]);
+
 
   // Confirmation dialog state
   const [confirm, setConfirm] = React.useState<{
@@ -122,9 +150,17 @@ export default function ShiftRequestsPage() {
 
     try {
       const token = await getToken();
-      const path = confirm.action === "approve" ? "approve" : "reject";
+     const path = confirm.action === "approve" ? "approve" : "reject";
+      const baseRoute =
+        selected.kind === "timeoff" ? "timeoff-requests" : "shift-requests";
+
+      // Strip the "timeoff-" / "trade-" prefix to get the DB id
+      const rawId = selected.id.includes("-")
+        ? selected.id.split("-")[1]
+        : selected.id;
+
       const res = await fetch(
-        `${API}/workspaces/${id}/shift-requests/${selected.id}/${path}`,
+        `${API}/workspaces/${id}/${baseRoute}/${rawId}/${path}`,
         {
           method: "POST",
           headers: {

@@ -18,6 +18,7 @@ model User {
   UserWorkspaceMembership UserWorkspaceMembership[]
   UserRoleMembership      UserRoleMembership[]
   Shift                   Shift[]
+  timeOffRequests         TimeOffRequest[]
 }
 
 model UserWorkspaceMembership {
@@ -36,6 +37,7 @@ model Workspace {
   location        String
   memberships     UserWorkspaceMembership[]
   roleMemberships UserRoleMembership[]
+  timeOffRequests TimeOffRequest[]
 }
 
 model Shift {
@@ -96,4 +98,15 @@ model Invitation {
 model Meeting {
   id          Int @id @default(autoincrement())
   workspaceId Int
+}
+
+model TimeOffRequest {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  workspaceId Int
+  startDate   DateTime
+  endDate     DateTime
+  status      Int
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 }
