@@ -14,7 +14,7 @@ type MemberDTO = {
 };
 
 export async function listMembers(req: Request, res: Response) {
-  const workspaceId = Number(req.params.id);
+  const workspaceId = Number(req.params.workspaceId ?? req.params.id);
 
   const rows = await prisma.userWorkspaceMembership.findMany({
     where: { workspaceId },
@@ -69,7 +69,7 @@ export async function listMembers(req: Request, res: Response) {
 }
 
 export async function removeMember(req: Request, res: Response) {
-  const workspaceId = Number(req.params.id);
+  const workspaceId = Number(req.params.workspaceId ?? req.params.id);
   const userId = Number(req.params.userId);
 
   await prisma.userWorkspaceMembership.deleteMany({

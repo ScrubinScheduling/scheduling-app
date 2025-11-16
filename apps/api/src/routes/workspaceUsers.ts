@@ -1,12 +1,10 @@
 import express from 'express';
 import { prisma } from '../db';
+import { listMembers, removeMember } from '../controllers/memberController';
 
 const router = express.Router({ mergeParams: true });
 
-router.get('/', async (req, res) => {
-	// TODO: Implement get workspace members
-	res.status(501).json({ error: 'Not implemented' });
-});
+router.get('/', listMembers);
 
 router.get('/:userId/shifts', async (req, res) => {
 	// TODO: Implement get user shifts
@@ -33,10 +31,7 @@ router.post('/', async (req, res) => {
 	res.status(501).json({ error: 'Not implemented' });
 });
 
-router.delete('/:userId', async (req, res) => {
-	// TODO: Implement remove member from workspace
-	res.status(501).json({ error: 'Not implemented' });
-});
+router.delete('/:userId', removeMember);
 
 export default router;
 

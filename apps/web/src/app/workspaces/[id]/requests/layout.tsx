@@ -10,7 +10,7 @@ export default function RequestsLayout({
  }) {
   return (
     <>
-      <RequestsTabBar sticky />
+      <RequestsTabBar />
       <main className="mx-auto max-w-6xl w-full">{children}</main>
     </>
   );

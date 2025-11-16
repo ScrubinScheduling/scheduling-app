@@ -9,8 +9,15 @@ import {
   Bolt,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
+import { useParams, usePathname } from "next/navigation";
 
 export default function AppHeader() {
+  const { id } = useParams<{ id: string }>();
+  const href_dashboard = `/workspaces/${id}/dashboard`;
+  const href_team = `/workspaces/${id}/team`;
+  const href_roles = `/workspaces/${id}/roles`;
+  const href_requests = `/workspaces/${id}/requests`;
+  
   return (
     <div className="w-full bg-white p-4 shadow flex-row justify-between items-center flex border-b-gray-500 border-b">
       {/* Left Header */}
@@ -23,22 +30,22 @@ export default function AppHeader() {
           <p className="text-gray-500 text-sm">Fairlight Veterinary Services</p>
         </div>
         <div className="flex flex-row gap-4 ml-5">
-          <Link href="/dashboard" className="flex flex-row gap-2 items-center bg-gray-100 p-2 rounded-lg cursor-pointer hover:bg-gray-200">
+          <Link href={href_dashboard} className="flex flex-row gap-2 items-center bg-gray-100 p-2 rounded-lg cursor-pointer hover:bg-gray-200">
             <LayoutDashboard size={20} color="gray" />
             <h1 className="text-gray-500 text-md">Dashboard</h1>
           </Link>
-          <Link href="/Team" className="flex flex-row gap-2 items-center bg-gray-100 p-2 rounded-lg cursor-pointer hover:bg-gray-200">
+          <Link href={href_team} className="flex flex-row gap-2 items-center bg-gray-100 p-2 rounded-lg cursor-pointer hover:bg-gray-200">
             <UsersRound size={20} color="gray" />
             <h1 className="text-gray-500 text-md">Team</h1>
           </Link>
-          <button className="flex flex-row gap-2 items-center bg-gray-100 p-2 rounded-lg cursor-pointer hover:bg-gray-200">
+          <Link href={href_roles} className="flex flex-row gap-2 items-center bg-gray-100 p-2 rounded-lg cursor-pointer hover:bg-gray-200">
             <UserRoundCog size={20} color="gray" />
             <h1 className="text-gray-500 text-md">Roles</h1>
-          </button>
-          <button className="flex flex-row gap-2 items-center bg-gray-100 p-2 rounded-lg cursor-pointer hover:bg-gray-200">
+          </Link>
+          <Link href={href_requests} className="flex flex-row gap-2 items-center bg-gray-100 p-2 rounded-lg cursor-pointer hover:bg-gray-200">
             <Send size={20} color="gray" />
             <h1 className="text-gray-500 text-md">Requests</h1>
-          </button>
+          </Link>
         </div>
       </div>
 
