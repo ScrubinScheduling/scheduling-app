@@ -9,6 +9,7 @@
 		"lint": "eslint"
 	},
 	"dependencies": {
+		"@ant-design/icons": "5.x",
 		"@clerk/nextjs": "^6.33.3",
 		"@hookform/resolvers": "^5.2.2",
 		"@radix-ui/react-accordion": "^1.2.12",

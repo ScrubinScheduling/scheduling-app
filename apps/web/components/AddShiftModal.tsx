@@ -10,22 +10,24 @@ import {
   Flex,
   Alert,
 } from "antd";
-import { json } from "stream/consumers";
-
+import { LoadingOutlined } from '@ant-design/icons';
 type AddShiftModalProps = {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   users: any;
-  workspaceId: Number; 
+  workspaceId: Number;
+  onSuccess?: ()=> void | Promise<void>;  
+
 };
 
-const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen, users, workspaceId }) => {
+const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen, users, workspaceId, onSuccess }) => {
   const [employee, setEmployee] = useState<any | undefined>(undefined);
   const [dates, setDates] = useState<Dayjs[] | null>(null);
   const [timeRange, setTimeRange] = useState<[Dayjs, Dayjs] | null>(null);
   const [alertDesc, setAlertDesc] = useState<string | null>(null);
   const [openAlert, setOpenAlert] = useState(false);
-  // const [isLoading, setIsloading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
   const handleCancel = () => {
     setOpen(false);
   };
@@ -60,12 +62,20 @@ const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen, users, wor
       const data = await res.json();
       console.log(data); 
       console.log("Submitting shift:", payload);
+
       setAlertDesc(null);
       setOpenAlert(false);
       setEmployee(undefined);
       setDates(null);
       setTimeRange(null);
-      setOpen(false);
+      
+      if (onSuccess) {
+        await onSuccess();
+      }
+      else {
+        setOpen(false); 
+      }
+
     } catch (e) {
       console.log("Error adding shifts", e);
     }
@@ -162,6 +172,9 @@ const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen, users, wor
               type="primary"
               className="bg-[#F72585]"
               onClick={handleSubmit}
+              loading={isSubmitting &&  <LoadingOutlined />}
+              
+              
             >
               Add Shift
             </Button>

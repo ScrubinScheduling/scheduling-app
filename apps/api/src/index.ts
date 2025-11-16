@@ -237,7 +237,7 @@ app.post('/dummy-create-shift', async (req, res) => {
 
                 return {
                     userId: employee,
-                    workspaceId: 3,
+                    workspaceId: workspaceId,
                     breakDuration: Number(breakDuration) || 30,
                     startTime: start,
                     endTime: end,
@@ -298,32 +298,7 @@ app.get('/get-users/:workspaceId', async (req, res) => {
     } catch (error) {}
 })
 
-// app.get('/shifts/:workspaceId', async (req, res) => {
-//     try {
-//         const workspaceId = Number(req.params.workspaceId)
-//         const { start, end } = req.query
-//         if (!Number.isInteger(workspaceId))
-//             return res.status(400).json({ message: 'Invalid workspaceId' })
-//         if (typeof start !== 'string' || typeof end !== 'string') {
-//             return res.status(400).json({ message: 'Missing start/end query params' })
-//         }
-//         const startDate = new Date(start)
-//         const endDate = new Date(end)
-//         if (typeof start !== 'string' || typeof end !== 'string') {
-//             return res.status(400).json({ message: 'Missing start/end query params' })
-//         }
-//         const shifts = await prisma.shift.findMany({
-//             where: { workspaceId, startTime: { lt: endDate }, endTime: { gt: startDate } },
-//             orderBy: { startTime: 'asc' },
-//             include: { user: true },
-//         })
 
-//         res.status(200).json(shifts)
-//     } catch (error) {
-//         console.log('Error in index route', error)
-//         res.status(500).json({ message: 'Internal server error' })
-//     }
-// })
 
 app.get('/shifts/:workspaceId/weekly', async (req, res) => {
     try {

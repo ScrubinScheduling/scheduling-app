@@ -1,19 +1,20 @@
 "use client";
-import { SignedIn } from "@clerk/nextjs";
 import React, { useState, useMemo, useEffect, use } from "react";
 import AddShiftModal from "../../../../../components/AddShiftModal";
 import dayjs from "dayjs";
 import { Spin, Button, DatePicker } from "antd";
+import { LoadingOutlined } from '@ant-design/icons';
 import { 
   getToday, 
   makeWeek, 
-  moveWeek, } from '../../../../../helpers/time'; 
+  moveWeek,
+  onPickWeek } from '../../../../../helpers/time'; 
 import {
   UsersRound,
   ChevronLeft,
   ChevronRight,
   Plus,
-  Coffee
+  Coffee,
 } from "lucide-react";
 
 import {
@@ -34,7 +35,8 @@ type WeeklyResponse = {
 const page = ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = use(params);
   const [anchor, setAnchor] = useState<Date>(getToday());
-  const [isModal, setIsModal] = useState<any>(false);
+  const [isModal, setIsModal] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false); 
   const [shifts, setShifts] = useState<WeeklyResponse>({
   days: [],
   users: [],
@@ -45,28 +47,34 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
   const nextWeek = () => setAnchor(w => moveWeek(w,1).anchor); // Moves 1 week forwards
   const prevWeek = () => setAnchor(w => moveWeek(w,-1).anchor); // Moves 1 week backwards
 
-  const getUsers = async() => {
-  try {
-    const response = await fetch(`http://localhost:4000/get-users/${id}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "Application/JSON"
-      }
-    }); 
-    
-    if (!response.ok) throw new Error("Was unable to fetch users");
-    const data = await response.json();
-    console.log(data); 
-    setUsers(data.users); 
 
-  } catch (error) {
-    // Need a better error handling system
-    console.log("Error fetching users"); 
-  }
+  const getUsers = async() => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`http://localhost:4000/get-users/${id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "Application/JSON"
+        }
+      }); 
+      
+      if (!response.ok) throw new Error("Was unable to fetch users");
+      const data = await response.json();
+      console.log(data); 
+      setUsers(data.users); 
+      setIsLoading(false);
+
+    } catch (error) {
+      // Need a better error handling system
+      console.log("Error fetching users"); 
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   const getShifts = async() => {
     try {
+      setIsLoading(true); 
       const params = new URLSearchParams({
         start: week.start.toISOString(),
         end: week.end.toISOString()
@@ -75,26 +83,34 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
 
       if (!response.ok) throw new Error("Could not get shifts");
       const data: WeeklyResponse = await response.json();
-      setShifts(data);  
+      setShifts(data); 
+      setIsLoading(false);  
 
     } catch (error) {
       console.log(error); 
+    } finally {
+      setIsLoading(false); 
     }
   };
+
+  const handleShiftAdded = async() => {
+    try {
+      setIsLoading(true);
+      await getShifts();
+      setIsModal(false);
+      setIsLoading(false);  
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false); 
+    }
+    
+  }
 
  useEffect( () => {
   getUsers();
   getShifts();    
  }, [id, week.start, week.end]); 
-  
-  // Could be moved into the helper folder
-  // Used to make it so when using datePicker the value
-  // By it is in the right format instead of day.js format
-  const onPickWeek = (value: dayjs.Dayjs | null) => {
-    if (!value) return; 
-    const picked = value.toDate();
-    setAnchor(picked); 
-  }
 
   return (
       <div className="min-h-screen border-b border-border bg-card px-6 py-4">
@@ -108,7 +124,7 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
               <DatePicker
               value={dayjs(anchor)}
               picker="week"
-              onChange={onPickWeek}
+              onChange={(value) => onPickWeek(value, setAnchor)}
               format={() => format(week.start, "yyyy MMMM d")}
               size="large"
               
@@ -128,6 +144,7 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
         </div>
 
         {/* Day headers */}
+        <Spin spinning={isLoading} indicator={<LoadingOutlined />} size="large">
         <div className="flex-1 overflow-auto pt-5">
             <div className="min-w-[1200px]">
               <div className="grid grid-cols-8 gap-2 mb-2">
@@ -185,7 +202,8 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
               </div>
             </div>
         </div>
-        <AddShiftModal open={isModal} setOpen={setIsModal} users={users} workspaceId={Number(id)}/>
+        </Spin>
+        <AddShiftModal open={isModal} setOpen={setIsModal} users={users} workspaceId={Number(id)} onSuccess={handleShiftAdded}/>
       </div>
   );
 };

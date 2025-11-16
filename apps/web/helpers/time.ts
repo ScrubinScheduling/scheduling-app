@@ -6,6 +6,7 @@ import {
     format
 } from 'date-fns'; 
 
+import dayjs from 'dayjs';
 import type {Day} from 'date-fns'; 
 
 export type Week = {
@@ -63,3 +64,8 @@ export function weekLabel(w: Week): String {
     return `${format(w.start, "MMM d, yyyy")} , ${format(w.end, "MMM d, yyyy")}`;
 }
 
+export  function onPickWeek(value: dayjs.Dayjs | null, setAnchor: React.Dispatch<React.SetStateAction<Date>>) {
+    if (!value) return; 
+    const picked = value.toDate();
+    setAnchor(picked); 
+  }
