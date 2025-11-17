@@ -215,7 +215,7 @@ export default function ShiftRequestsPage() {
   return (
     <div className="flex min-h-[640px]">
       {/* Left pane: request list */}
-      <aside className="w-1/2 border-r border-gray-200 p-4">
+      <aside className="w-1/2  p-4">
         <h2 className="mb-3 text-lg font-semibold text-gray-800">Requests</h2>  
         {loading && (
           <div className="mb-3 text-sm text-gray-500">Loading requests…</div>

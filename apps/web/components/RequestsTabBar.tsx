@@ -19,7 +19,7 @@ export default function RequestsTabBar() {
   return (
     <div
       className={[
-        "w-full bg-white border-b border-black",
+        "w-full bg-white ",
       ].join(" ")}
     >
       <div className="mx-auto max-w-6xl px-4 py-3 flex justify-center">
