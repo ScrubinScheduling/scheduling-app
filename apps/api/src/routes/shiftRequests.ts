@@ -48,6 +48,8 @@ router.get('/:id', async (req, res) => {
 	try {
 		const { workspaceId, id } = (req.params as { workspaceId: string; id: string });
 
+
+		// Query shift request by id and workspaceId
 		const shiftRequest = await prisma.shiftRequest.findFirst({
 			where: {
 				id: Number(id),
@@ -60,7 +62,8 @@ router.get('/:id', async (req, res) => {
 				requestedShift: true,
 			},
 		});
-
+		
+		// Shift request not found
 		if (!shiftRequest) {
 			return res.status(404).json({ error: 'Shift request not found' });
 		}
