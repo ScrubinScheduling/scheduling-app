@@ -45,7 +45,31 @@ router.get('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
 	// TODO: Implement get shift request
-	res.status(501).json({ error: 'Not implemented' });
+	try {
+		const { workspaceId, id } = (req.params as { workspaceId: string; id: string });
+
+		const shiftRequest = await prisma.shiftRequest.findFirst({
+			where: {
+				id: Number(id),
+				workspaceId: Number(workspaceId),
+			},
+			include: {
+				requestor: true,
+				workspace: true,
+				lendedShift: true,
+				requestedShift: true,
+			},
+		});
+
+		if (!shiftRequest) {
+			return res.status(404).json({ error: 'Shift request not found' });
+		}
+
+		res.status(200).json(shiftRequest);
+	} catch (error) {
+		console.error('Error fetching shift request:', error);
+		res.status(500).json({ error: 'Failed to fetch shift request' });
+	}
 });
 
 router.post('/', async (req, res) => {
