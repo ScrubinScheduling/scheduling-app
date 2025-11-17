@@ -221,6 +221,18 @@ export function createApiClient({ baseUrl, getToken }) {
 				path: `/workspaces/${workspaceId}/users/${userId}/shift-requests`,
 				params
 			}),
+		getIncomingShiftRequestsByUser: (workspaceId, userId, params?) =>
+			request({
+				method: 'GET',
+				path: `/workspaces/${workspaceId}/users/${userId}/shift-requests`,
+				params: { direction: 'incoming', ...(params ?? {}) }
+			}),
+		getOutgoingShiftRequestsByUser: (workspaceId, userId, params?) =>
+			request({
+				method: 'GET',
+				path: `/workspaces/${workspaceId}/users/${userId}/shift-requests`,
+				params: { direction: 'outgoing', ...(params ?? {}) }
+			}),
 		approveShiftRequest: (workspaceId, id) =>
 			request({
 				method: 'POST',
