@@ -15,9 +15,9 @@ model User {
   clerkId                 String                    @unique
   createdAt               DateTime                  @default(now())
   updatedAt               DateTime                  @updatedAt
-  UserWorkspaceMembership UserWorkspaceMembership[]
-  UserRoleMembership      UserRoleMembership[]
   Shift                   Shift[]
+  UserRoleMembership      UserRoleMembership[]
+  UserWorkspaceMembership UserWorkspaceMembership[]
 }
 
 model UserWorkspaceMembership {
@@ -26,6 +26,7 @@ model UserWorkspaceMembership {
   workspaceId Int
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
   @@unique([workspaceId, userId])
 }
 
@@ -34,8 +35,8 @@ model Workspace {
   name            String
   adminId         Int
   location        String
-  memberships     UserWorkspaceMembership[]
   roleMemberships UserRoleMembership[]
+  memberships     UserWorkspaceMembership[]
 }
 
 model Shift {
@@ -53,11 +54,10 @@ model Shift {
 }
 
 model Role {
-  id          Int    @id @default(autoincrement())
-  workspaceId Int
-  name        String
-  permissions Int    @default(0)
-
+  id                 Int                  @id @default(autoincrement())
+  workspaceId        Int
+  name               String
+  permissions        Int                  @default(0)
   UserRoleMembership UserRoleMembership[]
 }
 
@@ -72,9 +72,9 @@ model UserRoleMembership {
   userId      Int
   workSpaceId Int
   roleId      Int
+  role        Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   workspace   Workspace @relation(fields: [workSpaceId], references: [id], onDelete: Cascade)
-  role        Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
 }
 
 model ShiftRequest {
@@ -89,8 +89,8 @@ model ShiftRequest {
 model Invitation {
   id          String    @id @default(uuid())
   workspaceId Int
-  expiresAt   DateTime? @default(dbgenerated("now() + interval '1 day'")) @db.Timestamptz(6)
-  acceptedAt DateTime?
+  expiresAt   DateTime? @default(dbgenerated("(now() + '1 day'::interval)")) @db.Timestamptz(6)
+  acceptedAt  DateTime?
 }
 
 model Meeting {
