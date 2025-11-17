@@ -268,7 +268,7 @@ router.post('/:id/approve', async (req, res) => {
   
       await prisma.shiftRequest.update({
         where: { id },
-        data: { status: STATUS.approved },
+        data: { approvedByRequested: 'APPROVED' },
       });
   
       return res.status(204).send();
@@ -297,7 +297,7 @@ router.post('/:id/reject', async (req, res) => {
   
       await prisma.shiftRequest.update({
         where: { id },
-        data: { status: STATUS.denied },
+        data: { approvedByRequested: 'DENIED' },
       });
   
       return res.status(204).send();
