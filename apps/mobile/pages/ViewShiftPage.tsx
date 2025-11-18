@@ -1,6 +1,6 @@
-import React from 'react';
-import { Dimensions } from 'react-native';
-import { useState } from 'react';
+import React, { use } from 'react';
+import { Dimensions, experimental_LayoutConformance } from 'react-native';
+import { useState, useEffect } from 'react';
 import { View, Text, Button, StyleSheet, ScrollView, Image, TouchableOpacity} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@clerk/clerk-expo';
@@ -126,16 +126,62 @@ const getMonthDateRange = (month: string, year: number = new Date().getFullYear(
 }
 
 export default function ViewShiftPage() {
-  const [selectedMonth, setSelectedMonth] = useState<string>('October');
+  const [selectedMonth, setSelectedMonth] = useState<string>(months[new Date().getMonth()]);
+  const [shiftsData, setShiftsDate] = useState<Record<string, WeekData[]>>({});
+  const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+
+  const apiClient = useApiClient();
+  const { getToken, userId: clerkUserId } = useAuth();
+
+  useEffect(() => {
+    fetchCurrentUser();
+  }, []);
+
+  useEffect(() => {
+    if (currentUserId) {
+      fetchShiftsForMonth(selectedMonth);
+    }
+  }, [selectedMonth, currentUserId]);
+
+  const fetchCurrentUser = async () => {
+    try {
+      const user = await apiClient.getCurrentUser();
+      setCurrentUserId(user.id);
+    } catch (error) {
+      console.error('Error fetching current user:', error);
+    }
+  };
+
+  const fetchShiftsForMonth = async (month: string) => {
+    if (!currentUserId) return;
+
+    try {
+      setLoading(true);
+      const { startDate, endDate } = getMonthDateRange(month);
+
+      const shifts = await apiClient.getUserShifts(currentUserId, startDate, endDate);
+      const formattedData = formatShiftData(shifts);
+      setShiftsDate(formattedData);
+    } catch (error) {
+      console.error('Error fetching shifts:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleNext = () => {
-    const nextIndex = (months.indexOf(selectedMonth) + 1) % months.length;
+    const currentIndex = months.indexOf(selectedMonth);
+    const nextIndex = (currentIndex + 1) % months.length;
     setSelectedMonth(months[nextIndex]);
   };
   const handlePrev = () => {
-    const prevIndex = (months.indexOf(selectedMonth) - 1 + months.length) % months.length;
+    const currentIndex = months.indexOf(selectedMonth);
+    const prevIndex = (currentIndex - 1 + months.length) % months.length;
     setSelectedMonth(months[prevIndex]);
   }
-  const currentData = dummyShifts[selectedMonth] || [];
+
+  const currentData = shiftsData[selectedMonth] || [];
 
   return (
     <View style={styles.background}>
@@ -149,14 +195,20 @@ export default function ViewShiftPage() {
         </TouchableOpacity>
       </View>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {currentData.map((weekData: any, index: number) => (
+        {currentData.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyTesxt}>No shifts scheduled for {selectedMonth}</Text>
+          </View>
+        ) : (
+          currentData.map((weekData, index) => (
           <View key={index} style={styles.weekContainer}>
             <Text style={styles.weekTitle}>{weekData.week}</Text>
-            {weekData.shifts.map((shift: any, idx: number) => (
+            {weekData.shifts.map((shift, idx) => (
               <ShiftCard key={idx} shift={shift} />
             ))}
           </View>
-        ))}
+          ))
+        )}
       </ScrollView>
     </View>
   );
@@ -234,4 +286,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 3,
   },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 50,
+  },
+  emptyText: {
+    color: 'black',
+    fontSize: 16,
+    textAlign: 'center',
+  }
 });
