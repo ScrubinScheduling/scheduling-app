@@ -12,7 +12,7 @@ import {Copy, Link as LinkIcon } from "lucide-react";
 
 type AddMemberModalProps = {
   open: boolean;
-  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setOpen: (open: boolean) => void;
   inviteLink: string;
 };
 
