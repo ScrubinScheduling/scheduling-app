@@ -122,14 +122,12 @@ export default function TeamPage() {
 	const [invitationLink, setInvitationLink] = useState("")
 	const [addOpen, setAddOpen] = useState(false);
 
-	const handleOpen = async (val: boolean) => {
-		setAddOpen(val);
-		if (val) {
-			const inv = await apiClient.createInvitation({
-				workspaceId: Number(workspaceId)
-			});
-			setInvitationLink(`${window.location.origin}/invitations/${inv.id}`);
-		}
+	const handleOpen = async () => {
+		const inv = await apiClient.createInvitation({
+			workspaceId: Number(workspaceId)
+		});
+		setInvitationLink(`${window.location.origin}/invitations/${inv.id}`);
+		setAddOpen(true);
 	}
 	return (
 		<main className="p-6 max-w-6xl mx-auto">
@@ -140,7 +138,7 @@ export default function TeamPage() {
 				</div>
 				<div className="text-white">
 					<button
-						onClick={() => handleOpen(true)}
+						onClick={handleOpen}
 						className="inline-flex items-center gap-2 rounded-lg px-4 py-2 bg-[#3F37C9] hover:bg-[#2E299A]"
 					>
 						<Plus size={18} /> Add member
@@ -266,7 +264,7 @@ export default function TeamPage() {
 			</div>
 			<AddMemberModal
 				open={addOpen}
-				setOpen={handleOpen}
+				setOpen={setAddOpen}
 				inviteLink={invitationLink}
 			/>
 		</main>
