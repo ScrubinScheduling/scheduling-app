@@ -1,6 +1,5 @@
 import express from 'express';
 import { prisma } from '../db';
-import { getUserByClerkId } from '../controllers/userController';
 
 const router = express.Router();
 
