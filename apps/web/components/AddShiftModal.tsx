@@ -1,6 +1,6 @@
-import React, { startTransition, useState } from "react";
+import React, { startTransition, useMemo, useState } from "react";
 import { Dayjs } from "dayjs";
-
+import { useApiClient } from "@/hooks/useApiClient";
 import {
   Modal,
   Select,
@@ -27,6 +27,7 @@ const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen, users, wor
   const [alertDesc, setAlertDesc] = useState<string | null>(null);
   const [openAlert, setOpenAlert] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const clientAPI = useApiClient();
 
   const handleCancel = () => {
     setOpen(false);
@@ -49,17 +50,7 @@ const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen, users, wor
     };
 
     try {
-      const res = await fetch(`http://localhost:4000/dummy-create-shift`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) throw new Error((await res.json()) || `HTTP ${res.status}`);
-      const data = await res.json();
+      const data = await clientAPI.createShift(workspaceId, payload);
       console.log(data); 
       console.log("Submitting shift:", payload);
 
@@ -129,7 +120,7 @@ const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen, users, wor
                 placeholder="Select Employee"
                 onChange={(value) => setEmployee(value)}
                 options={users?.map(user => ({
-                value: user.id,
+                value: Number(user.id),
                 label: user.firstName,
                 })) ?? []}
                 allowClear

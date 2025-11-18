@@ -3,7 +3,7 @@ import { prisma } from '../db'
 
 const router = express.Router({ mergeParams: true })
 
-router.get('/:workspaceId/weekly', async (req, res) => {
+router.get('/', async (req, res) => {
     try {
         const workspaceId = Number(req.params.workspaceId)
         const { start, end } = req.query as { start?: string; end?: string }

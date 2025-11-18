@@ -4,6 +4,8 @@ import AddShiftModal from "../../../../../components/AddShiftModal";
 import dayjs from "dayjs";
 import { Spin, Button, DatePicker } from "antd";
 import { LoadingOutlined } from '@ant-design/icons';
+import { useAuth } from "@clerk/nextjs";
+import { useApiClient } from "@/hooks/useApiClient";
 import { 
   getToday, 
   makeWeek, 
@@ -32,18 +34,21 @@ type WeeklyResponse = {
 };
 
 
+
 const page = ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = use(params);
   const [anchor, setAnchor] = useState<Date>(getToday());
   const [isModal, setIsModal] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false); 
+  const [users, setUsers] = useState([]); 
   const [shifts, setShifts] = useState<WeeklyResponse>({
   days: [],
   users: [],
   buckets: {},
   });
+  
+  const apiClient = useApiClient();
   const week = useMemo(() => makeWeek(anchor), [anchor]);
-  const [users, setUsers] = useState<[] | null>(); 
   const nextWeek = () => setAnchor(w => moveWeek(w,1).anchor); // Moves 1 week forwards
   const prevWeek = () => setAnchor(w => moveWeek(w,-1).anchor); // Moves 1 week backwards
 
@@ -51,17 +56,8 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
   const getUsers = async() => {
     try {
       setIsLoading(true);
-      const response = await fetch(`http://localhost:4000/get-users/${id}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "Application/JSON"
-        }
-      }); 
-      
-      if (!response.ok) throw new Error("Was unable to fetch users");
-      const data = await response.json();
-      console.log(data); 
-      setUsers(data.users); 
+      const response = await apiClient.getWorkspaceMembers(id);
+      setUsers(response.members); 
       setIsLoading(false);
 
     } catch (error) {
@@ -79,11 +75,12 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
         start: week.start.toISOString(),
         end: week.end.toISOString()
       });
-      const response = await fetch(`http://localhost:4000/shifts/${id}/weekly?${params}`);
-
-      if (!response.ok) throw new Error("Could not get shifts");
-      const data: WeeklyResponse = await response.json();
-      setShifts(data); 
+      
+      const data: WeeklyResponse = await apiClient.getWorkspaceShifts(id, {
+        start: week.start.toISOString(),
+        end: week.end.toISOString(),
+      })
+      setShifts(data ?? []); 
       setIsLoading(false);  
 
     } catch (error) {
