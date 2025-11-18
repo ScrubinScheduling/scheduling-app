@@ -6,12 +6,14 @@ const router = express.Router({ mergeParams: true });
 
 router.get('/', listMembers);
 
+// gets shift for a user in a workspace
 router.get('/:userId/shifts', async (req, res) => {
 	// DONE: Implement get user shifts
 	try {
 		const workspaceId = Number(req.params.workspaceId);
 		const userId = Number(req.params.userId);
 
+		// check for validity
 		if (!Number.isInteger(workspaceId) || !Number.isInteger(userId)) {
 			return res.status(400).json({ error: 'Invalid workspaceId or userId' });
 		}

@@ -49,6 +49,7 @@ const ShiftCard = ({ shift }: { shift: FormattedShift }) => (
   </View>
 );
 
+// format shift time to "hh:mm am/pm - hh:mm am/pm"
 const formatShiftTime = (startTime: string, endTime: string): string => {
   const start = new Date(startTime);
   const end = new Date(endTime);
@@ -63,6 +64,7 @@ const formatShiftTime = (startTime: string, endTime: string): string => {
   return `${formatTime(start)} - ${formatTime(end)}`;
 };
 
+// get the shift tag given the shift start time
 const getShiftTag = (startTime: string): string => {
   const hour = new Date(startTime).getHours();
   if (hour < 12) return 'Morning';
@@ -70,6 +72,7 @@ const getShiftTag = (startTime: string): string => {
   return 'Evening';
 }
 
+// format the shift data into month -> week -> shifts structure
 const formatShiftData = (shifts: Shift[]): Record<string, WeekData[]> => {
   const formattedData: Record<string, WeekData[]> = {};
 
@@ -118,6 +121,7 @@ const formatShiftData = (shifts: Shift[]): Record<string, WeekData[]> => {
   return formattedData;
 }
 
+// get the start and end date of a month
 const getMonthDateRange = (month: string, year: number = new Date().getFullYear()) => {
   const monthIndex = months.indexOf(month);
   const startDate = new Date(year, monthIndex, 1);
@@ -144,6 +148,7 @@ export default function ViewShiftPage() {
     }
   }, [selectedMonth, currentUserId]);
 
+  // fetch the current authenticated user
   const fetchCurrentUser = async () => {
     try {
       const user = await apiClient.getCurrentUser();
@@ -153,6 +158,7 @@ export default function ViewShiftPage() {
     }
   };
 
+  // fetch shifts for the selected month
   const fetchShiftsForMonth = async (month: string) => {
     if (!currentUserId) return;
 
@@ -170,6 +176,7 @@ export default function ViewShiftPage() {
     }
   };
 
+  // handle the next and previous month navigation
   const handleNext = () => {
     const currentIndex = months.indexOf(selectedMonth);
     const nextIndex = (currentIndex + 1) % months.length;
@@ -197,7 +204,7 @@ export default function ViewShiftPage() {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {currentData.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyTesxt}>No shifts scheduled for {selectedMonth}</Text>
+            <Text style={styles.emptyText}>No shifts scheduled for {selectedMonth}</Text>
           </View>
         ) : (
           currentData.map((weekData, index) => (

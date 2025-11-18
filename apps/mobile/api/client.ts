@@ -53,6 +53,7 @@ class ApiClient {
         return response.json();
     }
 
+    // get the shifts for a user within an optional date range
     async getUserShifts(userId: number, startDate?: Date, endDate?: Date): Promise<Shift[]> {
         const params = new URLSearchParams();
         if (startDate) {
@@ -66,6 +67,7 @@ class ApiClient {
         return this.fetchWithAuth(url);
     }
 
+    // get the current authenticated user
     async getCurrentUser(): Promise<any> {
         const url = `${API_URL}/users/current`;
         return this.fetchWithAuth(url);

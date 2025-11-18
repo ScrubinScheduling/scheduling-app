@@ -28,11 +28,13 @@ router.delete('/:id', async (req, res) => {
 	res.status(501).json({ error: 'Not implemented' });
 });
 
+// get shifts from a user given ther userId and optional start and end date query parameters
 router.get('/:id/shifts', async (req, res) => {
 	try {
 		const userId = Number(req.params.id);
 		const { start, end } = req.query;
 
+		// check if valid user
 		if (!Number.isInteger(userId)) {
 			return res.status(400).json({ error: 'Invalid userId' });
 		}
@@ -62,6 +64,8 @@ router.get('/:id/shifts', async (req, res) => {
 	}
 });
 
+
+// Get the current authenticated user
 router.get('/current', async (req, res) => {
 	try {
 		const { userId } = req.auth;
@@ -69,6 +73,7 @@ router.get('/current', async (req, res) => {
 			return res.status(401).json({ error: 'Unauthorized' });
 		}
 
+		// if user found
 		const user = await prisma.user.findUnique({
 			where: { clerkId: userId }
 			include: {
@@ -80,6 +85,7 @@ router.get('/current', async (req, res) => {
 			}
 		});
 
+		// if not found
 		if (!user) {
 			return res.status(404).json({ error: 'User not found' });
 		}
