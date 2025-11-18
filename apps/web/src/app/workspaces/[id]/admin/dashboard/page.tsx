@@ -15,7 +15,7 @@ import {
   Plus,
   Clock,
 } from "lucide-react";
-import AddShiftModal from "../../../../../components/AddShiftModal";
+import AddShiftModal from "../../../../../../components/AddShiftModal";
 
 type Shift = {
   id: number;

@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import AddMemberModal from "../../../../../components/AddMemberModal";
+import AddMemberModal from "../../../../../../components/AddMemberModal";
 import { useParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 

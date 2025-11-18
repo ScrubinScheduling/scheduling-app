@@ -5,5 +5,5 @@ export default function RequestsIndexPage({
 }: {
   params: { id: string };
 }) {
-  redirect(`/workspaces/${params.id}/requests/shift`);
+  redirect(`/workspaces/${params.id}/admin/requests/shift`);
 }

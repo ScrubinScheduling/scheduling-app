@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import RequestsTabBar from "../../../../../components/RequestsTabBar";
+import RequestsTabBar from "../../../../../../components/RequestsTabBar";
 
 export default function RequestsLayout({
     children,

@@ -13,10 +13,10 @@ import { useParams, usePathname } from "next/navigation";
 
 export default function AppHeader() {
   const { id } = useParams<{ id: string }>();
-  const href_dashboard = `/workspaces/${id}/dashboard`;
-  const href_team = `/workspaces/${id}/team`;
+  const href_dashboard = `/workspaces/${id}/admin/dashboard`;
+  const href_team = `/workspaces/${id}/admin/team`;
   const href_roles = `/workspaces/${id}/roles`;
-  const href_requests = `/workspaces/${id}/requests`;
+  const href_requests = `/workspaces/${id}/admin/requests`;
   
   return (
     <div className="w-full bg-white p-4 shadow flex-row justify-between items-center flex border-b-gray-500 border-b">

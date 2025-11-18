@@ -27,6 +27,7 @@ model UserWorkspaceMembership {
   workspaceId Int
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
   @@unique([workspaceId, userId])
 }
 
@@ -79,20 +80,28 @@ model UserRoleMembership {
   role        Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
 }
 
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  DENIED
+}
+
 model ShiftRequest {
-  id               Int  @id @default(autoincrement())
-  requestorId      Int
-  workspaceId      Int
-  lendedShiftId    Int
-  requestedShiftId Int?
-  status           Int
+  id                  Int             @id @default(autoincrement())
+  requestorId         Int
+  requestedUserId     Int
+  workspaceId         Int
+  lendedShiftId       Int
+  requestedShiftId    Int?
+  approvedByRequested ApprovalStatus  @default(PENDING)
+  approvedByManager   ApprovalStatus?
 }
 
 model Invitation {
   id          String    @id @default(uuid())
   workspaceId Int
   expiresAt   DateTime? @default(dbgenerated("now() + interval '1 day'")) @db.Timestamptz(6)
-  acceptedAt DateTime?
+  acceptedAt  DateTime?
 }
 
 model Meeting {
