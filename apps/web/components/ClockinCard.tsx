@@ -1,81 +1,161 @@
 "use client";
+import { useState } from "react";
+import { Coffee, Play, Square, RefreshCw, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import React from "react";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+
+function ShiftTradeDialog({ children }: { children: React.ReactNode }) {
+    return (
+        <Dialog>
+            <DialogTrigger asChild>
+                {children}
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Find Cover / Trade Shift</DialogTitle>
+                    <DialogDescription>
+                        Request a shift trade or find cover for your shift.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                    <p className="text-sm text-muted-foreground">
+                        Shift trade functionality coming soon...
+                    </p>
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
+}
 
 export default function ClockinCard() {
+    const [status, setStatus] = useState<"scheduled" | "active" | "break" | "completed">("scheduled");
+
+    const coworkers = [
+        { name: "John D.", initials: "JD", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop" },
+        { name: "Sarah M.", initials: "SM", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop" },
+        { name: "Alex L.", initials: "AL", img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop" },
+    ];
+
     return (
-        <Card className="p-4">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h2 className="text-2xl">Current Shift</h2>
-                    <p className="text-md text-muted-foreground font-medium">
-                        Today, 9:00 AM - 5:00 PM
-                    </p>
+        <Card className="border-border bg-card text-card-foreground shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                        <CardTitle className="text-xl font-medium">Current Shift</CardTitle>
+                        {status === "active" && (
+                            <Badge variant="outline" className="bg-red-500/15 text-red-500 border-red-500/20 animate-pulse">
+                                <span className="relative flex h-2 w-2 mr-1">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                </span>
+                                Live
+                            </Badge>
+                        )}
+                    </div>
+                    <CardDescription>
+                        {status === "scheduled"
+                            ? "Today, 9:00 AM - 5:00 PM"
+                            : status === "active"
+                                ? "Shift in progress"
+                                : status === "break"
+                                    ? "Break in progress"
+                                    : "Shift completed"}
+                    </CardDescription>
                 </div>
                 <Badge
-                    variant="outline"
-                    className="h-8 px-3 py-1 text-xs font-medium rounded-lg"
+                    variant={status === "active" ? "default" : status === "break" ? "secondary" : "outline"}
+                    className={`px-3 py-1 text-xs font-medium ${
+                        status === "active" ? "bg-green-500/15 text-green-500 hover:bg-green-500/25 border-green-500/20" : ""
+                    } ${status === "break" ? "bg-yellow-500/15 text-yellow-500 hover:bg-yellow-500/25 border-yellow-500/20" : ""}`}
                 >
-                    Upcoming
+                    {status === "scheduled" && "Upcoming"}
+                    {status === "active" && "Active"}
+                    {status === "break" && "On Break"}
+                    {status === "completed" && "Completed"}
                 </Badge>
-            </div>
+            </CardHeader>
 
-            <div className="flex justify-between items-start mt-4">
-                <div className="">
-                    <p className="text-lg text-muted-foreground font-medium">
-                        Starts At
-                    </p>
-                    <p className="font-semibold text-4xl">9:00am</p>
-                </div>
-
-                <div className="flex flex-col items-end">
-                    <div className="flex items-center gap-2 mb-3">
-                        <Users className="w-5 h-5 text-muted-foreground" />
-                        <h3 className="text-lg font-medium text-muted-foreground">
-                            Working with
-                        </h3>
-                    </div>
-                    <div className="flex items-center">
-                        <Avatar className="h-10 w-10">
-                            <AvatarImage
-                                src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop"
-                                alt="Team member"
-                            />
-                            <AvatarFallback>JD</AvatarFallback>
-                        </Avatar>
-                        <Avatar className="h-10 w-10">
-                            <AvatarImage
-                                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop"
-                                alt="Team member"
-                            />
-                            <AvatarFallback>SM</AvatarFallback>
-                        </Avatar>
-                        <Avatar className="h-10 w-10">
-                            <AvatarImage
-                                src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop"
-                                alt="Team member"
-                            />
-                            <AvatarFallback>AL</AvatarFallback>
-                        </Avatar>
-                        <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                            <span className="text-sm font-medium text-muted-foreground">+2</span>
+            <CardContent className="space-y-6 pt-6">
+                <div className="flex flex-col md:flex-row gap-6 items-center justify-between">
+                    <div className="flex flex-col items-center md:items-start space-y-1">
+                        <span className="text-sm text-muted-foreground">
+                            {status === "scheduled" ? "Starts at" : status === "break" ? "Break Started" : "Clocked In"}
+                        </span>
+                        <div className="text-4xl font-bold tracking-tighter">
+                            {status === "scheduled" ? "9:00 AM" : status === "break" ? "12:30 PM" : "9:00 AM"}
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <div className="flex w-full gap-3 mt-4">
-                <Button variant="outline" className="w-1/2 text-2xl">
-                    Clock in
-                </Button>
-                <Button variant="outline" className="w-1/2">
-                    Find Cover/Trade
-                </Button>
-            </div>
+                    {status !== "completed" && (
+                        <div className="flex flex-col items-center md:items-end space-y-2">
+                            <span className="text-sm text-muted-foreground flex items-center gap-2">
+                                <Users className="w-4 h-4" /> Working with
+                            </span>
+                            <div className="flex -space-x-2">
+                                {coworkers.map((coworker, i) => (
+                                    <Avatar key={i} className="border-2 border-background w-8 h-8">
+                                        <AvatarImage src={coworker.img} alt={coworker.name} />
+                                        <AvatarFallback>{coworker.initials}</AvatarFallback>
+                                    </Avatar>
+                                ))}
+                                <div className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-background bg-muted text-[10px] font-medium text-muted-foreground">
+                                    +2
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    {status === "scheduled" && (
+                        <Button className="w-full h-12 text-base" onClick={() => setStatus("active")}>
+                            <Play className="mr-2 h-4 w-4" /> Clock In
+                        </Button>
+                    )}
+
+                    {status === "active" && (
+                        <>
+                            <Button variant="secondary" className="w-full h-12 text-base" onClick={() => setStatus("break")}>
+                                <Coffee className="mr-2 h-4 w-4" /> Start Break
+                            </Button>
+                            <Button variant="destructive" className="w-full h-12 text-base" onClick={() => setStatus("completed")}>
+                                <Square className="mr-2 h-4 w-4 fill-current" /> Clock Out
+                            </Button>
+                        </>
+                    )}
+
+                    {status === "break" && (
+                        <Button className="w-full col-span-2 h-12 text-base" onClick={() => setStatus("active")}>
+                            <Play className="mr-2 h-4 w-4" /> End Break & Resume
+                        </Button>
+                    )}
+
+                    {status === "completed" && (
+                        <Button variant="outline" className="w-full col-span-2 h-12 text-base" disabled>
+                            Shift Ended at 5:00 PM
+                        </Button>
+                    )}
+
+                    {/* Find Cover / Trade Button - Only visible when not clocked in or active */}
+                    {status === "scheduled" && (
+                        <ShiftTradeDialog>
+                            <Button variant="outline" className="w-full h-12 text-base border-dashed">
+                                <RefreshCw className="mr-2 h-4 w-4" /> Find Cover / Trade
+                            </Button>
+                        </ShiftTradeDialog>
+                    )}
+                </div>
+            </CardContent>
         </Card>
     );
 }

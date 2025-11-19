@@ -1,9 +1,4 @@
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Users } from "lucide-react";
 import React from "react";
-import { Button } from "@/components/ui/button";
 import ClockinCard from "../../../../../../components/ClockinCard";
 
 export default function Page() {
