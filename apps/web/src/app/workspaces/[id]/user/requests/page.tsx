@@ -8,15 +8,15 @@ import {
     Dialog,
     DialogContent,
     DialogDescription,
-		DialogFooter,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
-	import { Input } from "@/components/ui/input";
-	import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useParams } from "next/navigation";
 import { createApiClient } from "@scrubin/api-client";
@@ -42,26 +42,27 @@ export default function Page() {
     };
     type AnyRequest = TradeReq | TimeOffReq;
 
-	const { getToken } = useAuth();
-	const { user } = useUser();
-	const { id } = useParams<{ id: string }>();
-	const apiClient = useMemo(
-		() =>
-			createApiClient({
-				baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000",
-				getToken,
-			}),
-		[getToken]
-	);
+    const { getToken } = useAuth();
+    const { user } = useUser();
+    const { id } = useParams<{ id: string }>();
+    const apiClient = useMemo(
+        () =>
+            createApiClient({
+                baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000",
+                getToken,
+            }),
+        [getToken]
+    );
 
     const [incoming, setIncoming] = useState<AnyRequest[]>([]);
     const [outgoing, setOutgoing] = useState<AnyRequest[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-	const [dialogOpen, setDialogOpen] = useState(false);
-	const [newStartDate, setNewStartDate] = useState<string>("");
-	const [newEndDate, setNewEndDate] = useState<string>("");
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [newStartDate, setNewStartDate] = useState<string>("");
+    const [newEndDate, setNewEndDate] = useState<string>("");
 
+    const { userId } = useAuth();
     function badge(status: DecisionStatus) {
         if (status === "approved") return <Badge variant="secondary">Approved</Badge>;
         if (status === "denied") return <Badge variant="destructive">Denied</Badge>;
@@ -69,58 +70,44 @@ export default function Page() {
     }
 
     useEffect(() => {
-		let alive = true;
-		(async () => {
-			try {
-				setLoading(true);
-				setError(null);
-				// Resolve current user's numeric id within the workspace via email
-				const membersResp = await apiClient.getWorkspaceMembers(id);
-				const members: { id: string; email: string }[] = membersResp.members ?? [];
-				const myEmail =
-					user?.primaryEmailAddress?.emailAddress ??
-					user?.emailAddresses?.[0]?.emailAddress ??
-					"";
-				const me =
-					members.find(
-						(m) =>
-							m.email.toLowerCase() === (myEmail || "").toLowerCase()
-					) ?? members[0];
-				if (!me) {
-					throw new Error("No workspace membership found for current user");
-				}
-				const userId = Number(me.id);
-				const [incomingRes, outgoingRes] = await Promise.all([
-					apiClient.getIncomingShiftRequestsByUser(id, userId),
-					apiClient.getOutgoingShiftRequestsByUser(id, userId),
-				]);
-				if (!alive) return;
-				setIncoming((incomingRes?.requests ?? []) as AnyRequest[]);
-				setOutgoing((outgoingRes?.requests ?? []) as AnyRequest[]);
-			} catch (e: any) {
-				if (!alive) return;
-				setError(e?.message ?? "Failed to load requests");
-			} finally {
-				if (!alive) return;
-				setLoading(false);
-			}
-		})();
-		return () => {
-			alive = false;
-		};
-	}, [id, apiClient, user?.primaryEmailAddress?.emailAddress]);
+        if (!userId) return;  // Guard clause
+        let alive = true;
+        (async () => {
+            try {
+                setLoading(true);
+                setError(null);
+
+                const [incomingRes, outgoingRes] = await Promise.all([
+                    apiClient.getIncomingShiftRequestsByUser(id, userId),
+                    apiClient.getOutgoingShiftRequestsByUser(id, userId),
+                ]);
+                if (!alive) return;
+                setIncoming((incomingRes?.requests ?? []) as AnyRequest[]);
+                setOutgoing((outgoingRes?.requests ?? []) as AnyRequest[]);
+            } catch (e: any) {
+                if (!alive) return;
+                setError(e?.message ?? "Failed to load requests");
+            } finally {
+                if (!alive) return;
+                setLoading(false);
+            }
+        })();
+        return () => {
+            alive = false;
+        };
+    }, [id, apiClient, userId]);
 
     async function approve(idStr: string) {
-		await apiClient.approveShiftRequest(id, idStr);
-		setIncoming((prev) =>
+        await apiClient.approveShiftRequest(id, idStr);
+        setIncoming((prev) =>
             prev.map((r) =>
                 r.id === idStr ? { ...r, requestedApproval: "approved", managerApproval: r.managerApproval ?? "pending" } : r
             )
         );
     }
     async function reject(idStr: string) {
-		await apiClient.rejectShiftRequest(id, idStr);
-		setIncoming((prev) =>
+        await apiClient.rejectShiftRequest(id, idStr);
+        setIncoming((prev) =>
             prev.map((r) => (r.id === idStr ? { ...r, requestedApproval: "denied" } : r))
         );
     }
@@ -128,83 +115,83 @@ export default function Page() {
     return (
         <main className="mt-4">
             <div className="w-full flex justify-end px-4">
-				<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
-						<Button className="flex items-center gap-2 text-white" onClick={() => setDialogOpen(true)}>
+                        <Button className="flex items-center gap-2 text-white" onClick={() => setDialogOpen(true)}>
                             <Plus />
                             New Request
                         </Button>
                     </DialogTrigger>
                     <DialogContent>
                         <DialogHeader>
-							<DialogTitle>Create a shift request</DialogTitle>
+                            <DialogTitle>Create a shift request</DialogTitle>
                             <DialogDescription>
-								Request coverage for a single day or a date range.
+                                Request coverage for a single day or a date range.
                             </DialogDescription>
                         </DialogHeader>
-						<form
-							className="space-y-4"
-							onSubmit={(e) => {
-								e.preventDefault();
-								if (!newStartDate) return;
-								const start = newStartDate;
-								const end = newEndDate || newStartDate;
-								const startTime = new Date(start).getTime();
-								const endTime = new Date(end).getTime();
-								const normalized = startTime <= endTime ? { start, end } : { start: end, end: start };
-								const newReq: TimeOffReq = {
-									id: `out-${Date.now()}`,
-									kind: "timeoff",
-									requestorId: 1,
-									requestedUserId: 0,
-									requestedApproval: "pending",
-									managerApproval: null,
-									requesterNames: ["You"],
-									dateRange: normalized,
-								};
-								setOutgoing((prev) => [newReq, ...prev]);
-								setDialogOpen(false);
-								setNewStartDate("");
-								setNewEndDate("");
-							}}
-						>
-							<div className="grid gap-2">
-								<Label htmlFor="start-date">Start date</Label>
-								<Input
-									id="start-date"
-									type="date"
-									value={newStartDate}
-									onChange={(e) => setNewStartDate(e.target.value)}
-									required
-								/>
-							</div>
-							<div className="grid gap-2">
-								<Label htmlFor="end-date">End date (optional)</Label>
-								<Input
-									id="end-date"
-									type="date"
-									value={newEndDate}
-									onChange={(e) => setNewEndDate(e.target.value)}
-									min={newStartDate || undefined}
-								/>
-							</div>
-							<DialogFooter>
-								<Button
-									type="button"
-									variant="outline"
-									onClick={() => {
-										setDialogOpen(false);
-										setNewStartDate("");
-										setNewEndDate("");
-									}}
-								>
-									Cancel
-								</Button>
-								<Button type="submit" disabled={!newStartDate}>
-									Create
-								</Button>
-							</DialogFooter>
-						</form>
+                        <form
+                            className="space-y-4"
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                if (!newStartDate) return;
+                                const start = newStartDate;
+                                const end = newEndDate || newStartDate;
+                                const startTime = new Date(start).getTime();
+                                const endTime = new Date(end).getTime();
+                                const normalized = startTime <= endTime ? { start, end } : { start: end, end: start };
+                                const newReq: TimeOffReq = {
+                                    id: `out-${Date.now()}`,
+                                    kind: "timeoff",
+                                    requestorId: 1,
+                                    requestedUserId: 0,
+                                    requestedApproval: "pending",
+                                    managerApproval: null,
+                                    requesterNames: ["You"],
+                                    dateRange: normalized,
+                                };
+                                setOutgoing((prev) => [newReq, ...prev]);
+                                setDialogOpen(false);
+                                setNewStartDate("");
+                                setNewEndDate("");
+                            }}
+                        >
+                            <div className="grid gap-2">
+                                <Label htmlFor="start-date">Start date</Label>
+                                <Input
+                                    id="start-date"
+                                    type="date"
+                                    value={newStartDate}
+                                    onChange={(e) => setNewStartDate(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="end-date">End date (optional)</Label>
+                                <Input
+                                    id="end-date"
+                                    type="date"
+                                    value={newEndDate}
+                                    onChange={(e) => setNewEndDate(e.target.value)}
+                                    min={newStartDate || undefined}
+                                />
+                            </div>
+                            <DialogFooter>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => {
+                                        setDialogOpen(false);
+                                        setNewStartDate("");
+                                        setNewEndDate("");
+                                    }}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button type="submit" disabled={!newStartDate}>
+                                    Create
+                                </Button>
+                            </DialogFooter>
+                        </form>
                     </DialogContent>
                 </Dialog>
             </div>
