@@ -54,7 +54,7 @@ class ApiClient {
     }
 
     // get the shifts for a user within an optional date range
-    async getUserShifts(userId: number, startDate?: Date, endDate?: Date): Promise<Shift[]> {
+    async getUserShifts(userId: string, startDate?: Date, endDate?: Date): Promise<Shift[]> {
         const params = new URLSearchParams();
         if (startDate) {
             params.append('start', startDate.toISOString());

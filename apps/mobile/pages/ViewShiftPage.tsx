@@ -7,8 +7,9 @@ import { useApiClient } from '@/hooks/useApiClient';
 
 // Temporarily here until workspaces are implemented on mobile
 import { useApiClient as useOldApiClient } from '@/api/client';
+import { useAuth } from '@clerk/clerk-expo';
 
-const months = [ 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December' ];
+const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const { height } = Dimensions.get('window');
 
 type FormattedShift = {
@@ -26,25 +27,25 @@ type WeekData = {
 
 const ShiftCard = ({ shift }: { shift: FormattedShift }) => (
   <View style={styles.shiftContainer}>
-    <Image style={{height: 40, width: 40, borderRadius: '50%'}} source={require('assets/example-vet.png')}/>
+    <Image style={{ height: 40, width: 40, borderRadius: '50%' }} source={require('assets/example-vet.png')} />
     <View style={styles.shiftTextContainer}>
       <View style={styles.shiftRowTextContainer}>
         <Text style={styles.standardText}>{shift.day}</Text>
         <View style={styles.shiftButtonLeft}>
-          <Text style={[styles.standardText, {fontSize: 10, fontWeight: 'normal'}]}>{shift.role}</Text>
+          <Text style={[styles.standardText, { fontSize: 10, fontWeight: 'normal' }]}>{shift.role}</Text>
         </View>
         <View style={styles.shiftButtonRight}>
-          <Text style={[styles.standardText, {fontSize: 10, fontWeight: 'normal'}]}>{shift.tag}</Text>
+          <Text style={[styles.standardText, { fontSize: 10, fontWeight: 'normal' }]}>{shift.tag}</Text>
         </View>
       </View>
       <View style={styles.shiftRowTextContainer}>
         <View style={styles.shiftRowTextContainer}>
           <Ionicons name="time-outline" size={12} color="#fff" />
-          <Text style={[styles.standardText, {fontWeight: 'normal'}]}>{shift.time}</Text>
+          <Text style={[styles.standardText, { fontWeight: 'normal' }]}>{shift.time}</Text>
         </View>
         <View style={styles.shiftRowTextContainer}>
           <Ionicons name="location-outline" size={12} color="#fff" />
-          <Text style={[styles.standardText, {fontWeight: 'normal'}]}>{shift.location}</Text>
+          <Text style={[styles.standardText, { fontWeight: 'normal' }]}>{shift.location}</Text>
         </View>
       </View>
     </View>
@@ -135,39 +136,26 @@ export default function ViewShiftPage() {
   const [selectedMonth, setSelectedMonth] = useState<string>(months[new Date().getMonth()]);
   const [shiftsData, setShiftsDate] = useState<Record<string, WeekData[]>>({});
   const [loading, setLoading] = useState(true);
-  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
-
+  const { userId } = useAuth();
   const apiClient = useApiClient();
   const oldApiClient = useOldApiClient();
 
   useEffect(() => {
-    fetchCurrentUser();
-  }, []);
-
-  useEffect(() => {
-    if (currentUserId) {
+    if (userId) {
       fetchShiftsForMonth(selectedMonth);
     }
-  }, [selectedMonth, currentUserId]);
+  }, [selectedMonth, userId]);
 
-  // fetch the current authenticated user
-  const fetchCurrentUser = async () => {
-    try {
-      setCurrentUserId(user.id);
-    } catch (error) {
-      console.error('Error fetching current user:', error);
-    }
-  };
-
+  
   // fetch shifts for the selected month
   const fetchShiftsForMonth = async (month: string) => {
-    if (!currentUserId) return;
+    if (!userId) return;
 
     try {
       setLoading(true);
       const { startDate, endDate } = getMonthDateRange(month);
 
-      const shifts = await oldApiClient.getUserShifts(currentUserId, startDate, endDate);
+      const shifts = await oldApiClient.getUserShifts(userId, startDate, endDate);
       const formattedData = formatShiftData(shifts);
       setShiftsDate(formattedData);
     } catch (error) {
@@ -209,12 +197,12 @@ export default function ViewShiftPage() {
           </View>
         ) : (
           currentData.map((weekData, index) => (
-          <View key={index} style={styles.weekContainer}>
-            <Text style={styles.weekTitle}>{weekData.week}</Text>
-            {weekData.shifts.map((shift, idx) => (
-              <ShiftCard key={idx} shift={shift} />
-            ))}
-          </View>
+            <View key={index} style={styles.weekContainer}>
+              <Text style={styles.weekTitle}>{weekData.week}</Text>
+              {weekData.shifts.map((shift, idx) => (
+                <ShiftCard key={idx} shift={shift} />
+              ))}
+            </View>
           ))
         )}
       </ScrollView>
@@ -251,7 +239,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     marginBottom: 10,
   },
-  
+
   shiftContainer: {
     backgroundColor: '#ffc802',
     borderRadius: 10,
