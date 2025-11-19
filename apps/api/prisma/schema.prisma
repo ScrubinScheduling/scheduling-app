@@ -87,8 +87,8 @@ enum ApprovalStatus {
 
 model ShiftRequest {
   id                  Int             @id @default(autoincrement())
-  requestorId         Int
-  requestedUserId     Int
+  requestorId         String
+  requestedUserId     String
   workspaceId         Int
   lendedShiftId       Int
   requestedShiftId    Int?
