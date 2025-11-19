@@ -1,5 +1,6 @@
 import React from "react";
 import ClockinCard from "../../../../../../components/ClockinCard";
+import UpcomingSchedule from "../../../../../../components/UpcomingScheduleCard";
 
 export default function Page() {
     return (
@@ -9,6 +10,7 @@ export default function Page() {
                 <p className="text-lg text-muted-foreground font-medium">Manage your shifts, breaks, and schedule.</p>
                 <div className="space-y-4">
                     <ClockinCard/>
+                    <UpcomingSchedule/>
                 </div>
             </div>
         </main>
