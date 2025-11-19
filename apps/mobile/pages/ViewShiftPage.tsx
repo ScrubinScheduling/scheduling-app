@@ -1,10 +1,12 @@
 import React, { use } from 'react';
 import { Dimensions, experimental_LayoutConformance } from 'react-native';
 import { useState, useEffect } from 'react';
-import { View, Text, Button, StyleSheet, ScrollView, Image, TouchableOpacity} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '@clerk/clerk-expo';
-import { useApiClient, Shift } from '@/api/client';
+import { useApiClient } from '@/hooks/useApiClient';
+
+// Temporarily here until workspaces are implemented on mobile
+import { useApiClient as useOldApiClient } from '@/api/client';
 
 const months = [ 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December' ];
 const { height } = Dimensions.get('window');
@@ -136,7 +138,7 @@ export default function ViewShiftPage() {
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
   const apiClient = useApiClient();
-  const { getToken, userId: clerkUserId } = useAuth();
+  const oldApiClient = useOldApiClient();
 
   useEffect(() => {
     fetchCurrentUser();
@@ -151,7 +153,6 @@ export default function ViewShiftPage() {
   // fetch the current authenticated user
   const fetchCurrentUser = async () => {
     try {
-      const user = await apiClient.getCurrentUser();
       setCurrentUserId(user.id);
     } catch (error) {
       console.error('Error fetching current user:', error);
@@ -166,7 +167,7 @@ export default function ViewShiftPage() {
       setLoading(true);
       const { startDate, endDate } = getMonthDateRange(month);
 
-      const shifts = await apiClient.getUserShifts(currentUserId, startDate, endDate);
+      const shifts = await oldApiClient.getUserShifts(currentUserId, startDate, endDate);
       const formattedData = formatShiftData(shifts);
       setShiftsDate(formattedData);
     } catch (error) {
