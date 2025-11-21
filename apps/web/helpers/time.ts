@@ -3,7 +3,9 @@ import {
     startOfWeek,
     endOfWeek,
     eachDayOfInterval,
-    format
+    format,
+    isDate,
+    parseISO,
 } from 'date-fns'; 
 
 import dayjs from 'dayjs';
@@ -77,3 +79,18 @@ export  function onPickWeek(value: dayjs.Dayjs | null, setAnchor: React.Dispatch
     const picked = value.toDate();
     setAnchor(picked); 
 }
+
+const ensureDate = (value: Date | string) =>
+  (isDate(value) ? value : parseISO(value as string));
+
+export const formatLongDate = (value: Date | string) =>
+  format(ensureDate(value), "EEEE, MMMM d, yyyy");
+
+export const formatTimeRange = (
+  start: Date | string,
+  end: Date | string
+) => {
+  const startDate = ensureDate(start);
+  const endDate = ensureDate(end);
+  return `${format(startDate, "h:mm a")} - ${format(endDate, "h:mm a")}`;
+};

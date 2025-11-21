@@ -23,6 +23,7 @@ import {
   format,
   parseISO,
 } from "date-fns"; 
+import ShiftModal from "../../../../../../components/ShiftModal";
 
 
 type ApiShift = { id: number; startTime: string; endTime: string; breakDuration: number | null };
@@ -45,7 +46,10 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
   const [users, setUsers] = useState<Member[]>([]); 
   const [shifts, setShifts] = useState<WeeklyResponse>(emptyWeekly);
   const [error, setError] = useState<string | null>(null);
-
+  const [selectedUser, setSelectedUser] = useState<any | undefined>(undefined);
+  const [selectedShift, setSelectedShift] = useState<any | undefined>(undefined);
+  const [openShiftDetails, setOpenShiftDeatils] = useState<boolean>(false);  
+  
   const apiClient = useApiClient();
   const week = useMemo(() => makeWeek(anchor), [anchor]);
   const nextWeek = () => setAnchor(w => moveWeek(w,1).anchor); // Moves 1 week forwards
@@ -82,6 +86,7 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
         start: week.start.toISOString(),
         end: week.end.toISOString(),
       })
+      console.log(data); 
       setShifts(data ?? emptyWeekly); 
       setIsLoading(false);  
 
@@ -185,6 +190,11 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
                                     key={shift.id}
                                     type="primary"
                                     className="flex-1 w-full justify-start"
+                                    onClick={() => {
+                                      setSelectedShift(shift);
+                                      setSelectedUser(user);
+                                      setOpenShiftDeatils(true); 
+                                    }}
                                   >
                                     <div className="flex flex-col flex-1 text-left gap-1">
                                       <span className="text-sm font-medium">Manager</span>
@@ -209,6 +219,15 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
             </div>
         </div>
         </Spin>
+        {selectedUser && selectedShift && (
+          <ShiftModal
+            shift={selectedShift}
+            user={selectedUser}
+            workspaceId={workspaceId}
+            isVisiable={openShiftDetails}
+            setIsVisiable={setOpenShiftDeatils}
+          />
+        )}
         <AddShiftModal open={isModal} setOpen={setIsModal} users={users} workspaceId={Number(id)} onSuccess={handleShiftAdded}/>
       </div>
   );
