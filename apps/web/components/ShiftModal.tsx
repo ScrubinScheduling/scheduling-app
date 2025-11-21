@@ -3,7 +3,6 @@ import React, { use, useState } from 'react'
 import { Modal, Button } from 'antd';
 import {Calendar, User, Clock9, MapPin, Trash, Edit} from 'lucide-react';
 import {formatLongDate, formatTimeRange} from '../helpers/time';
-import { useApiClient } from '@/hooks/useApiClient';
 
 type Shift = { id: number; startTime: string; endTime: string; breakDuration: number | null };
 type User = { id: number; firstName: string; lastName?: string | null };
@@ -13,7 +12,7 @@ type ShiftModalProps  = {
     shift: Shift;
     workspaceId: Number | null;
     isVisiable: boolean;   
-    onDelete?: ()=> void | Promise<void>;
+    onDelete?: (shiftId: number) => void | Promise<void>;
     setIsVisiable: React.Dispatch<React.SetStateAction<boolean>>;  
 }
 
@@ -21,12 +20,25 @@ type ShiftModalProps  = {
 
 function ShiftModal({user, shift, onDelete, workspaceId, isVisiable, setIsVisiable} : ShiftModalProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const apiClient = useApiClient(); 
+  const [openModal, setOpenModal] = useState<boolean>(false); 
+
    const onCancel = () => {
       setIsVisiable(false); 
    }
+  const deleteShift = async () => {
+    if (!onDelete) return;
+    try {
+      setIsLoading(true);
+      await onDelete(shift.id);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+};
 
   return (
+
     <Modal
     open={isVisiable}
     onCancel={onCancel}
@@ -106,7 +118,7 @@ function ShiftModal({user, shift, onDelete, workspaceId, isVisiable, setIsVisiab
           </div>
 
           <div className='flex flex-row gap-3'>
-            <Button className='flex-1' danger={true} style={{minHeight:"40px"}}>
+            <Button className='flex-1' danger={true} style={{minHeight:"40px"}} onClick={() => {setOpenModal(true)}} loading={isLoading}>
                 <div className='flex flex-row items-center gap-1 justify-center'>
                     <Trash size={18}/>
                     <span className='font-semibold'>Delete</span>
@@ -121,6 +133,31 @@ function ShiftModal({user, shift, onDelete, workspaceId, isVisiable, setIsVisiab
             </Button>
           </div>
         </div>
+
+        {/* Confirm Deletion */}
+        <Modal
+          onCancel={() => {
+            setOpenModal(false);
+          }}
+          open={openModal}
+          footer={null}
+          centered
+        >
+            <div className='flex flex-col justify-center items-center gap-3'>
+              <span className='text-lg font-bold'>Are you sure you want to delete this shift?</span>
+              <div className='flex flex-row gap-3'>
+                <Button className='flex-1' onClick={() => {
+                  setOpenModal(false); 
+                }}>
+                  cancel
+                </Button>
+
+                <Button type='primary' className='flex-1' danger onClick={deleteShift}>
+                  <span className='font-bold'>Delete</span>
+                </Button>
+              </div>
+            </div>
+        </Modal>
     </Modal>
   )
 }

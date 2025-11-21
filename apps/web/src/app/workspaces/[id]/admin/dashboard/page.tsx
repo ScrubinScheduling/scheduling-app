@@ -98,7 +98,7 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
     }
   };
 
-  const handleShiftAdded = async() => {
+  const handleShiftReload = async() => {
     try {
       setIsLoading(true);
       await getShifts();
@@ -110,6 +110,23 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
       setIsLoading(false); 
     }
     
+  }
+
+  const handleDelete = async(shiftId: number) => {
+      if (!confirm) return;
+     
+      try {
+        setIsLoading(true); 
+        await apiClient.deleteShift(id, shiftId); 
+        await handleShiftReload();
+        setOpenShiftDeatils(false);
+        setSelectedShift(null); 
+        setSelectedUser(null); 
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setIsLoading(false);
+      }
   }
 
  useEffect( () => {
@@ -223,12 +240,13 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
           <ShiftModal
             shift={selectedShift}
             user={selectedUser}
+            onDelete={handleDelete}
             workspaceId={workspaceId}
             isVisiable={openShiftDetails}
             setIsVisiable={setOpenShiftDeatils}
           />
         )}
-        <AddShiftModal open={isModal} setOpen={setIsModal} users={users} workspaceId={Number(id)} onSuccess={handleShiftAdded}/>
+        <AddShiftModal open={isModal} setOpen={setIsModal} users={users} workspaceId={Number(id)} onSuccess={handleShiftReload} />
       </div>
   );
 };
