@@ -167,7 +167,7 @@ export default function ShiftRequestsPage() {
         : selected.id;
 
       const res = await fetch(
-        `${API}/workspaces/${id}/${baseRoute}/${rawId}/${path}`,
+        `${API}/workspaces/${id}/${baseRoute}/${rawId}/admin/${path}`,
         {
           method: "POST",
           headers: {

@@ -269,36 +269,117 @@ router.delete('/:id', async (req, res) => {
     res.status(501).json({ error: 'Not implemented' })
 })
 
-router.post('/:id/approve', async (req, res) => {
+router.post('/:id/admin/approve', async (req, res) => {
     try {
-        const workspaceId = Number((req.params as any).workspaceId)
-        const id = Number(req.params.id)
+        const workspaceId = Number((req.params as any).workspaceId);
+        const id = Number(req.params.id);
 
         if (!workspaceId || Number.isNaN(workspaceId) || Number.isNaN(id)) {
-        return res.status(400).json({ error: 'Invalid id' })
+        return res.status(400).json({ error: 'Invalid id' });
         }
 
+        // Load the request so we know what kind it is
         const existing = await prisma.shiftRequest.findFirst({
         where: { id, workspaceId },
-        })
+        });
+
         if (!existing) {
-        return res.status(404).json({ error: 'Shift request not found' })
+        return res.status(404).json({ error: 'Shift request not found' });
         }
 
-        await prisma.shiftRequest.update({
-        where: { id },
-        data: { approvedByManager: 'APPROVED' },
-        })
+        // Safety: only allow manager approval once the requested user has approved
+        if (existing.approvedByRequested !== 'APPROVED') {
+        return res
+            .status(409)
+            .json({ error: 'Requested user has not approved this request yet' });
+        }
 
-        return res.status(204).send()
+        // If manager already decided, avoid double-applying the swap
+        if (existing.approvedByManager === 'APPROVED') {
+        return res.status(409).json({ error: 'Shift request already approved' });
+        }
+        if (existing.approvedByManager === 'DENIED') {
+        return res.status(409).json({ error: 'Shift request already denied' });
+        }
+
+        // Fetch the involved shift(s)
+        const lendedShift = await prisma.shift.findUnique({
+        where: { id: existing.lendedShiftId },
+        });
+
+        if (!lendedShift) {
+        return res
+            .status(500)
+            .json({ error: 'Lended shift not found for this request' });
+        }
+
+        let requestedShift = null;
+        if (existing.requestedShiftId != null) {
+        requestedShift = await prisma.shift.findUnique({
+            where: { id: existing.requestedShiftId },
+        });
+        if (!requestedShift) {
+            return res
+            .status(500)
+            .json({ error: 'Requested shift not found for this request' });
+        }
+        }
+
+        // Optional consistency checks (can be removed if you don’t care)
+        if (lendedShift.userId !== existing.requestorId) {
+        return res.status(409).json({
+            error: 'Lended shift is no longer owned by the requestor',
+        });
+        }
+        if (requestedShift && requestedShift.userId !== existing.requestedUserId) {
+        return res.status(409).json({
+            error: 'Requested shift is no longer owned by the requested user',
+        });
+        }
+
+        // At this point:
+        // - If requestedShift is null  => COVER REQUEST
+        // - If requestedShift exists   => TRADE REQUEST
+
+        if (!requestedShift) {
+        // COVER: move lendedShift to requestedUserId
+        await prisma.$transaction([
+            prisma.shift.update({
+            where: { id: existing.lendedShiftId },
+            data: { userId: existing.requestedUserId },
+            }),
+            prisma.shiftRequest.update({
+            where: { id },
+            data: { approvedByManager: 'APPROVED' },
+            }),
+        ]);
+        } else {
+        // TRADE: swap the owners of the two shifts
+        await prisma.$transaction([
+            prisma.shift.update({
+            where: { id: existing.lendedShiftId },
+            data: { userId: existing.requestedUserId },
+            }),
+            prisma.shift.update({
+            where: { id: existing.requestedShiftId! },
+            data: { userId: existing.requestorId },
+            }),
+            prisma.shiftRequest.update({
+            where: { id },
+            data: { approvedByManager: 'APPROVED' },
+            }),
+        ]);
+        }
+
+        return res.status(204).send();
     } catch (err) {
-        console.error(err)
-        return res.status(500).json({ error: 'Failed to approve shift request' })
+        console.error(err);
+        return res.status(500).json({ error: 'Failed to approve shift request' });
     }
-})
+});
 
 
-router.post('/:id/reject', async (req, res) => {
+router.post('/:id/admin/reject', async (req, res) => {
     try {
         const workspaceId = Number((req.params as any).workspaceId)
         const id = Number(req.params.id)
