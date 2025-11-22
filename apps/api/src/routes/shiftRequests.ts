@@ -4,8 +4,11 @@ import { prisma } from '../db'
 const router = express.Router({ mergeParams: true })
 
 function formatDate(d: Date) {
-    // YYYY-MM-DD
-    return d.toISOString().slice(0, 10)
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 function formatTime(d: Date) {

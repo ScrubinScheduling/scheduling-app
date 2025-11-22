@@ -392,12 +392,12 @@ export default function ShiftRequestsPage() {
             )}
 
             {/* Actions */}
-            <div className="mt-6 flex items-center justify-end gap-2">
+            <div className="mt-6 flex items-center justify-end gap-2 text-white">
               {/* Deny */}
               <button
                 type="button"
                 onClick={() => openConfirm("reject")}
-                className="inline-flex items-center gap-2 rounded-lg border bg-red-500 px-4 py-2 text-sm font-medium text-black hover:bg-red-700"
+                className="inline-flex items-center gap-2 rounded-lg border bg-red-700 px-4 py-2 text-sm font-medium hover:bg-red-800"
               >
                 <X size={16} /> Deny
               </button>
@@ -406,7 +406,7 @@ export default function ShiftRequestsPage() {
               <button
                 type="button"
                 onClick={() => openConfirm("approve")}
-                className="inline-flex items-center gap-2 rounded-lg bg-green-500 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+                className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
               >
                 <Check size={16} /> Approve
               </button>
@@ -444,14 +444,14 @@ export default function ShiftRequestsPage() {
               onClick={applyDecision}
               className={
                 confirm.action === "approve"
-                  ? "bg-green-500 hover:bg-green-700"
-                  : "bg-red-500 hover:bg-red-700"
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-red-700 hover:bg-red-800"
               }
             >
-              <span className="text-black">
+              <span className="text-white">
                 {confirm.action === "approve"
-                  ? "Confirm approve"
-                  : "Confirm deny"}
+                  ? "Confirm Approve"
+                  : "Confirm Deny"}
               </span>
             </AlertDialogAction>
           </AlertDialogFooter>

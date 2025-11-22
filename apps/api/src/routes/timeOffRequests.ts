@@ -33,8 +33,11 @@ function statusFromQuery(s: string | undefined): number | undefined {
 }
 
 function formatDate(d: Date) {
-  // YYYY-MM-DD
-  return d.toISOString().slice(0, 10);
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 function fullName(user: { firstName: string | null; lastName: string | null } | null) {
