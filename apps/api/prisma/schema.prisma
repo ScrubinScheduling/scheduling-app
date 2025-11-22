@@ -33,7 +33,7 @@ model UserWorkspaceMembership {
 model Workspace {
   id              Int                       @id @default(autoincrement())
   name            String
-  adminId         Int
+  adminId         String
   location        String
   memberships     UserWorkspaceMembership[]
   roleMemberships UserRoleMembership[]
