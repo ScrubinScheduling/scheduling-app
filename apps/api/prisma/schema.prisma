@@ -31,7 +31,7 @@ model UserWorkspaceMembership {
 }
 
 model Workspace {
-  id              Int                       @id @default(autoincrement())
+  id              Int                       @id @default(autoincrement())              
   name            String
   adminId         String
   location        String

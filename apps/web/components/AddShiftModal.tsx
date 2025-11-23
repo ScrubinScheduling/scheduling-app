@@ -129,7 +129,7 @@ const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen, users, wor
                 placeholder="Select Employee"
                 onChange={(value) => setUser(value)}
                 options={users?.map((user: { id: any; firstName: any; }) => ({
-                value: Number(user.id),
+                value: String(user.id),
                 label: user.firstName,
                 })) ?? []}
                 allowClear
