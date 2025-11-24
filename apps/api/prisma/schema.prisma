@@ -47,16 +47,24 @@ model Shift {
   id             Int       @id @default(autoincrement())
   startTime      DateTime
   endTime        DateTime
-  clockInTime    DateTime?
-  clockOutTime   DateTime?
   userId         String
-  startBreakTime DateTime?
-  endBreakTime   DateTime?
   breakDuration  Int
   workspaceId    Int
   user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  timesheet Timesheet?
+
 }
 
+model Timesheet {
+  id             Int       @id @default(autoincrement())
+  shiftId        Int       @unique
+  clockInTime    DateTime?
+  clockOutTime   DateTime?
+  startBreakTime DateTime?
+  endBreakTime   DateTime?
+  shift Shift @relation(fields: [shiftId], references: [id])
+
+}
 model Role {
   id          Int    @id @default(autoincrement())
   workspaceId Int
@@ -116,6 +124,8 @@ model TimeOffRequest {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 }
+
+
 
 enum MeetingStatus {
   PENDING
