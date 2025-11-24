@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { format } from "date-fns";
 import { Coffee, Play, Square, RefreshCw, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,6 +40,18 @@ function ShiftTradeDialog({ children }: { children: React.ReactNode }) {
 
 export default function ClockinCard() {
     const [status, setStatus] = useState<"scheduled" | "active" | "break" | "completed">("scheduled");
+    
+    // Scheduled shift times (could come from props/API in the future)
+    const [scheduledStart] = useState<Date>(new Date(new Date().setHours(9, 0, 0, 0)));
+    const [scheduledEnd] = useState<Date>(new Date(new Date().setHours(17, 0, 0, 0)));
+    
+    // Clock in/out times
+    const [clockInTime, setClockInTime] = useState<Date | null>(null);
+    const [clockOutTime, setClockOutTime] = useState<Date | null>(null);
+    
+    // Break times
+    const [breakStartTime, setBreakStartTime] = useState<Date | null>(null);
+    const [breakEndTime, setBreakEndTime] = useState<Date | null>(null);
 
     const coworkers = [
         { name: "John D.", initials: "JD", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop" },
@@ -64,7 +77,7 @@ export default function ClockinCard() {
                     </div>
                     <CardDescription>
                         {status === "scheduled"
-                            ? "Today, 9:00 AM - 5:00 PM"
+                            ? `Today, ${format(scheduledStart, "h:mm a")} - ${format(scheduledEnd, "h:mm a")}`
                             : status === "active"
                                 ? "Shift in progress"
                                 : status === "break"
@@ -92,7 +105,13 @@ export default function ClockinCard() {
                             {status === "scheduled" ? "Starts at" : status === "break" ? "Break Started" : "Clocked In"}
                         </span>
                         <div className="text-4xl font-bold tracking-tighter">
-                            {status === "scheduled" ? "9:00 AM" : status === "break" ? "12:30 PM" : "9:00 AM"}
+                            {status === "scheduled" 
+                                ? format(scheduledStart, "h:mm a")
+                                : status === "break" && breakStartTime
+                                    ? format(breakStartTime, "h:mm a")
+                                    : clockInTime
+                                        ? format(clockInTime, "h:mm a")
+                                        : format(scheduledStart, "h:mm a")}
                         </div>
                     </div>
 
@@ -118,31 +137,57 @@ export default function ClockinCard() {
 
                 <div className="grid grid-cols-2 gap-4">
                     {status === "scheduled" && (
-                        <Button className="w-full h-12 text-base" onClick={() => setStatus("active")}>
+                        <Button 
+                            className="w-full h-12 text-base" 
+                            onClick={() => {
+                                setClockInTime(new Date());
+                                setStatus("active");
+                            }}
+                        >
                             <Play className="mr-2 h-4 w-4" /> Clock In
                         </Button>
                     )}
 
                     {status === "active" && (
                         <>
-                            <Button variant="secondary" className="w-full h-12 text-base" onClick={() => setStatus("break")}>
+                            <Button 
+                                variant="secondary" 
+                                className="w-full h-12 text-base" 
+                                onClick={() => {
+                                    setBreakStartTime(new Date());
+                                    setStatus("break");
+                                }}
+                            >
                                 <Coffee className="mr-2 h-4 w-4" /> Start Break
                             </Button>
-                            <Button variant="destructive" className="w-full h-12 text-base" onClick={() => setStatus("completed")}>
+                            <Button 
+                                variant="destructive" 
+                                className="w-full h-12 text-base" 
+                                onClick={() => {
+                                    setClockOutTime(new Date());
+                                    setStatus("completed");
+                                }}
+                            >
                                 <Square className="mr-2 h-4 w-4 fill-current" /> Clock Out
                             </Button>
                         </>
                     )}
 
                     {status === "break" && (
-                        <Button className="w-full col-span-2 h-12 text-base" onClick={() => setStatus("active")}>
+                        <Button 
+                            className="w-full col-span-2 h-12 text-base" 
+                            onClick={() => {
+                                setBreakEndTime(new Date());
+                                setStatus("active");
+                            }}
+                        >
                             <Play className="mr-2 h-4 w-4" /> End Break & Resume
                         </Button>
                     )}
 
-                    {status === "completed" && (
+                    {status === "completed" && clockOutTime && (
                         <Button variant="outline" className="w-full col-span-2 h-12 text-base" disabled>
-                            Shift Ended at 5:00 PM
+                            Shift Ended at {format(clockOutTime, "h:mm a")}
                         </Button>
                     )}
 
