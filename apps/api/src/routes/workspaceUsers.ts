@@ -8,10 +8,12 @@ router.get('/', listMembers);
 
 // gets shifts for a user in a workspace
 // Note: :userId here is the Clerk userId (which is now the user.id)
+// Query params: start, end (optional ISO date strings for date filtering)
 router.get('/:userId/shifts', async (req, res) => {
 	try {
 		const workspaceId = Number((req.params as any).workspaceId);
 		const clerkId = String(req.params.userId);
+		const { start, end } = req.query;
 
 		if (!workspaceId || Number.isNaN(workspaceId) || !clerkId) {
 			return res.status(400).json({ error: 'Invalid workspaceId or userId' });
@@ -20,8 +22,17 @@ router.get('/:userId/shifts', async (req, res) => {
 		const user = await prisma.user.findUnique({ where: { id: clerkId } });
 		if (!user) return res.status(404).json({ error: 'User not found' });
 
+		const where: any = { workspaceId, userId: user.id };
+		
+		// Add date filtering if start and end are provided
+		if (start && end) {
+			const startDate = new Date(start as string);
+			const endDate = new Date(end as string);
+			where.startTime = { gte: startDate, lt: endDate };
+		}
+
 		const shifts = await prisma.shift.findMany({
-			where: { workspaceId, userId: user.id },
+			where,
 			orderBy: { startTime: 'asc' },
 			include: {
 				timesheet: true,

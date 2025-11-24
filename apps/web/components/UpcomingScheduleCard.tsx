@@ -22,12 +22,12 @@ type Shift = {
   startTime: string
   endTime: string
   breakDuration: number
-}
-
-type WorkspaceShiftsResponse = {
-  days: string[]
-  users: Array<{ id: number; firstName: string | null; lastName: string | null }>
-  buckets: Record<number, Record<string, Shift[]>>
+  timesheet?: {
+    clockInTime: string | null
+    clockOutTime: string | null
+    startBreakTime: string | null
+    endBreakTime: string | null
+  } | null
 }
 
 export default function UpcomingScheduleCard() {
@@ -53,7 +53,7 @@ export default function UpcomingScheduleCard() {
         setLoading(true)
         setError(null)
 
-        // Get shifts for this week filtered by clerkId
+        // Get shifts for this week
         const now = new Date()
         const weekStart = startOfWeek(now, { weekStartsOn: 0 })
         const weekEnd = endOfWeek(now, { weekStartsOn: 0 })
@@ -61,15 +61,20 @@ export default function UpcomingScheduleCard() {
         // Add one week to get upcoming shifts
         weekEnd.setDate(weekEnd.getDate() + 7)
 
-        const shiftsResp = await apiClient.getWorkspaceShifts(workspaceId as string, {
+        const workspaceIdNum = Number(workspaceId)
+        const response = await apiClient.getUserShifts(workspaceIdNum, userId, {
           start: weekStart.toISOString(),
           end: weekEnd.toISOString(),
-          clerkId: userId, // Pass clerkId directly
-        }) as WorkspaceShiftsResponse
+        }) as { shifts: Shift[] }
 
         if (!alive) return
 
-        // Extract shifts from buckets (when clerkId is provided, buckets will only contain that user's shifts)
+        // Filter out shifts that have been clocked out
+        const activeShifts = response.shifts.filter(shift => {
+          return !shift.timesheet || !shift.timesheet.clockOutTime
+        })
+
+        // Extract and format shifts
         const userShifts: Array<{
           id: string
           date: string
@@ -77,33 +82,27 @@ export default function UpcomingScheduleCard() {
           startTime: Date
         }> = []
 
-        // Since shifts are filtered by clerkId, iterate through all buckets (should only be one user)
-        for (const userIdKey in shiftsResp.buckets) {
-          const userBucket = shiftsResp.buckets[userIdKey]
-          for (const [day, dayShifts] of Object.entries(userBucket)) {
-            for (const shift of dayShifts) {
-              const startTime = parseISO(shift.startTime)
-              const endTime = parseISO(shift.endTime)
-              
-              // Format date
-              let dateLabel = format(startTime, "EEE, MMM d")
-              if (isToday(startTime)) {
-                dateLabel = "Today"
-              } else if (isTomorrow(startTime)) {
-                dateLabel = "Tomorrow"
-              }
-
-              // Format time
-              const timeLabel = `${format(startTime, "h:mm a")} - ${format(endTime, "h:mm a")}`
-
-              userShifts.push({
-                id: String(shift.id),
-                date: dateLabel,
-                time: timeLabel,
-                startTime,
-              })
-            }
+        for (const shift of activeShifts) {
+          const startTime = parseISO(shift.startTime)
+          const endTime = parseISO(shift.endTime)
+          
+          // Format date
+          let dateLabel = format(startTime, "EEE, MMM d")
+          if (isToday(startTime)) {
+            dateLabel = "Today"
+          } else if (isTomorrow(startTime)) {
+            dateLabel = "Tomorrow"
           }
+
+          // Format time
+          const timeLabel = `${format(startTime, "h:mm a")} - ${format(endTime, "h:mm a")}`
+
+          userShifts.push({
+            id: String(shift.id),
+            date: dateLabel,
+            time: timeLabel,
+            startTime,
+          })
         }
 
         // Sort by start time
