@@ -18,6 +18,7 @@ model User {
   UserRoleMembership      UserRoleMembership[]
   Shift                   Shift[]
   timeOffRequests         TimeOffRequest[]
+  meetingCreator          Meeting[]
 }
 
 model UserWorkspaceMembership {
@@ -26,6 +27,7 @@ model UserWorkspaceMembership {
   workspaceId Int
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  meetingInvites  MeetingInvite[]
 
   @@unique([workspaceId, userId])
 }
@@ -38,22 +40,31 @@ model Workspace {
   memberships     UserWorkspaceMembership[]
   roleMemberships UserRoleMembership[]
   timeOffRequests TimeOffRequest[]
+  meetings        Meeting[]
 }
 
 model Shift {
   id             Int       @id @default(autoincrement())
   startTime      DateTime
   endTime        DateTime
-  clockInTime    DateTime?
-  clockOutTime   DateTime?
   userId         String
-  startBreakTime DateTime?
-  endBreakTime   DateTime?
   breakDuration  Int
   workspaceId    Int
   user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  timesheet Timesheet?
+
 }
 
+model Timesheet {
+  id             Int       @id @default(autoincrement())
+  shiftId        Int       @unique
+  clockInTime    DateTime?
+  clockOutTime   DateTime?
+  startBreakTime DateTime?
+  endBreakTime   DateTime?
+  shift Shift @relation(fields: [shiftId], references: [id])
+
+}
 model Role {
   id          Int    @id @default(autoincrement())
   workspaceId Int
@@ -103,11 +114,6 @@ model Invitation {
   acceptedAt  DateTime?
 }
 
-model Meeting {
-  id          Int @id @default(autoincrement())
-  workspaceId Int
-}
-
 model TimeOffRequest {
   id          Int       @id @default(autoincrement())
   userId      String
@@ -117,4 +123,48 @@ model TimeOffRequest {
   status      Int
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+
+
+enum MeetingStatus {
+  PENDING
+  FINALIZED
+  CANCELLED
+  RESCHEDULED
+}
+
+enum MeetingResponse {
+  PENDING
+  YES
+  NO
+}
+
+model Meeting {
+  id            Int             @id @default(autoincrement())
+  workspaceId   Int
+  createdById   String
+  location      String
+  description   String
+  scheduledAt   DateTime
+  status        MeetingStatus   @default(PENDING)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  workspace     Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy     User            @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  invitations   MeetingInvite[]
+}
+
+model MeetingInvite {
+  id           Int                     @id @default(autoincrement())
+  meetingId    Int
+  membershipId Int
+  response     MeetingResponse         @default(PENDING)
+  respondedAt  DateTime?
+
+  meeting      Meeting                 @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  membership   UserWorkspaceMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+
+  @@unique([meetingId, membershipId])
 }

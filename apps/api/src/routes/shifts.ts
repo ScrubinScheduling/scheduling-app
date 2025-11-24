@@ -22,7 +22,10 @@ router.get(
             const shifts = await prisma.shift.findMany({
                 where: { workspaceId, startTime: { lt: endDate }, endTime: { gt: startDate } },
                 orderBy: { startTime: 'asc' },
-                include: { user: { select: { id: true, firstName: true, lastName: true } } },
+                include: { 
+                    user: { select: { id: true, firstName: true, lastName: true } },
+                    timesheet: true,
+                },
             })
 
             // build day list, assume start and end are midnight boundaries in workspace tz already
@@ -74,8 +77,29 @@ router.get(
 )
 
 router.get('/:id', async (req, res) => {
-    // TODO: Implement get single shift
-    res.status(501).json({ error: 'Not implemented' })
+    try {
+        const id = Number(req.params.id)
+        if (!Number.isInteger(id)) {
+            return res.status(400).json({ error: 'Invalid shift id' })
+        }
+
+        const shift = await prisma.shift.findUnique({
+            where: { id },
+            include: {
+                user: { select: { id: true, firstName: true, lastName: true } },
+                timesheet: true,
+            },
+        })
+
+        if (!shift) {
+            return res.status(404).json({ error: 'Shift not found' })
+        }
+
+        res.status(200).json(shift)
+    } catch (error) {
+        console.log('Error in get shift route', error)
+        res.status(500).json({ message: 'Internal server error' })
+    }
 })
 
 router.post('/', async (req, res) => {
@@ -183,23 +207,155 @@ router.delete('/:id', async (req, res) => {
 })
 
 router.post('/:id/clock-in', async (req, res) => {
-    // TODO: Implement clock in
-    res.status(501).json({ error: 'Not implemented' })
+    try {
+        const shiftId = Number(req.params.id)
+        if (!Number.isInteger(shiftId)) {
+            return res.status(400).json({ error: 'Invalid shift id' })
+        }
+
+        // Verify shift exists
+        const shift = await prisma.shift.findUnique({ where: { id: shiftId } })
+        if (!shift) {
+            return res.status(404).json({ error: 'Shift not found' })
+        }
+
+        // Get clock-in time from request body or use current time
+        const clockInTime = req.body?.at ? new Date(req.body.at) : new Date()
+
+        // Upsert timesheet (create if doesn't exist, update if it does)
+        const timesheet = await prisma.timesheet.upsert({
+            where: { shiftId },
+            update: {
+                clockInTime,
+            },
+            create: {
+                shiftId,
+                clockInTime,
+            },
+            include: {
+                shift: true,
+            },
+        })
+
+        res.status(200).json(timesheet)
+    } catch (error) {
+        console.log('Error in clock-in route', error)
+        res.status(500).json({ message: 'Internal server error' })
+    }
 })
 
 router.post('/:id/clock-out', async (req, res) => {
-    // TODO: Implement clock out
-    res.status(501).json({ error: 'Not implemented' })
+    try {
+        const shiftId = Number(req.params.id)
+        if (!Number.isInteger(shiftId)) {
+            return res.status(400).json({ error: 'Invalid shift id' })
+        }
+
+        // Verify shift exists
+        const shift = await prisma.shift.findUnique({ where: { id: shiftId } })
+        if (!shift) {
+            return res.status(404).json({ error: 'Shift not found' })
+        }
+
+        // Get clock-out time from request body or use current time
+        const clockOutTime = req.body?.at ? new Date(req.body.at) : new Date()
+
+        // Update timesheet (create if doesn't exist)
+        const timesheet = await prisma.timesheet.upsert({
+            where: { shiftId },
+            update: {
+                clockOutTime,
+            },
+            create: {
+                shiftId,
+                clockOutTime,
+            },
+            include: {
+                shift: true,
+            },
+        })
+
+        res.status(200).json(timesheet)
+    } catch (error) {
+        console.log('Error in clock-out route', error)
+        res.status(500).json({ message: 'Internal server error' })
+    }
 })
 
 router.post('/:id/break/start', async (req, res) => {
-    // TODO: Implement start break
-    res.status(501).json({ error: 'Not implemented' })
+    try {
+        const shiftId = Number(req.params.id)
+        if (!Number.isInteger(shiftId)) {
+            return res.status(400).json({ error: 'Invalid shift id' })
+        }
+
+        // Verify shift exists
+        const shift = await prisma.shift.findUnique({ where: { id: shiftId } })
+        if (!shift) {
+            return res.status(404).json({ error: 'Shift not found' })
+        }
+
+        // Get break start time from request body or use current time
+        const startBreakTime = req.body?.at ? new Date(req.body.at) : new Date()
+
+        // Update timesheet (create if doesn't exist)
+        const timesheet = await prisma.timesheet.upsert({
+            where: { shiftId },
+            update: {
+                startBreakTime,
+            },
+            create: {
+                shiftId,
+                startBreakTime,
+            },
+            include: {
+                shift: true,
+            },
+        })
+
+        res.status(200).json(timesheet)
+    } catch (error) {
+        console.log('Error in start break route', error)
+        res.status(500).json({ message: 'Internal server error' })
+    }
 })
 
 router.post('/:id/break/end', async (req, res) => {
-    // TODO: Implement end break
-    res.status(501).json({ error: 'Not implemented' })
+    try {
+        const shiftId = Number(req.params.id)
+        if (!Number.isInteger(shiftId)) {
+            return res.status(400).json({ error: 'Invalid shift id' })
+        }
+
+        // Verify shift exists
+        const shift = await prisma.shift.findUnique({ where: { id: shiftId } })
+        if (!shift) {
+            return res.status(404).json({ error: 'Shift not found' })
+        }
+
+        // Get break end time from request body or use current time
+        const endBreakTime = req.body?.at ? new Date(req.body.at) : new Date()
+
+        // Update timesheet (create if doesn't exist)
+        const timesheet = await prisma.timesheet.upsert({
+            where: { shiftId },
+            update: {
+                endBreakTime,
+            },
+            create: {
+                shiftId,
+                endBreakTime,
+            },
+            include: {
+                shift: true,
+            },
+        })
+
+        res.status(200).json(timesheet)
+    } catch (error) {
+        console.log('Error in end break route', error)
+        res.status(500).json({ message: 'Internal server error' })
+    }
 })
 
 export default router
