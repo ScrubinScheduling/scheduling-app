@@ -22,7 +22,10 @@ router.get('/:userId/shifts', async (req, res) => {
 
 		const shifts = await prisma.shift.findMany({
 			where: { workspaceId, userId: user.id },
-			orderBy: { startTime: 'asc' }
+			orderBy: { startTime: 'asc' },
+			include: {
+				timesheet: true,
+			},
 		});
 
 		return res.status(200).json({ shifts });
@@ -127,7 +130,7 @@ router.get('/:userId/shift-requests', async (req, res) => {
 		const shifts = shiftIdList.length
 			? await prisma.shift.findMany({
 					where: { id: { in: shiftIdList } },
-					include: { user: true },
+					include: { user: true, timesheet: true },
 			  })
 			: [];
 		const shiftById = new Map<number, (typeof shifts)[number]>();
