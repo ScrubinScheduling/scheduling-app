@@ -7,6 +7,7 @@ import {
     Send,
     Bell,
     Bolt,
+    CalendarFold,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { useParams, usePathname } from "next/navigation";
@@ -15,6 +16,7 @@ export default function UserAppHeader() {
     const { id } = useParams<{ id: string }>();
     const href_dashboard = `/workspaces/${id}/user/dashboard`;
     const href_requests = `/workspaces/${id}/user/requests`;
+    const href_calendar = `/workspaces/${id}/user/calendar`;
 
     return (
         <div className="w-full bg-white p-4 shadow flex-row justify-between items-center flex border-b-gray-500 border-b">
@@ -32,12 +34,17 @@ export default function UserAppHeader() {
             <div className="flex flex-row gap-4 ml-5">
                 <Link href={href_dashboard} className="flex flex-row gap-2 items-center bg-gray-100 p-2 rounded-lg cursor-pointer hover:bg-gray-200">
                     <LayoutDashboard size={20} color="gray" />
-                    <h1 className="text-gray-500 text-md">Dashboard</h1>
+                    <span className="text-gray-500 text-md">Dashboard</span>
                 </Link>
 
                 <Link href={href_requests} className="flex flex-row gap-2 items-center bg-gray-100 p-2 rounded-lg cursor-pointer hover:bg-gray-200">
                     <Send size={20} color="gray" />
-                    <h1 className="text-gray-500 text-md">Requests</h1>
+                    <span className="text-gray-500 text-md">Requests</span>
+                </Link>
+
+                <Link href={href_calendar} className="flex flex-row gap-2 items-center bg-gray-100 p-2 rounded-lg cursor-pointer hover:bg-gray-200">
+                    <CalendarFold size={20} color="gray" />
+                    <span className="text-gray-500 text-md">Calendar</span>
                 </Link>
             </div>
             <div className="flex flex-row gap-4 items-center">
