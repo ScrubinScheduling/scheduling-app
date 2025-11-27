@@ -52,7 +52,8 @@ router.get('/:id/shifts', async (req, res) => {
 				startTime: 'asc'
 			},
 			include: {
-				user: true
+				user: true,
+				timesheet: true,
 			}
 		});
 

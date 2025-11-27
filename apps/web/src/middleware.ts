@@ -8,6 +8,8 @@ const isWorkspaceRoute = createRouteMatcher([
   "/workspaces/:workspaceId/:path*",
 ]);
 
+const isWorkspaceRoot = createRouteMatcher(["/workspaces/:workspaceId"])
+
 async function getWorkspaceMembershipStatus(token: string | null, workspaceId: number) {
   try {
     const apiClient = createApiClient({
@@ -22,13 +24,28 @@ async function getWorkspaceMembershipStatus(token: string | null, workspaceId: n
   }
 }
 
+async function isAdmin(token, userId: string | null, workspaceId: number) {
+  try {
+    const apiClient = createApiClient({
+      baseUrl: "http://localhost:4000",
+      getToken: async () => token
+    });
+    
+    const workspace = await apiClient.getWorkspace(workspaceId); 
+
+    return workspace.adminId === userId;
+  } catch (err) {
+    console.error(err)
+  }
+}
+
 export default clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {
     await auth.protect();
   }
 
   if (isWorkspaceRoute(req)) {
-    const { getToken } = await auth();
+    const { getToken, userId } = await auth();
     const token = await getToken();
     const workspaceId = Number(req.url.split("/")[4])
 	  const membershipStatus = await getWorkspaceMembershipStatus(token, workspaceId);
@@ -36,6 +53,11 @@ export default clerkMiddleware(async (auth, req) => {
 		if (membershipStatus === 403) {
 			return NextResponse.redirect(new URL("/not-found", req.url));
 		}
+
+    if (isWorkspaceRoot(req)) {
+      const isUserAdmin = await isAdmin(token, userId, workspaceId);
+			return NextResponse.redirect(new URL(`/workspaces/${workspaceId}/${isUserAdmin ? 'admin': 'user'}/dashboard`, req.url));
+    }
 
   }
 });

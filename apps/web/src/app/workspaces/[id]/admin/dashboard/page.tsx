@@ -24,6 +24,7 @@ import {
   parseISO,
 } from "date-fns"; 
 import ShiftModal from "../../../../../../components/ShiftModal";
+import { on } from "events";
 
 
 type ApiShift = { id: number; startTime: string; endTime: string; breakDuration: number | null };
@@ -244,6 +245,8 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
             workspaceId={workspaceId}
             isVisiable={openShiftDetails}
             setIsVisiable={setOpenShiftDeatils}
+            users={users}
+            onSuccess={handleShiftReload}
           />
         )}
         <AddShiftModal open={isModal} setOpen={setIsModal} users={users} workspaceId={Number(id)} onSuccess={handleShiftReload} />

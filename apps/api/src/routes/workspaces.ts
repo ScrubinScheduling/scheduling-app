@@ -36,7 +36,7 @@ router.get('/:id', async (req, res) => {
 			return res.status(403).json({ error: 'Unauthorized to Access Workspace' });
 		}
 
-		res.status(200).json(membership.workspace);
+		res.status(200).json(membership.workspace); // This is what I changed
 	} catch (err) {
 		console.error(err);
 		res.status(500).json({ error: err });
