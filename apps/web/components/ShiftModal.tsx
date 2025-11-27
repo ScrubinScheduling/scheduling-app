@@ -13,7 +13,7 @@ type Member = { id: number; firstName: string; lastName?: string | null };
 type ShiftModalProps  = {
     user: User;
     shift: Shift;
-    workspaceId: Number | null;
+    workspaceId: number | null;
     isVisiable: boolean;   
     onDelete?: (shiftId: number) => void | Promise<void>;
     setIsVisiable: React.Dispatch<React.SetStateAction<boolean>>;
@@ -29,7 +29,7 @@ function ShiftModal({user, shift, onDelete, workspaceId, isVisiable, setIsVisiab
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [date, setDate] = useState<Dayjs | null>(dayjs(shift.startTime));
-  const [err, setErr] = useState<String | undefined>(undefined);
+  const [err, setErr] = useState<string | undefined>(undefined);
   const [timeRange, setTimeRange] = useState<[Dayjs, Dayjs] | null>([
     dayjs(shift.startTime),
     dayjs(shift.endTime),

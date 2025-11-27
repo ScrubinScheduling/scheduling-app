@@ -4,7 +4,7 @@ import { format, parseISO, isToday } from "date-fns";
 import { Coffee, Play, Square, RefreshCw, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -66,13 +66,12 @@ export default function ClockinCard() {
     
     const status = getStatus();
     
-    // Parse times from API response (only if shift exists)
     const scheduledStart = currentShift ? parseISO(currentShift.startTime) : null;
     const scheduledEnd = currentShift ? parseISO(currentShift.endTime) : null;
     const clockInTime = currentShift?.timesheet?.clockInTime ? parseISO(currentShift.timesheet.clockInTime) : null;
     const clockOutTime = currentShift?.timesheet?.clockOutTime ? parseISO(currentShift.timesheet.clockOutTime) : null;
     const breakStartTime = currentShift?.timesheet?.startBreakTime ? parseISO(currentShift.timesheet.startBreakTime) : null;
-    const breakEndTime = currentShift?.timesheet?.endBreakTime ? parseISO(currentShift.timesheet.endBreakTime) : null;
+    // const breakEndTime = currentShift?.timesheet?.endBreakTime ? parseISO(currentShift.timesheet.endBreakTime) : null;
 
     // Fetch upcoming shift
     useEffect(() => {

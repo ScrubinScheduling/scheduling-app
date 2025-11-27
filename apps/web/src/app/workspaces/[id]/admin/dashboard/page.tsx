@@ -24,7 +24,6 @@ import {
   parseISO,
 } from "date-fns"; 
 import ShiftModal from "../../../../../../components/ShiftModal";
-import { on } from "events";
 
 
 type ApiShift = { id: number; startTime: string; endTime: string; breakDuration: number | null };
@@ -35,8 +34,7 @@ type WeeklyResponse = {
   buckets: Record<number, Record<string, ApiShift[]>>;
 };
 
-
-const page = ({ params }: { params: Promise<{ id: string }> }) => {
+export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const workspaceId = Number(id);
   const hasValidWorkspace = Number.isInteger(workspaceId);
@@ -77,11 +75,7 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
     if (!hasValidWorkspace) return;
     try {
       setIsLoading(true); 
-      const params = new URLSearchParams({
-        start: week.start.toISOString(),
-        end: week.end.toISOString()
-      });
-
+    
       // API client throws error; start/end are required
       const data: WeeklyResponse = await apiClient.getWorkspaceShifts(id, {
         start: week.start.toISOString(),
@@ -252,6 +246,4 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
         <AddShiftModal open={isModal} setOpen={setIsModal} users={users} workspaceId={Number(id)} onSuccess={handleShiftReload} />
       </div>
   );
-};
-
-export default page;
+}

@@ -49,7 +49,7 @@ export function makeWeek(anchor: Date, weekStartsOn = WEEK_START): Week {
  * @param weekStartsOn first day of week (defaults to WEEK_START)
  * @returns the recalculated week structure for the new anchor
  */
-export function moveWeek(anchor: Date, offset: number, weekStartsOn: Day = WEEK_START): Week {
+export function moveWeek(anchor: Date, offset: number): Week {
     const nextAnchor = addWeeks(anchor, offset);
     return makeWeek(nextAnchor); 
 }
@@ -59,7 +59,7 @@ export function moveWeek(anchor: Date, offset: number, weekStartsOn: Day = WEEK_
  * @param w is the Week object that contains the current week. 
  * @returns a formated string based on the week. 
  */
-export function weekLabel(w: Week): String {
+export function weekLabel(w: Week): string {
     const sameYear = format(w.start, "yyyy") === format(w.end, "yyyy");
     const sameMonth = format(w.start, "MM") === format(w.end, "yyyy"); 
     if (sameYear && sameMonth) return `${format(w.start, "MMM d")} , ${format(w.end, "d")} , ${format(w.end, "yyyy")}`;

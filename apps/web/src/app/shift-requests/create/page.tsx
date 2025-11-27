@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { useUser, useAuth } from '@clerk/nextjs';
 
 export default function CreateShiftRequestPage() {
-    const { user } = useUser();
     const { getToken } = useAuth();
 
     const [workspaceId, setWorkspaceId] = useState<string>('')

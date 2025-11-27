@@ -43,7 +43,6 @@ export default function Page() {
     type AnyRequest = TradeReq | TimeOffReq;
 
     const { getToken } = useAuth();
-    const { user } = useUser();
     const { id } = useParams<{ id: string }>();
     const apiClient = useMemo(
         () =>
