@@ -17,6 +17,13 @@ type MemberDTO = {
 export async function listMembers(req: Request, res: Response) {
     const workspaceId = Number(req.params.workspaceId ?? req.params.id)
 
+    const workspace = await prisma.workspace.findUnique({
+        where: { id: workspaceId },
+    })
+    if (!workspace) {
+        return res.status(404).json({ error: 'Workspace not found' })
+    }
+
     const rows = await prisma.userWorkspaceMembership.findMany({
         where: { workspaceId },
         select: {
@@ -28,7 +35,10 @@ export async function listMembers(req: Request, res: Response) {
                     lastName: true,
                     UserRoleMembership: {
                         where: { workSpaceId: workspaceId },
-                        select: { role: { select: { name: true } } },
+                        select: {
+                            roleId: true,
+                            role: { select: { name: true } },
+                        },
                     },
                 },
             },
@@ -59,6 +69,7 @@ export async function listMembers(req: Request, res: Response) {
                 lastName: user.lastName ?? '',
                 email,
                 phone,
+                isAdmin: workspace.adminId === user.id,
             }
         }),
     )
@@ -70,6 +81,20 @@ export async function removeMember(req: Request, res: Response) {
     const workspaceId = Number(req.params.workspaceId ?? req.params.id)
     const userId = String(req.params.userId)
 
+    // Guard against removing the workspace admin
+    const workspace = await prisma.workspace.findUnique({
+        where: { id: workspaceId },
+    })
+
+    if (!workspace) {
+        return res.status(404).json({ error: 'Workspace not found' })
+    }
+
+    if (workspace.adminId === userId) {
+        return res.status(403).json({ error: 'Cannot remove workspace admin from workspace' })
+    }
+
+    // Existing deletion logic
     await prisma.userWorkspaceMembership.deleteMany({
         where: { workspaceId, userId },
     })

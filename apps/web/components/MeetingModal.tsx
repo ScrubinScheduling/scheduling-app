@@ -18,12 +18,12 @@ import { Calendar as CalendarIcon } from "lucide-react";
 
 import dayjs, { Dayjs } from "dayjs";
 import { TimePicker } from "antd";
-import { Member } from "@scrubin/schemas";
 
 type MemberOption = {
-  id: string;   // UserWorkspaceMembership.id
-  userId: string; // User.id (Clerk)
-  name: string;
+  id: string;            // UserWorkspaceMembership.id (stringified)
+  userId: string;        // User.id (Clerk)
+  firstName: string;
+  lastName: string;
   role: string;
 };
 
@@ -64,7 +64,7 @@ export default function MeetingModal({
   const [selectedDate, setSelectedDate] = React.useState<Date | null>(null);
   const [time, setTime] = React.useState<Dayjs | null>(null);
   const [selectedMemberIds, setSelectedMemberIds] = React.useState<string[]>([]);
-  const [members, setMembers] = React.useState<Member[]>([]);
+  const [members, setMembers] = React.useState<MemberOption[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -82,23 +82,29 @@ export default function MeetingModal({
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
 
+        // Clerk user id of the creator
         const creatorUserId =
           mode === "edit" && meeting ? meeting.createdById : currentUserId;
 
-        const mapped: Member[] = (data.members ?? [])
-          .map((m: Member) => ({
-            id: String(m.membershipId ?? m.id), // prefer membership id, fallback to user id
-            userId: String(m.id ?? m.id),
-            name: `${m.firstName ?? ""} ${m.lastName ?? ""}`.trim() || "Unnamed",
+        const mapped: MemberOption[] = (data.members ?? [])
+          .map((m: any) => ({
+            // membershipId (if backend sends it) or fallback to user id
+            id: String(m.membershipId ?? m.id),
+            userId: String(m.userId ?? m.id),
+            firstName: m.firstName ?? "",
+            lastName: m.lastName ?? "",
             role: m.role ?? "Member",
           }))
-          .filter((m: Member) =>
-            creatorUserId ? String(m.id) !== String(creatorUserId) : true
+          // filter out the creator by userId, not membershipId
+          .filter((m) =>
+            creatorUserId ? String(m.userId) !== String(creatorUserId) : true
           );
 
         setMembers(mapped);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load members");
+        setError(
+          err instanceof Error ? err.message : "Failed to load members"
+        );
       }
     })();
   }, [open, workspaceId, getToken, mode, meeting, currentUserId]);
@@ -320,7 +326,7 @@ export default function MeetingModal({
                 value={time}
                 onChange={(val) => setTime(val)}
                 className="w-full"
-                minuteStep={5} // adjust if you want 15, etc.
+                minuteStep={5}
               />
             </div>
           </div>
@@ -336,20 +342,24 @@ export default function MeetingModal({
                   No members found for this workspace.
                 </div>
               ) : (
-                members.map((m) => (
-                  <label
-                    key={m.id}
-                    className="flex items-center gap-2 text-sm"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedMemberIds.includes(m.id)}
-                      onChange={() => toggleMember(m.id)}
-                    />
-                    <span>{m.firstName} {m.lastName}</span>
-                    <span className="text-xs text-gray-500">· {m.role}</span>
-                  </label>
-                ))
+                members.map((m) => {
+                  const displayName =
+                    `${m.firstName} ${m.lastName}`.trim() || "Unnamed";
+                  return (
+                    <label
+                      key={m.id}
+                      className="flex items-center gap-2 text-sm"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedMemberIds.includes(m.id)}
+                        onChange={() => toggleMember(m.id)}
+                      />
+                      <span>{displayName}</span>
+                      <span className="text-xs text-gray-500">· {m.role}</span>
+                    </label>
+                  );
+                })
               )}
             </div>
           </div>
