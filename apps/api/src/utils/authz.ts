@@ -1,6 +1,6 @@
 import { prisma } from '../db'
 
-export async function getWorkspaceMembership(clerkId: string | null, workspaceId: number) {
+export async function getWorkspaceMembership(clerkId: string, workspaceId: number) {
     const membership = await prisma.userWorkspaceMembership.findFirst({
         where: { workspaceId, user: { id: clerkId } },
 

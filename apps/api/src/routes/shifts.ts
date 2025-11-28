@@ -1,8 +1,15 @@
 import express from 'express'
 import { prisma } from '../db'
-import { Request, Response } from 'express'
-const router = express.Router({ mergeParams: true })
+import type { Request, Response } from 'express'
+import type { Prisma } from '@prisma/client'
 
+const router = express.Router({ mergeParams: true })
+type ShiftWithUserAndTimesheet = Prisma.ShiftGetPayload<{
+    include: {
+      user: { select: { id: true; firstName: true; lastName: true } };
+      timesheet: true;
+    };
+  }>;
 router.get(
     '/',
     async (
@@ -19,7 +26,7 @@ router.get(
             const startDate = new Date(start)
             const endDate = new Date(end)
 
-            const shifts = await prisma.shift.findMany({
+            const shifts: ShiftWithUserAndTimesheet[]  = await prisma.shift.findMany({
                 where: { workspaceId, startTime: { lt: endDate }, endTime: { gt: startDate } },
                 orderBy: { startTime: 'asc' },
                 include: {
@@ -39,9 +46,9 @@ router.get(
             }
 
             // bucket: { [userId]: { [yyyy-mm-dd]: Shift[] } }
-            const buckets: Record<number, Record<string, any[]>> = {}
+            const buckets: Record<string, Record<string, any[]>> = {}
             const users: Record<
-                number,
+                string,
                 { id: number; firstName: string | null; lastName: string | null }
             > = {}
 

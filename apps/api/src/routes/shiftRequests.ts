@@ -364,8 +364,8 @@ router.post('/:id/admin/approve', async (req, res) => {
         if (existing.approvedByManager === 'APPROVED') {
             return res.status(409).json({ error: 'Shift request already approved' })
         }
-        if (existing.approvedByManager === 'DENIED') {
-            return res.status(409).json({ error: 'Shift request already denied' })
+        if (existing.approvedByManager === 'REJECTED') {
+            return res.status(409).json({ error: 'Shift request already rejected' })
         }
 
         // Fetch the involved shift(s)
@@ -458,7 +458,7 @@ router.post('/:id/admin/reject', async (req, res) => {
 
         await prisma.shiftRequest.update({
             where: { id },
-            data: { approvedByManager: 'DENIED' },
+            data: { approvedByManager: 'REJECTED' },
         })
 
         return res.status(204).send()

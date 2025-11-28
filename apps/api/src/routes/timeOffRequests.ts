@@ -1,6 +1,7 @@
 import express from 'express'
 import { prisma } from '../db'
 
+import type { Request } from 'express'
 const router = express.Router({ mergeParams: true })
 
 // Status mapping between DB ints and API strings
@@ -52,7 +53,7 @@ function fullName(user: { firstName: string | null; lastName: string | null } | 
  * GET /workspaces/:workspaceId/timeoff-requests
  * Returns { requests: AnyRequest[] } but only "timeoff" kinds.
  */
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request<{ workspaceId: string }>, res) => {
     try {
         const workspaceId = Number(req.params.workspaceId)
 
@@ -99,7 +100,7 @@ router.get('/', async (req, res) => {
  * GET /workspaces/:workspaceId/timeoff-requests/:id
  * Returns a single timeoff request (same shape).
  */
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req: Request<{workspaceId: string; id: string}>, res) => {
     try {
         const workspaceId = Number(req.params.workspaceId)
         const id = Number(req.params.id)
@@ -167,7 +168,7 @@ router.delete('/:id', async (req, res) => {
  * POST /workspaces/:workspaceId/timeoff-requests/:id/approve
  * Marks time off request as approved.
  */
-router.post('/:id/approve', async (req, res) => {
+router.post('/:id/approve', async (req: Request<{ workspaceId: string; id: string }>, res) => {
     try {
         const workspaceId = Number(req.params.workspaceId)
         const id = Number(req.params.id)
@@ -201,7 +202,7 @@ router.post('/:id/approve', async (req, res) => {
  * POST /workspaces/:workspaceId/timeoff-requests/:id/reject
  * Marks time off request as denied.
  */
-router.post('/:id/reject', async (req, res) => {
+router.post('/:id/reject', async (req: Request<{ workspaceId: string; id: string }>, res) => {
     try {
         const workspaceId = Number(req.params.workspaceId)
         const id = Number(req.params.id)

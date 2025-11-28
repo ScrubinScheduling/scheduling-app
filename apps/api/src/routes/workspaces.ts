@@ -6,8 +6,12 @@ import { getWorkspaceMembership } from '../utils/authz'
 const router = express.Router()
 
 router.get('/', async (req, res) => {
-    const { userId } = getAuth(req)
+    const { isAuthenticated, userId } = getAuth(req)
 
+    if (!isAuthenticated) {
+        return res.status(401).json({ error: 'User not authenticated' })
+
+    }
     const user = await prisma.user.findFirst({
         where: {
             id: userId,
@@ -29,7 +33,12 @@ router.get('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
     try {
-        const { userId } = getAuth(req)
+        const { isAuthenticated, userId } = getAuth(req)
+
+        if (!isAuthenticated) {
+            return res.status(401).json({ error: 'User not authenticated' })
+    
+        }
         const membership = await getWorkspaceMembership(userId, Number(req.params.id))
 
         if (!membership) {
@@ -44,8 +53,12 @@ router.get('/:id', async (req, res) => {
 })
 
 router.post('/', async (req, res) => {
-    const { userId } = getAuth(req)
+    const { isAuthenticated, userId } = getAuth(req)
 
+    if (!isAuthenticated) {
+        return res.status(401).json({ error: 'User not authenticated' })
+
+    }
     const user = await prisma.user.findFirst({
         where: {
             id: userId,

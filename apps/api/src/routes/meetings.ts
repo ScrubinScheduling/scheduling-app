@@ -90,15 +90,19 @@ function mapMeetingForResponse(meeting: any) {
  */
 router.get('/', async (req, res) => {
     try {
-        const { userId } = getAuth(req)
+        const { userId, isAuthenticated } = getAuth(req)
         const workspaceId = parseWorkspaceId(req)
+
+        if (!isAuthenticated) {
+            return res.status(401).json({ error: 'User not authenticated' })
+        }
 
         if (!workspaceId) {
             return res.status(400).json({ error: 'Invalid workspaceId' })
         }
 
         // Ensure the caller is a member of this workspace
-        const membership = await getWorkspaceMembership(userId ?? null, workspaceId)
+        const membership = await getWorkspaceMembership(userId, workspaceId)
         if (!membership) {
             return res.status(403).json({ error: 'Not a member of this workspace' })
         }
@@ -134,9 +138,13 @@ router.get('/', async (req, res) => {
  */
 router.get('/:id', async (req, res) => {
     try {
-        const { userId } = getAuth(req)
+        const { userId, isAuthenticated } = getAuth(req)
         const workspaceId = parseWorkspaceId(req)
         const meetingId = parseMeetingId(req)
+
+        if (!isAuthenticated) {
+            return res.status(401).json({ error: 'User not authenticated' })
+        }
 
         if (!workspaceId || !meetingId) {
             return res.status(400).json({ error: 'Invalid workspaceId or meeting id' })
@@ -188,9 +196,12 @@ router.get('/:id', async (req, res) => {
  */
 router.post('/', async (req, res) => {
     try {
-        const { userId } = getAuth(req)
+        const { userId, isAuthenticated } = getAuth(req)
         const workspaceId = parseWorkspaceId(req)
 
+        if (!isAuthenticated) {
+            return res.status(401).json({ error: 'User not authenticated' })
+        }
         if (!workspaceId) {
             return res.status(400).json({ error: 'Invalid workspaceId' })
         }
@@ -271,9 +282,14 @@ router.post('/', async (req, res) => {
  */
 router.delete('/:id', async (req, res) => {
     try {
-        const { userId } = getAuth(req)
+        const { userId, isAuthenticated } = getAuth(req)
         const workspaceId = parseWorkspaceId(req)
         const meetingId = parseMeetingId(req)
+
+        if (!isAuthenticated) {
+            return res.status(401).json({ error: 'User not authenticated' })
+
+        }
 
         if (!workspaceId || !meetingId) {
             return res.status(400).json({ error: 'Invalid workspaceId or meeting id' })
@@ -316,9 +332,14 @@ router.delete('/:id', async (req, res) => {
  */
 router.post('/:id/finalize', async (req, res) => {
     try {
-        const { userId } = getAuth(req)
+        const { userId, isAuthenticated } = getAuth(req)
         const workspaceId = parseWorkspaceId(req)
         const meetingId = parseMeetingId(req)
+
+        if (!isAuthenticated) {
+            return res.status(401).json({ error: 'User not authenticated' })
+
+        }
 
         if (!workspaceId || !meetingId) {
             return res.status(400).json({ error: 'Invalid workspaceId or meeting id' })
@@ -367,10 +388,15 @@ router.post('/:id/finalize', async (req, res) => {
  */
 router.post('/:id/cancel', async (req, res) => {
     try {
-        const { userId } = getAuth(req)
+        const { userId, isAuthenticated } = getAuth(req)
         const workspaceId = parseWorkspaceId(req)
         const meetingId = parseMeetingId(req)
 
+
+        if (!isAuthenticated) {
+            return res.status(401).json({ error: 'User not authenticated' })
+
+        }
         if (!workspaceId || !meetingId) {
             return res.status(400).json({ error: 'Invalid workspaceId or meeting id' })
         }
@@ -414,9 +440,14 @@ router.post('/:id/cancel', async (req, res) => {
 
 router.post('/:id/reschedule', async (req, res) => {
     try {
-        const { userId } = getAuth(req)
+        const { userId, isAuthenticated } = getAuth(req)
         const workspaceId = parseWorkspaceId(req)
         const meetingId = parseMeetingId(req)
+
+        if (!isAuthenticated) {
+            return res.status(401).json({ error: 'User not authenticated' })
+
+        }
 
         if (!workspaceId || !meetingId) {
             return res.status(400).json({ error: 'Invalid workspaceId or meeting id' })
