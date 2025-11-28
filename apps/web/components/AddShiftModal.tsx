@@ -29,6 +29,7 @@ const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen, users, wor
   const [alertDesc, setAlertDesc] = useState<string | null>(null);
   const [openAlert, setOpenAlert] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
   const clientAPI = useApiClient();
 
   const handleCancel = () => {
@@ -36,6 +37,8 @@ const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen, users, wor
   };
 
   const handleSubmit = async () => {
+    setDatePickerOpen(false);
+    await Promise.resolve();
     setAlertDesc(null);
     if (!user || !dates || !timeRange) {
       setAlertDesc("Please fill in all fields.");
@@ -159,6 +162,7 @@ const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen, users, wor
                   onChange={(vals) => {
                     setDates(vals as Dayjs[] | null);
                   }}
+                  onOpenChange={setDatePickerOpen}
                   allowClear
                 />
               </Flex>

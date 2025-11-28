@@ -48,13 +48,12 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
   const [error, setError] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<any | undefined>(undefined);
   const [selectedShift, setSelectedShift] = useState<any | undefined>(undefined);
-  const [openShiftDetails, setOpenShiftDeatils] = useState<boolean>(false);  
+  const [openShiftDetails, setOpenShiftDeatils] = useState<boolean>(false);
   
   const apiClient = useApiClient();
   const week = useMemo(() => makeWeek(anchor), [anchor]);
   const nextWeek = () => setAnchor(w => moveWeek(w,1).anchor); // Moves 1 week forwards
   const prevWeek = () => setAnchor(w => moveWeek(w,-1).anchor); // Moves 1 week backwards
-
 
   const getUsers = async() => {
     if (!hasValidWorkspace) return;
@@ -132,7 +131,7 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
  useEffect( () => {
   if (!hasValidWorkspace) return;
   getUsers();
-  getShifts(); // Refetch when workspace changes or week window moves
+  getShifts(); 
  }, [hasValidWorkspace, id, week.start, week.end]); 
 
   return (

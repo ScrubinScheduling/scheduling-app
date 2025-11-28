@@ -267,7 +267,7 @@ function ShiftModal({user, shift, onDelete, workspaceId, isVisiable, setIsVisiab
                 </div>
               </Button>
             
-            <Button className='flex-1' color="cyan" variant='solid' style={{minHeight:"40px"}} onClick={editShift} loading={isLoading}>
+            <Button className='flex-1' color="green" variant='solid' style={{minHeight:"40px"}} onClick={editShift} loading={isLoading}>
                 <div className='flex flex-row items-center gap-1'>
                   <span className='font-semibold'>Submit</span>
                   <Send size={18}/>
