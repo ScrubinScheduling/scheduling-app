@@ -18,7 +18,11 @@ import {
   isSameDay,
   format,
   parseISO,
+  startOfDay,
+  endOfDay,
+  addDays
 } from 'date-fns';
+import { start } from 'repl';
 
 
 type Shift = {
@@ -39,6 +43,12 @@ type ApiShift = {
 
 }
 
+type WorkspaceShcedule = {
+    days: string[];
+    users: {id: string; firstName: string | null; lastName: string | null;}[]
+    buckets: Record<number, Record<string, ApiShift[]>>;
+}
+
 function cn(...classes: (string | false | null | undefined)[]) {
   return classes.filter(Boolean).join(" ")
 }
@@ -51,7 +61,10 @@ export default function page({ params }: { params: Promise<{ id: string }> }) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(currentDate); 
   const [shifts, setShifts] = useState<Shift[]>([]); 
   const [isLoading, setIsloading] = useState<boolean>(false);
+  const [teamSchedule, setTeamSchedule] = useState<WorkspaceShcedule | null>(null); 
   const [err, setErr] = useState<string>('');
+  
+
   
 
   const mapApiShift = (shift: ApiShift): Shift => {
@@ -97,6 +110,37 @@ export default function page({ params }: { params: Promise<{ id: string }> }) {
     }
   }
 
+  const fetchTeamSchedule = useCallback(async (day: Date) => {
+    const dayStart = startOfDay(day);
+    const dayEnd = addDays(day, 1);
+
+    const data = await apiClient.getWorkspaceShifts(id, 
+        {
+            start: dayStart.toISOString(),
+            end: dayEnd.toISOString()
+        }
+    ); 
+
+    setTeamSchedule(data);
+  }, [apiClient, id]); 
+
+  useEffect(() => {
+    if (!selectedDate) return;
+    fetchTeamSchedule(selectedDate);
+  }, [selectedDate, fetchTeamSchedule])
+
+  const coworkerEntries = useMemo(() => {
+    if (!teamSchedule || !selectedDate) return [];
+    const key = format(selectedDate, 'yyyy-MM-dd');
+    return teamSchedule.users
+        .filter(member => String(member.id) !== userId)
+        .map(member => ({
+        member,
+        shifts: teamSchedule.buckets[member.id]?.[key] ?? [],
+        }))
+        .filter(entry => entry.shifts.length > 0);
+  }, [teamSchedule, selectedDate, userId]);
+
   useEffect(() => {
     if (!userId) return;
     fetchShifts(); 
@@ -106,7 +150,6 @@ export default function page({ params }: { params: Promise<{ id: string }> }) {
     const key = format(day, 'yyyy-MM-dd');
     return shifts.filter((s) => s.date === key); 
   }, [shifts]); 
-
 
   const selectedDayShifts = useMemo(
     () => (selectedDate ? getShiftsForDay(selectedDate) : []),
@@ -222,22 +265,23 @@ export default function page({ params }: { params: Promise<{ id: string }> }) {
                     </CardTitle>
                 </CardHeader>
 
-                <CardContent>
+                <CardContent className='flex flex-col gap-3'>
                 {selectedDate && selectedDayShifts.length > 0 ? (
                     <div className="space-y-3">
                     {selectedDayShifts.map((shift) => (
                         <div
                         key={shift.id}
                         className="p-4 rounded-lg border bg-card space-y-2"
-                        >
-                        <div className="flex justify-between text-sm">
-                            <span className="font-medium">
-                            {shift.startTime} - {shift.endTime}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                            {shift.role}
-                            </span>
-                        </div>
+                        >   
+                            {/* Shift card */}
+                            <div className="flex justify-between text-sm">
+                                <span className="font-medium">
+                                    {shift.startTime} - {shift.endTime}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                    Shift
+                                </span>
+                            </div>
                         </div>
                     ))}
                     </div>
@@ -250,6 +294,35 @@ export default function page({ params }: { params: Promise<{ id: string }> }) {
                         Click on a date to view shift details
                         </p>
                     )}
+
+                    <CardTitle className='text-lg'>
+                        Scheduled:
+                    </CardTitle>
+
+                    <div>
+                        {coworkerEntries.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                            No coworkers scheduled for this day.
+                        </p>
+                        ) : (
+                        <div className="space-y-3">
+                            {coworkerEntries.map(({ member, shifts }) => (
+                            <div key={member.id} className="border rounded-lg p-3">
+                                <div className="text-sm font-medium">
+                                {member.firstName} {member.lastName ?? ''}
+                                </div>
+                                <div className="mt-1 space-y-1 text-xs text-muted-foreground">
+                                {shifts.map(shift => (
+                                    <div key={shift.id}>
+                                    {format(parseISO(shift.startTime), 'HH:mm')} – {format(parseISO(shift.endTime), 'HH:mm')}
+                                    </div>
+                                ))}
+                                </div>
+                            </div>
+                            ))}
+                        </div>
+                        )}
+                    </div>
                 </CardContent>
             </Card>
         </div>
