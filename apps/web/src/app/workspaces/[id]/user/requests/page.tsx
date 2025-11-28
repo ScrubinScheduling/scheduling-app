@@ -85,7 +85,7 @@ export default function Page() {
                 setOutgoing((outgoingRes?.requests ?? []) as AnyRequest[]);
             } catch (err) {
                 if (!alive) return;
-                setError(err?.message ?? "Failed to load requests");
+                setError(err instanceof Error ? err.message : "Failed to load requests");
             } finally {
                 if (!alive) return;
                 setLoading(false);

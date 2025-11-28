@@ -145,7 +145,7 @@ export default function MeetingRequestsPage() {
         setSelectedId((prev) => prev || mapped[0]?.id || "");
       } catch (err) {
         if (!alive) return;
-        setError(err.message ?? "Failed to load meetings");
+        setError(err instanceof Error ? err.message : "Failed to load meetings");
       } finally {
         if (!alive) return;
         setLoading(false);
@@ -199,7 +199,9 @@ export default function MeetingRequestsPage() {
       });
     } catch (err) {
       setError(
-        `Failed to delete meeting${err.message ? `: ${err.message}` : ""}`
+        `Failed to delete meeting${
+          err instanceof Error ? `: ${err.message}` : ""
+        }`
       );
     } finally {
       closeDeleteConfirm();
@@ -248,7 +250,7 @@ export default function MeetingRequestsPage() {
     } catch (err) {
       setError(
         `Failed to ${action === "FINALIZED" ? "Finalize" : "Cancel"} meeting${
-          err.message ? `: ${err.message}` : ""
+          err instanceof Error ? `: ${err.message}` : ""
         }`
       );
     } finally {

@@ -48,7 +48,7 @@ export default function TeamPage() {
 				if (!res.ok) throw new Error(`HTTP ${res.status}`);
 				const data = await res.json();
 				// Map API → your Member type
-				const mapped: Member[] = (data.members ?? []).map((m: Member[]) => ({
+				const mapped: Member[] = (data.members ?? []).map((m: Member) => ({
 					id: String(m.id),
 					name: `${m.firstName ?? ""} ${m.lastName ?? ""}`.trim() || "Unnamed",
 					role: m.role ?? "Member",
@@ -57,7 +57,7 @@ export default function TeamPage() {
 				}));
 				if (alive) setMembers(mapped);
 			} catch (err) {
-				if (alive) setError(err.message ?? "Failed to load team");
+				if (alive) setError(err instanceof Error ? err.message : "Failed to load team");
 			} finally {
 				if (alive) setLoading(false);
 			}
@@ -172,7 +172,7 @@ export default function TeamPage() {
 							return (
 								<React.Fragment key={m.id}>
 									<tr className="border-t border-gray-400">
-										<td className="p-3">{m.name}</td>
+										<td className="p-3">{m.firstName} {m.lastName}</td>
 										<td className="p-3">{m.role}</td>
 										<td className="p-3">
 											<div className="flex justify-end pr-1">
@@ -228,7 +228,7 @@ export default function TeamPage() {
 														<AlertDialogContent>
 															<AlertDialogHeader>
 																<AlertDialogTitle className="font-bold">
-																	Remove {confirmState.member?.name}?
+																	Remove {confirmState.member?.firstName} {confirmState.member?.lastName}
 																</AlertDialogTitle>
 																<AlertDialogDescription className="text-gray-700">
 																	This will remove this user from your team. You cannot undo this action.

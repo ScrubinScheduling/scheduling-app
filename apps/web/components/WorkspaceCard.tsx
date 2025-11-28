@@ -6,7 +6,9 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 import { useRouter } from "next/navigation";
-export default function WorkspaceCard({workspace}) {
+import type { Workspace } from "@scrubin/schemas";
+
+export default function WorkspaceCard({ workspace }: {workspace: Workspace}) {
     const router = useRouter();
 
     return (
@@ -14,7 +16,7 @@ export default function WorkspaceCard({workspace}) {
             <CardHeader className="flex items-center justify-between">
                 <CardTitle>{workspace.name}</CardTitle>
             </CardHeader>
-           
+
         </Card >
     );
 

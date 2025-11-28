@@ -20,11 +20,14 @@ async function getWorkspaceMembershipStatus(token: string | null, workspaceId: n
     await apiClient.getWorkspace(workspaceId); 
     return 200; 
   } catch (error) {
-    return error.status || 500;
+    if (error && typeof error === 'object' && 'status' in error && typeof error.status === 'number') {
+      return error.status;
+    }
+    return 500;
   }
 }
 
-async function isAdmin(token, userId: string | null, workspaceId: number) {
+async function isAdmin(token: string, userId: string | null, workspaceId: number) {
   try {
     const apiClient = createApiClient({
       baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL as string,
@@ -50,7 +53,7 @@ export default clerkMiddleware(async (auth, req) => {
     const workspaceId = Number(req.url.split("/")[4])
 	  const membershipStatus = await getWorkspaceMembershipStatus(token, workspaceId);
 
-		if (membershipStatus === 403) {
+		if (membershipStatus === 403 || !token) {
 			return NextResponse.redirect(new URL("/not-found", req.url));
 		}
 

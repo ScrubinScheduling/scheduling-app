@@ -269,7 +269,7 @@ export default function ClockinCard() {
                 }
             } catch (err) {
                 if (!alive) return;
-                setError(err?.message || "Failed to load shift");
+                setError(err instanceof Error ? err.message : "Failed to load shift");
                 console.error("Error fetching upcoming shift:", err);
             } finally {
                 if (alive) {

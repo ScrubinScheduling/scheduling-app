@@ -99,7 +99,7 @@ export default function UpcomingScheduleCard() {
         setShifts(userShifts)
       } catch (err) {
         if (!alive) return
-        setError(err.message ?? "Failed to load shifts")
+        setError(err instanceof Error ? err.message : "Failed to load shifts")
       } finally {
         if (alive) {
           setLoading(false)

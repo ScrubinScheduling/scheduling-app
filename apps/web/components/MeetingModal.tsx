@@ -18,6 +18,7 @@ import { Calendar as CalendarIcon } from "lucide-react";
 
 import dayjs, { Dayjs } from "dayjs";
 import { TimePicker } from "antd";
+import { Member } from "@scrubin/schemas";
 
 type MemberOption = {
   id: string;   // UserWorkspaceMembership.id
@@ -63,7 +64,7 @@ export default function MeetingModal({
   const [selectedDate, setSelectedDate] = React.useState<Date | null>(null);
   const [time, setTime] = React.useState<Dayjs | null>(null);
   const [selectedMemberIds, setSelectedMemberIds] = React.useState<string[]>([]);
-  const [members, setMembers] = React.useState<MemberOption[]>([]);
+  const [members, setMembers] = React.useState<Member[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -84,20 +85,20 @@ export default function MeetingModal({
         const creatorUserId =
           mode === "edit" && meeting ? meeting.createdById : currentUserId;
 
-        const mapped: MemberOption[] = (data.members ?? [])
-          .map((m: MemberOption) => ({
+        const mapped: Member[] = (data.members ?? [])
+          .map((m: Member) => ({
             id: String(m.membershipId ?? m.id), // prefer membership id, fallback to user id
-            userId: String(m.userId ?? m.id),
+            userId: String(m.id ?? m.id),
             name: `${m.firstName ?? ""} ${m.lastName ?? ""}`.trim() || "Unnamed",
             role: m.role ?? "Member",
           }))
-          .filter((m: MemberOption) =>
-            creatorUserId ? String(m.userId) !== String(creatorUserId) : true
+          .filter((m: Member) =>
+            creatorUserId ? String(m.id) !== String(creatorUserId) : true
           );
 
         setMembers(mapped);
       } catch (err) {
-        setError(err.message ?? "Failed to load members");
+        setError(err instanceof Error ? err.message : "Failed to load members");
       }
     })();
   }, [open, workspaceId, getToken, mode, meeting, currentUserId]);
@@ -215,7 +216,7 @@ export default function MeetingModal({
       onSaved();
       onClose();
     } catch (err) {
-      setError(err.message ?? "Failed to save meeting");
+      setError(err instanceof Error ? err.message : "Failed to save meeting");
     } finally {
       setLoading(false);
     }
@@ -345,7 +346,7 @@ export default function MeetingModal({
                       checked={selectedMemberIds.includes(m.id)}
                       onChange={() => toggleMember(m.id)}
                     />
-                    <span>{m.name}</span>
+                    <span>{m.firstName} {m.lastName}</span>
                     <span className="text-xs text-gray-500">· {m.role}</span>
                   </label>
                 ))
