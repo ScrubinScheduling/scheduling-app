@@ -12,7 +12,7 @@
 		"build:api": "pnpm -F api build",
 		"postinstall": "pnpm -F api-client build; pnpm -F schemas build",
 		"build:api-client": "pnpm -F api-client build",
-    	"db": "pnpm -F api db"
+		"db": "pnpm -F api db"
 	},
 	"keywords": [],
 	"author": "",

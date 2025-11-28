@@ -61,7 +61,6 @@
 		"zod": "^4.1.12",
 		"@scrubin/api-client": "workspace:*",
 		"@scrubin/schemas": "workspace:*"
-
 	},
 	"devDependencies": {
 		"@eslint/eslintrc": "^3",

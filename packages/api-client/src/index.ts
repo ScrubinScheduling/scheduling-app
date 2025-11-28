@@ -91,15 +91,11 @@ export function createApiClient({ baseUrl, getToken }) {
 				body: { at }
 			}),
 
-		// Invitations 
-		getInvitations: (params?) =>
-			request({ method: 'GET', path: '/invitations', params }),
-		getInvitation: (id) =>
-			request({ method: 'GET', path: `/invitations/${id}` }),
-		createInvitation: (data) =>
-			request({ method: 'POST', path: '/invitations', body: data }),
-		deleteInvitation: (id) =>
-			request({ method: 'DELETE', path: `/invitations/${id}` }),
+		// Invitations
+		getInvitations: (params?) => request({ method: 'GET', path: '/invitations', params }),
+		getInvitation: (id) => request({ method: 'GET', path: `/invitations/${id}` }),
+		createInvitation: (data) => request({ method: 'POST', path: '/invitations', body: data }),
+		deleteInvitation: (id) => request({ method: 'DELETE', path: `/invitations/${id}` }),
 		acceptInvitation: (id) =>
 			request({
 				method: 'POST',

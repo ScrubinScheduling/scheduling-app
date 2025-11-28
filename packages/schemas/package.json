@@ -1,22 +1,20 @@
 {
-  "name": "@scrubin/schemas",
-  "version": "0.0.1",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "types": "src/index.ts",
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "build:watch": "tsc -p tsconfig.json --watch"
-  },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
-  },
-  "devDependencies": {
-    "typescript": "^5.9.3"
-  }
+	"name": "@scrubin/schemas",
+	"version": "0.0.1",
+	"main": "dist/index.js",
+	"module": "dist/index.js",
+	"types": "src/index.ts",
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "tsc -p tsconfig.json",
+		"build:watch": "tsc -p tsconfig.json --watch"
+	},
+	"peerDependencies": {
+		"typescript": "^5.0.0"
+	},
+	"devDependencies": {
+		"typescript": "^5.9.3"
+	}
 }
-
-

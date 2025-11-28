@@ -22,7 +22,7 @@ router.get(
             const shifts = await prisma.shift.findMany({
                 where: { workspaceId, startTime: { lt: endDate }, endTime: { gt: startDate } },
                 orderBy: { startTime: 'asc' },
-                include: { 
+                include: {
                     user: { select: { id: true, firstName: true, lastName: true } },
                     timesheet: true,
                 },

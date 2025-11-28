@@ -17,13 +17,12 @@ deploy:api:preview:
         - apps/api/**/*
         - apps/api/prisma/**/*
         - packages/schemas/**/*
-  
+
   script:
     - npm install --global vercel
     - npm install --global pnpm
     - vercel pull --yes --environment=preview --token="$TOKEN"
     - vercel deploy --token="$TOKEN"
-
 
 deploy:web:preview:
   stage: deploy
@@ -31,12 +30,12 @@ deploy:web:preview:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_NAME == "dev"'
       changes:
         - apps/web/**/*
-        - packages/schemas/**/*    
+        - packages/schemas/**/*
 
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev"'
       changes:
         - apps/web/**/*
-        - packages/schemas/**/*    
+        - packages/schemas/**/*
   script:
     - npm install --global vercel
     - npm install --global pnpm
@@ -55,7 +54,7 @@ deploy:web:preview:
       echo "WEB_PREVIEW_URL=$WEB_HOST" > "$CI_PROJECT_DIR/web.env"
   artifacts:
     reports:
-      dotenv: web.env   # exposes $WEB_PREVIEW_URL to downstream jobs
+      dotenv: web.env # exposes $WEB_PREVIEW_URL to downstream jobs
     expire_in: 7 days
 
 expose:web:environment:
@@ -67,12 +66,12 @@ expose:web:environment:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_NAME == "dev"'
       changes:
         - apps/web/**/*
-        - packages/schemas/**/*    
+        - packages/schemas/**/*
 
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev"'
       changes:
         - apps/web/**/*
-        - packages/schemas/**/*      
+        - packages/schemas/**/*
   script:
     - echo "Publishing environment URL $WEB_PREVIEW_URL"
   environment:
@@ -105,23 +104,21 @@ deploy:web:production:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_NAME == "main"'
       changes:
         - apps/web/**/*
-        - packages/schemas/**/*    
+        - packages/schemas/**/*
 
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
       changes:
         - apps/web/**/*
-        - packages/schemas/**/*    
+        - packages/schemas/**/*
   script:
     - npm i -g vercel pnpm
     - vercel pull --yes --environment=production --token="$TOKEN"
     - vercel deploy --yes --prod --token="$TOKEN" \
-        --env NEXT_PUBLIC_API_URL="https://api-flax-iota.vercel.app/" \
-        --build-env NEXT_PUBLIC_API_URL="https://api-flax-iota.vercel.app/" \
-        --env NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" \
-        --build-env NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" \
-        --env CLERK_SECRET_KEY="$CLERK_SECRET_KEY"
+      --env NEXT_PUBLIC_API_URL="https://api-flax-iota.vercel.app/" \
+      --build-env NEXT_PUBLIC_API_URL="https://api-flax-iota.vercel.app/" \
+      --env NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" \
+      --build-env NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" \
+      --env CLERK_SECRET_KEY="$CLERK_SECRET_KEY"
   environment:
     name: production
     url: https://web-rho-rouge.vercel.app
-
-

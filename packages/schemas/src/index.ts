@@ -56,24 +56,24 @@ export type Member = {
 };
 
 export type User = {
-  id: string; 
-  firstName: string; 
-  lastName?: string | null 
+	id: string;
+	firstName: string;
+	lastName?: string | null;
 };
 
 export type Workspace = {
-  id: number;
-  name: string;
-  adminId: string;
-  location: string;
-}
+	id: number;
+	name: string;
+	adminId: string;
+	location: string;
+};
 
 export type InvitationInfo = {
-  workspaceName: string;
-  workspaceOwnerName: string;
-  workspaceOwnerEmail: string;
-  invitationId: string;
-}
+	workspaceName: string;
+	workspaceOwnerName: string;
+	workspaceOwnerEmail: string;
+	invitationId: string;
+};
 
 export type UserShiftsResponseLegacy = {
 	shifts: ShiftLegacy[];

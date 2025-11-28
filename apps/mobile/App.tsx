@@ -45,12 +45,12 @@ export default function App() {
 				<NavigationContainer>
 					<SignedIn>
 						<Stack.Navigator>
-							<Stack.Screen name="Main" component={TabNavigator} options={{headerShown: false}}/>
+							<Stack.Screen name="Main" component={TabNavigator} options={{ headerShown: false }} />
 						</Stack.Navigator>
 					</SignedIn>
 
 					<SignedOut>
-						<Stack.Navigator screenOptions={{headerShown: false}}>
+						<Stack.Navigator screenOptions={{ headerShown: false }}>
 							<Stack.Screen name="Entry" component={EntryPage} />
 							<Stack.Screen name="SignIn" component={SignInPage} />
 							<Stack.Screen name="SignUp" component={SignUpPage} />

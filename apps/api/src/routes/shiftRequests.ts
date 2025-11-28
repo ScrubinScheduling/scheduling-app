@@ -1,15 +1,15 @@
-import express from 'express';
-import { prisma } from '../db';
-import { getAuth } from '@clerk/express';
+import express from 'express'
+import { prisma } from '../db'
+import { getAuth } from '@clerk/express'
 
 const router = express.Router({ mergeParams: true })
 
 function formatDate(d: Date) {
-  return d.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+    return d.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+    })
 }
 
 function formatTime(d: Date) {
@@ -45,15 +45,9 @@ router.get('/', async (req, res) => {
         const where: any = { workspaceId }
 
         if (statusFilter === 'approved') {
-            where.AND = [
-                { approvedByRequested: 'APPROVED' },
-                { approvedByManager: 'APPROVED' },
-            ]
+            where.AND = [{ approvedByRequested: 'APPROVED' }, { approvedByManager: 'APPROVED' }]
         } else if (statusFilter === 'denied') {
-            where.OR = [
-                { approvedByRequested: 'DENIED' },
-                { approvedByManager: 'DENIED' },
-            ]
+            where.OR = [{ approvedByRequested: 'DENIED' }, { approvedByManager: 'DENIED' }]
         } else if (statusFilter === 'pending') {
             // Manager pending: requested user has approved, manager not decided yet
             where.AND = [
@@ -65,12 +59,12 @@ router.get('/', async (req, res) => {
         const rows = await prisma.shiftRequest.findMany({
             where,
             orderBy: { id: 'desc' },
-            })
+        })
 
-            // collect shift ids
-            const shiftIds = new Set<number>()
-            const requestedUserIds = new Set<string>()
-            for (const r of rows) {
+        // collect shift ids
+        const shiftIds = new Set<number>()
+        const requestedUserIds = new Set<string>()
+        for (const r of rows) {
             shiftIds.add(r.lendedShiftId)
             if (r.requestedShiftId != null) {
                 shiftIds.add(r.requestedShiftId)
@@ -78,64 +72,62 @@ router.get('/', async (req, res) => {
             if (r.requestedUserId) {
                 requestedUserIds.add(r.requestedUserId)
             }
-            }
+        }
 
-            const shiftIdList = Array.from(shiftIds)
-            const shifts = shiftIdList.length
+        const shiftIdList = Array.from(shiftIds)
+        const shifts = shiftIdList.length
             ? await prisma.shift.findMany({
-                where: { id: { in: shiftIdList } },
-                include: { user: true },
-                })
+                  where: { id: { in: shiftIdList } },
+                  include: { user: true },
+              })
             : []
 
-            const requestedUsers = requestedUserIds.size
+        const requestedUsers = requestedUserIds.size
             ? await prisma.user.findMany({
-                where: { id: { in: Array.from(requestedUserIds) } },
-                })
+                  where: { id: { in: Array.from(requestedUserIds) } },
+              })
             : []
 
-            const shiftById = new Map<number, (typeof shifts)[number]>()
-            for (const s of shifts) {
+        const shiftById = new Map<number, (typeof shifts)[number]>()
+        for (const s of shifts) {
             shiftById.set(s.id, s)
-            }
+        }
 
-            const userById = new Map<string, (typeof requestedUsers)[number]>()
-            for (const u of requestedUsers) {
+        const userById = new Map<string, (typeof requestedUsers)[number]>()
+        for (const u of requestedUsers) {
             userById.set(u.id, u)
-            }
+        }
 
-            const requests = rows
+        const requests = rows
             .map((row) => {
                 const lended = shiftById.get(row.lendedShiftId)
-                const requested = row.requestedShiftId
-                ? shiftById.get(row.requestedShiftId)
-                : null
+                const requested = row.requestedShiftId ? shiftById.get(row.requestedShiftId) : null
 
                 if (!lended) {
-                return null
+                    return null
                 }
 
                 const base = {
-                id: String(row.id),
-                status: computeStatus(row),
+                    id: String(row.id),
+                    status: computeStatus(row),
                 }
 
                 if (!requested) {
-                // COVER REQUEST: one shift, second person is requestedUser
-                const coverer = userById.get(row.requestedUserId)
-                return {
-                    ...base,
-                    kind: 'cover' as const,
-                    from: {
-                    name: fullName(lended.user),
-                    date: formatDate(lended.startTime),
-                    start: formatTime(lended.startTime),
-                    end: formatTime(lended.endTime),
-                    },
-                    coverer: {
-                    name: fullName(coverer ?? null),
-                    },
-                }
+                    // COVER REQUEST: one shift, second person is requestedUser
+                    const coverer = userById.get(row.requestedUserId)
+                    return {
+                        ...base,
+                        kind: 'cover' as const,
+                        from: {
+                            name: fullName(lended.user),
+                            date: formatDate(lended.startTime),
+                            start: formatTime(lended.startTime),
+                            end: formatTime(lended.endTime),
+                        },
+                        coverer: {
+                            name: fullName(coverer ?? null),
+                        },
+                    }
                 }
 
                 // TRADE REQUEST: two shifts
@@ -143,20 +135,20 @@ router.get('/', async (req, res) => {
                 const toUser = requested.user
 
                 return {
-                ...base,
-                kind: 'trade' as const,
-                from: {
-                    name: fullName(fromUser),
-                    date: formatDate(lended.startTime),
-                    start: formatTime(lended.startTime),
-                    end: formatTime(lended.endTime),
-                },
-                to: {
-                    name: fullName(toUser),
-                    date: formatDate(requested.startTime),
-                    start: formatTime(requested.startTime),
-                    end: formatTime(requested.endTime),
-                },
+                    ...base,
+                    kind: 'trade' as const,
+                    from: {
+                        name: fullName(fromUser),
+                        date: formatDate(lended.startTime),
+                        start: formatTime(lended.startTime),
+                        end: formatTime(lended.endTime),
+                    },
+                    to: {
+                        name: fullName(toUser),
+                        date: formatDate(requested.startTime),
+                        start: formatTime(requested.startTime),
+                        end: formatTime(requested.endTime),
+                    },
                 }
             })
             .filter((r) => r !== null)
@@ -201,53 +193,53 @@ router.get('/:id', async (req, res) => {
         const requested = row.requestedShiftId ? shiftById.get(row.requestedShiftId) : null
 
         if (!lended) {
-        return res.status(500).json({ error: 'Inconsistent shift request data' })
+            return res.status(500).json({ error: 'Inconsistent shift request data' })
         }
 
         const base = {
-        id: String(row.id),
-        status: computeStatus(row),
+            id: String(row.id),
+            status: computeStatus(row),
         }
 
         let requestDto: any
 
         if (!requested) {
-        // COVER REQUEST
-        const coverer = await prisma.user.findUnique({
-            where: { id: row.requestedUserId },
-        })
+            // COVER REQUEST
+            const coverer = await prisma.user.findUnique({
+                where: { id: row.requestedUserId },
+            })
 
-        requestDto = {
-            ...base,
-            kind: 'cover' as const,
-            from: {
-            name: fullName(lended.user),
-            date: formatDate(lended.startTime),
-            start: formatTime(lended.startTime),
-            end: formatTime(lended.endTime),
-            },
-            coverer: {
-            name: fullName(coverer),
-            },
-        }
+            requestDto = {
+                ...base,
+                kind: 'cover' as const,
+                from: {
+                    name: fullName(lended.user),
+                    date: formatDate(lended.startTime),
+                    start: formatTime(lended.startTime),
+                    end: formatTime(lended.endTime),
+                },
+                coverer: {
+                    name: fullName(coverer),
+                },
+            }
         } else {
-        // TRADE REQUEST
-        requestDto = {
-            ...base,
-            kind: 'trade' as const,
-            from: {
-            name: fullName(lended.user),
-            date: formatDate(lended.startTime),
-            start: formatTime(lended.startTime),
-            end: formatTime(lended.endTime),
-            },
-            to: {
-            name: fullName(requested.user),
-            date: formatDate(requested.startTime),
-            start: formatTime(requested.startTime),
-            end: formatTime(requested.endTime),
-            },
-        }
+            // TRADE REQUEST
+            requestDto = {
+                ...base,
+                kind: 'trade' as const,
+                from: {
+                    name: fullName(lended.user),
+                    date: formatDate(lended.startTime),
+                    start: formatTime(lended.startTime),
+                    end: formatTime(lended.endTime),
+                },
+                to: {
+                    name: fullName(requested.user),
+                    date: formatDate(requested.startTime),
+                    start: formatTime(requested.startTime),
+                    end: formatTime(requested.endTime),
+                },
+            }
         }
 
         return res.status(200).json({ request: requestDto })
@@ -259,77 +251,79 @@ router.get('/:id', async (req, res) => {
 })
 
 router.post('/', async (req, res) => {
-	// Implemented create shift request
-	try {
-		const { lendedShiftId, requestedShiftId, requestedUserId } = req.body;
-		const { workspaceId } = (req.params as { workspaceId: string });
+    // Implemented create shift request
+    try {
+        const { lendedShiftId, requestedShiftId, requestedUserId } = req.body
+        const { workspaceId } = req.params as { workspaceId: string }
 
-		// Authenticated user from Clerk
-		const { userId: clerkId } = getAuth(req);
+        // Authenticated user from Clerk
+        const { userId: clerkId } = getAuth(req)
         if (!clerkId) {
-            return res.status(401).json({ error: 'Unauthorized' });
+            return res.status(401).json({ error: 'Unauthorized' })
         }
 
-		// Look up the correspoding user row in our database
-		const requestingUser = await prisma.user.findUnique({
-			where: { id: clerkId },
-		});
+        // Look up the correspoding user row in our database
+        const requestingUser = await prisma.user.findUnique({
+            where: { id: clerkId },
+        })
 
-		if (!requestingUser) {
-			return res.status(404).json({ error: 'Requesting user not found' });
-		}
+        if (!requestingUser) {
+            return res.status(404).json({ error: 'Requesting user not found' })
+        }
 
-		// Basic validation
-		if (!lendedShiftId) {
-			return res.status(400).json({ error: 'Missing required fields' });
-		}
+        // Basic validation
+        if (!lendedShiftId) {
+            return res.status(400).json({ error: 'Missing required fields' })
+        }
 
         if (!requestedUserId && !requestedShiftId) {
-            return res.status(400).json({ error: 'Either requestedUserId or requestedShiftId must be provided' });
+            return res
+                .status(400)
+                .json({ error: 'Either requestedUserId or requestedShiftId must be provided' })
         }
 
         // Determine if this is a trade or cover request
-        let finalRequestedUserId: string | null = null;
+        let finalRequestedUserId: string | null = null
 
         if (requestedShiftId) {
             // Trade request: look up the requested shift to find its owner
             const requestedShift = await prisma.shift.findUnique({
                 where: { id: Number(requestedShiftId) },
                 select: { userId: true },
-            });
+            })
 
             if (!requestedShift) {
-                return res.status(404).json({ error: 'Requested shift not found' });
+                return res.status(404).json({ error: 'Requested shift not found' })
             }
 
-            finalRequestedUserId = requestedShift.userId;
+            finalRequestedUserId = requestedShift.userId
         } else if (requestedUserId) {
             // Cover request: directly use the provided requestedUserId
-            finalRequestedUserId = requestedUserId;
+            finalRequestedUserId = requestedUserId
         }
 
-		// Create the shift request
-		const newShiftRequest = await prisma.shiftRequest.create({
-			data: {
-				requestorId: requestingUser.id,
-				workspaceId: Number(workspaceId),
-				lendedShiftId: Number(lendedShiftId),
-				requestedShiftId: requestedShiftId ? Number(requestedShiftId) : null,
+        // Create the shift request
+        const newShiftRequest = await prisma.shiftRequest.create({
+            data: {
+                requestorId: requestingUser.id,
+                workspaceId: Number(workspaceId),
+                lendedShiftId: Number(lendedShiftId),
+                requestedShiftId: requestedShiftId ? Number(requestedShiftId) : null,
                 requestedUserId: finalRequestedUserId!,
-				approvedByRequested: 'PENDING',
+                approvedByRequested: 'PENDING',
                 approvedByManager: 'PENDING',
-			},
+            },
             include: {
                 workspace: true,
             },
-		});
+        })
 
-		res.status(201).json(newShiftRequest);
-	} catch (error) {
-		console.error(error)
-		res.status(500).json({ error: 'Failed to create shift request' });
-	}
-});
+        res.status(201).json(newShiftRequest)
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ error: 'Failed to create shift request' })
+    }
+})
 
 router.patch('/:id', async (req, res) => {
     // TODO: Implement update shift request
@@ -343,70 +337,66 @@ router.delete('/:id', async (req, res) => {
 
 router.post('/:id/admin/approve', async (req, res) => {
     try {
-        const workspaceId = Number((req.params as any).workspaceId);
-        const id = Number(req.params.id);
+        const workspaceId = Number((req.params as any).workspaceId)
+        const id = Number(req.params.id)
 
         if (!workspaceId || Number.isNaN(workspaceId) || Number.isNaN(id)) {
-        return res.status(400).json({ error: 'Invalid id' });
+            return res.status(400).json({ error: 'Invalid id' })
         }
 
         // Load the request so we know what kind it is
         const existing = await prisma.shiftRequest.findFirst({
-        where: { id, workspaceId },
-        });
+            where: { id, workspaceId },
+        })
 
         if (!existing) {
-        return res.status(404).json({ error: 'Shift request not found' });
+            return res.status(404).json({ error: 'Shift request not found' })
         }
 
         // Safety: only allow manager approval once the requested user has approved
         if (existing.approvedByRequested !== 'APPROVED') {
-        return res
-            .status(409)
-            .json({ error: 'Requested user has not approved this request yet' });
+            return res
+                .status(409)
+                .json({ error: 'Requested user has not approved this request yet' })
         }
 
         // If manager already decided, avoid double-applying the swap
         if (existing.approvedByManager === 'APPROVED') {
-        return res.status(409).json({ error: 'Shift request already approved' });
+            return res.status(409).json({ error: 'Shift request already approved' })
         }
         if (existing.approvedByManager === 'DENIED') {
-        return res.status(409).json({ error: 'Shift request already denied' });
+            return res.status(409).json({ error: 'Shift request already denied' })
         }
 
         // Fetch the involved shift(s)
         const lendedShift = await prisma.shift.findUnique({
-        where: { id: existing.lendedShiftId },
-        });
+            where: { id: existing.lendedShiftId },
+        })
 
         if (!lendedShift) {
-        return res
-            .status(500)
-            .json({ error: 'Lended shift not found for this request' });
+            return res.status(500).json({ error: 'Lended shift not found for this request' })
         }
 
-        let requestedShift = null;
+        let requestedShift = null
         if (existing.requestedShiftId != null) {
-        requestedShift = await prisma.shift.findUnique({
-            where: { id: existing.requestedShiftId },
-        });
-        if (!requestedShift) {
-            return res
-            .status(500)
-            .json({ error: 'Requested shift not found for this request' });
-        }
+            requestedShift = await prisma.shift.findUnique({
+                where: { id: existing.requestedShiftId },
+            })
+            if (!requestedShift) {
+                return res.status(500).json({ error: 'Requested shift not found for this request' })
+            }
         }
 
         // Optional consistency checks (can be removed if you don’t care)
         if (lendedShift.userId !== existing.requestorId) {
-        return res.status(409).json({
-            error: 'Lended shift is no longer owned by the requestor',
-        });
+            return res.status(409).json({
+                error: 'Lended shift is no longer owned by the requestor',
+            })
         }
         if (requestedShift && requestedShift.userId !== existing.requestedUserId) {
-        return res.status(409).json({
-            error: 'Requested shift is no longer owned by the requested user',
-        });
+            return res.status(409).json({
+                error: 'Requested shift is no longer owned by the requested user',
+            })
         }
 
         // At this point:
@@ -414,42 +404,41 @@ router.post('/:id/admin/approve', async (req, res) => {
         // - If requestedShift exists   => TRADE REQUEST
 
         if (!requestedShift) {
-        // COVER: move lendedShift to requestedUserId
-        await prisma.$transaction([
-            prisma.shift.update({
-            where: { id: existing.lendedShiftId },
-            data: { userId: existing.requestedUserId },
-            }),
-            prisma.shiftRequest.update({
-            where: { id },
-            data: { approvedByManager: 'APPROVED' },
-            }),
-        ]);
+            // COVER: move lendedShift to requestedUserId
+            await prisma.$transaction([
+                prisma.shift.update({
+                    where: { id: existing.lendedShiftId },
+                    data: { userId: existing.requestedUserId },
+                }),
+                prisma.shiftRequest.update({
+                    where: { id },
+                    data: { approvedByManager: 'APPROVED' },
+                }),
+            ])
         } else {
-        // TRADE: swap the owners of the two shifts
-        await prisma.$transaction([
-            prisma.shift.update({
-            where: { id: existing.lendedShiftId },
-            data: { userId: existing.requestedUserId },
-            }),
-            prisma.shift.update({
-            where: { id: existing.requestedShiftId! },
-            data: { userId: existing.requestorId },
-            }),
-            prisma.shiftRequest.update({
-            where: { id },
-            data: { approvedByManager: 'APPROVED' },
-            }),
-        ]);
+            // TRADE: swap the owners of the two shifts
+            await prisma.$transaction([
+                prisma.shift.update({
+                    where: { id: existing.lendedShiftId },
+                    data: { userId: existing.requestedUserId },
+                }),
+                prisma.shift.update({
+                    where: { id: existing.requestedShiftId! },
+                    data: { userId: existing.requestorId },
+                }),
+                prisma.shiftRequest.update({
+                    where: { id },
+                    data: { approvedByManager: 'APPROVED' },
+                }),
+            ])
         }
 
-        return res.status(204).send();
+        return res.status(204).send()
     } catch (err) {
-        console.error(err);
-        return res.status(500).json({ error: 'Failed to approve shift request' });
+        console.error(err)
+        return res.status(500).json({ error: 'Failed to approve shift request' })
     }
-});
-
+})
 
 router.post('/:id/admin/reject', async (req, res) => {
     try {
@@ -457,19 +446,19 @@ router.post('/:id/admin/reject', async (req, res) => {
         const id = Number(req.params.id)
 
         if (!workspaceId || Number.isNaN(workspaceId) || Number.isNaN(id)) {
-        return res.status(400).json({ error: 'Invalid id' })
+            return res.status(400).json({ error: 'Invalid id' })
         }
 
         const existing = await prisma.shiftRequest.findFirst({
-        where: { id, workspaceId },
+            where: { id, workspaceId },
         })
         if (!existing) {
-        return res.status(404).json({ error: 'Shift request not found' })
+            return res.status(404).json({ error: 'Shift request not found' })
         }
 
         await prisma.shiftRequest.update({
-        where: { id },
-        data: { approvedByManager: 'DENIED' },
+            where: { id },
+            data: { approvedByManager: 'DENIED' },
         })
 
         return res.status(204).send()
