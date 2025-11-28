@@ -46,8 +46,8 @@ export type ShiftLegacy = {
 };
 
 export type Member = {
-	id: string; // userId (Clerk id)
-	membershipId: number; // UserWorkspaceMembership.id
+	id: string; 
+	membershipId: number; 
 	role: string;
 	firstName: string;
 	lastName: string;

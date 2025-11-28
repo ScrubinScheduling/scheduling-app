@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import MeetingModal, { MeetingForModal } from "../../../../../../../components/MeetingModal";
 
-const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
+const API = process.env.NEXT_PUBLIC_API_BASE_URL as string;
 
 /**** Types ****/
 

@@ -25,7 +25,7 @@ export default function InvitationCard({ workspaceName, workspaceOwnerName, work
     const { getToken } = useAuth();
     
     const apiClient = createApiClient({
-        baseUrl: "http://localhost:4000",
+        baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL as string,
         getToken
     });
 

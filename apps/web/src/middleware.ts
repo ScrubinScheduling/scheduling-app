@@ -13,7 +13,7 @@ const isWorkspaceRoot = createRouteMatcher(["/workspaces/:workspaceId"])
 async function getWorkspaceMembershipStatus(token: string | null, workspaceId: number) {
   try {
     const apiClient = createApiClient({
-      baseUrl: "http://localhost:4000",
+      baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL as string,
       getToken: async () => token
     });
     
@@ -27,7 +27,7 @@ async function getWorkspaceMembershipStatus(token: string | null, workspaceId: n
 async function isAdmin(token, userId: string | null, workspaceId: number) {
   try {
     const apiClient = createApiClient({
-      baseUrl: "http://localhost:4000",
+      baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL as string,
       getToken: async () => token
     });
     

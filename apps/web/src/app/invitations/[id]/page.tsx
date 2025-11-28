@@ -11,7 +11,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     const { id } = await params;
 
     const apiClient = createApiClient({
-        baseUrl: "http://localhost:4000",
+        baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL as string,
         getToken: async () => await getToken()
     });
 

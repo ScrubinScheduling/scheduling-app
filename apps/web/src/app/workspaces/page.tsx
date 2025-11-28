@@ -12,7 +12,7 @@ export default function Page() {
     const { getToken } = useAuth();
     const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
     const apiClient = createApiClient({
-        baseUrl: "http://localhost:4000",
+        baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL as string,
         getToken
     });
 
