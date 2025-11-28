@@ -38,10 +38,6 @@ export default function AppHeader() {
             <UsersRound size={20} color="gray" />
             <h1 className="text-gray-500 text-md">Team</h1>
           </Link>
-          <Link href={href_roles} className="flex flex-row gap-2 items-center bg-gray-100 p-2 rounded-lg cursor-pointer hover:bg-gray-200">
-            <UserRoundCog size={20} color="gray" />
-            <h1 className="text-gray-500 text-md">Roles</h1>
-          </Link>
           <Link href={href_requests} className="flex flex-row gap-2 items-center bg-gray-100 p-2 rounded-lg cursor-pointer hover:bg-gray-200">
             <Send size={20} color="gray" />
             <h1 className="text-gray-500 text-md">Requests</h1>
