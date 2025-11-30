@@ -562,7 +562,7 @@ export default function MeetingRequestsPage() {
             <AlertDialogDescription className="text-gray-700">
               {statusConfirm.action === "FINALIZED"
                 ? "Finalizing this meeting confirms that it will go ahead as scheduled based on the current responses."
-                : "Cancelling this meeting will mark it as cancelled and notify attendees according to your notification settings."}
+                : "Cancelling this meeting will mark it as cancelled and notify attendees accordingly."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

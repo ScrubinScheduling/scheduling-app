@@ -429,8 +429,8 @@ export default function ShiftRequestsPage() {
             </AlertDialogTitle>
             <AlertDialogDescription className="text-gray-700">
               {confirm.action === "approve"
-                ? "This will mark the request as approved. You can change it later, but it may affect scheduling."
-                : "This will mark the request as denied. You can change it later if needed."}
+                ? "This will mark the request as approved. You cannot change it later."
+                : "This will mark the request as denied. You cannot change it later."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
