@@ -21,7 +21,7 @@ import AddMemberModal from "../../../../../../components/AddMemberModal";
 import { useParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { createApiClient } from "@scrubin/api-client";
-import { type Member } from "@scrubin/schemas";
+import { type MemberApi } from "@scrubin/schemas";
 
 // NEW: dialog + input/button imports for role editing
 import {
@@ -35,11 +35,16 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 // NEW: extend Member with roleId and name parts used in the UI
-type TeamMember = Member & {
-    roleId?: number | null;
-    firstName?: string;
-    lastName?: string;
-	isAdmin?: boolean;
+type TeamMember = {
+    id: string;
+    name: string;
+    role: string;
+    email: string;
+    phone: string;
+    roleId: number | null;
+    firstName: string;
+    lastName: string;
+    isAdmin: boolean;
 };
 
 export default function TeamPage() {
@@ -69,14 +74,15 @@ export default function TeamPage() {
                 const data = await res.json();
 
                 // CHANGED: map backend DTO → TeamMember, preserving roleId, first/last
-                const mapped: TeamMember[] = (data.members ?? []).map((m: any) => ({
+                const mapped: TeamMember[] = (data.members as MemberApi[] ?? []).map((m) => ({
                     id: String(m.id),
+                    
                     // Member.name used elsewhere; keep it
                     name: `${m.firstName ?? ""} ${m.lastName ?? ""}`.trim() || "Unnamed",
                     role: m.role ?? "Member",
                     email: m.email ?? "",
                     phone: m.phone ?? "",
-                    roleId: m.roleId ?? null,
+                    roleId: m.roleId ? Number(m.roleId) : null,
                     firstName: m.firstName ?? "",
                     lastName: m.lastName ?? "",
 					isAdmin: m.isAdmin ?? false,

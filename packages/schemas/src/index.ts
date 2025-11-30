@@ -46,13 +46,14 @@ export type ShiftLegacy = {
 };
 
 export type Member = {
+  userId: string;
 	id: string; 
 	membershipId: number; 
 	role: string;
 	firstName: string;
 	lastName: string;
-	email: string;
-	phone: string;
+	email?: string;
+	phone?: string;
 };
 
 export type User = {
@@ -77,4 +78,18 @@ export type InvitationInfo = {
 
 export type UserShiftsResponseLegacy = {
 	shifts: ShiftLegacy[];
+};
+
+export type MemberApi = {
+  membershipId?: number | string;
+  id?: number | string;
+  userId?: number | string;
+  firstName?: string | null;
+  lastName?: string | null;
+  role?: string | null;
+  email?: string;
+  phone: string;
+  roleId: string;
+  isAdmin: boolean;
+
 };

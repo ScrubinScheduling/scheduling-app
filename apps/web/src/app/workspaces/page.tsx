@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import WorkspaceList from "../../../components/WorkspaceList";
 import { useAuth, UserButton } from "@clerk/nextjs";
 
@@ -11,19 +11,23 @@ export default function Page() {
 
     const { getToken } = useAuth();
     const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
-    const apiClient = createApiClient({
-        baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL as string,
-        getToken
-    });
+
+    const apiClient = useMemo( () =>
+        createApiClient({
+            baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL as string,
+            getToken,
+        }),[getToken]);
 
     useEffect(() => {
 
         (async () => {
             
-            const workspaces: Workspace[] = await apiClient.getWorkspaces();
-            setWorkspaces(workspaces)
+            const list  = await apiClient.getWorkspaces();
+            setWorkspaces(list)
         })();
-    }, [apiClient])
+    }, [apiClient]);
+
+    
     return (
         <div>
             <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white">

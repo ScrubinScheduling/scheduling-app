@@ -161,6 +161,7 @@ const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen, users, wor
                   value={dates}
                   format={"YYYY-MM-DD"}
                   maxTagCount={"responsive"}
+                  open={datePickerOpen}
                   onChange={(vals) => {
                     setDates(vals as Dayjs[] | null);
                   }}

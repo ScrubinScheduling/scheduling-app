@@ -35,11 +35,12 @@ type WeeklyResponse = {
     buckets: Record<string, Record<string, ApiShift[]>>;
 };
 
+const emptyWeekly: WeeklyResponse = { days: [], users: [], buckets: {} };
+
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const workspaceId = Number(id);
     const hasValidWorkspace = Number.isInteger(workspaceId);
-    const emptyWeekly: WeeklyResponse = { days: [], users: [], buckets: {} };
     const [anchor, setAnchor] = useState<Date>(getToday());
     const [isModal, setIsModal] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -129,7 +130,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
         if (!hasValidWorkspace) return;
         getUsers();
         getShifts(); // Refetch when workspace changes or week window moves
-    }, [hasValidWorkspace, id, week.start, week.end]);
+    }, [hasValidWorkspace, getUsers, getShifts]);
 
     return (
         <div className="min-h-screen border-b border-border bg-card px-6 py-4">

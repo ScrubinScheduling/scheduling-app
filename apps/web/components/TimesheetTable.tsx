@@ -7,7 +7,7 @@ export default function TimesheetTable({ timesheets }) {
     const formatTimesheetWorkDuration = (timesheet) => {
         if (!timesheet.clockInTime || !timesheet.clockOutTime) return ""
 
-        let breakDuration = (timesheet.startBreakTime && timesheet.endBreakTime) ?
+        const breakDuration = (timesheet.startBreakTime && timesheet.endBreakTime) ?
         differenceInMinutes(timesheet.endBreakTime, timesheet.startBreakTime): 0;
 
         return formatDurationHM(timesheet.clockInTime, timesheet.clockOutTime, breakDuration);

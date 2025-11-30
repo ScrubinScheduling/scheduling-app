@@ -106,19 +106,6 @@ const expandTimeOffRequests = (requests: ApiTimeOffRequest[]): TimeOffEvent[] =>
     return events;
 }
 
-export default function page({ params }: { params: Promise<{ id: string }> }) {
-  const apiClient = useApiClient();
-  const { id } = use(params);
-  const { userId } = useAuth();  
-  const [currentDate, setCurrentDate] = useState<Date>(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(currentDate); 
-  const [shifts, setShifts] = useState<Shift[]>([]); 
-  const [isLoading, setIsloading] = useState<boolean>(false);
-  const [teamSchedule, setTeamSchedule] = useState<WorkspaceShcedule | null>(null);
-  const [timeOff, setTimeOff] = useState<TimeOffEvent[]>([]); 
-  const [err, setErr] = useState<string>('');
-  
-
   
 
   const mapApiShift = (shift: ApiShift): Shift => {
@@ -135,9 +122,24 @@ export default function page({ params }: { params: Promise<{ id: string }> }) {
     }
   }
   
+
+export default function Page({ params }: { params: Promise<{ id: string }> }) {
+  const apiClient = useApiClient();
+  const { id } = use(params);
+  const { userId } = useAuth();  
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(currentDate); 
+  const [shifts, setShifts] = useState<Shift[]>([]); 
+  const [isLoading, setIsloading] = useState<boolean>(false);
+  const [teamSchedule, setTeamSchedule] = useState<WorkspaceShcedule | null>(null);
+  const [timeOff, setTimeOff] = useState<TimeOffEvent[]>([]); 
+  // Todo: Add Error Checks const [err, setErr] = useState<string>('');
   
 
-  const fetchShifts = async() => {
+
+  
+
+  const fetchShifts = useCallback( async() => {
     try {
         setIsloading(true);
         const monthStart = startOfMonth(currentDate);
@@ -155,7 +157,7 @@ export default function page({ params }: { params: Promise<{ id: string }> }) {
     } finally {
         setIsloading(false); 
     }
-  }
+  }, [apiClient, currentDate, id, userId]);
 
   const fetchTeamSchedule = useCallback(async (day: Date) => {
     const dayStart = startOfDay(day);
@@ -171,10 +173,11 @@ export default function page({ params }: { params: Promise<{ id: string }> }) {
     setTeamSchedule(data);
   }, [apiClient, id]);
   
-  const fetchTimeOff = async() => {
+  const fetchTimeOff = useCallback(async() => {
     try {
-        const monthStart = startOfMonth(currentDate);
-        const monthEnd = endOfMonth(currentDate);
+        // Todo: Implement time range for getting TimeOffRequests
+        //const monthStart = startOfMonth(currentDate);
+        //const monthEnd = endOfMonth(currentDate);
 
         const data = await apiClient.getTimeOffRequests(id, {
             status: "approved"
@@ -186,7 +189,7 @@ export default function page({ params }: { params: Promise<{ id: string }> }) {
     } catch (error) {
         console.log(error); 
     }
-  }
+  }, [apiClient, id])
 
   useEffect(() => {
     if (!selectedDate) return;
@@ -197,7 +200,7 @@ export default function page({ params }: { params: Promise<{ id: string }> }) {
     if (!userId) return;
     fetchShifts();
     fetchTimeOff();  
-  }, [apiClient, id, userId, currentDate])
+  }, [userId, fetchShifts, fetchTimeOff])
 
   const getShiftsForDay = useCallback( (day: Date) => {
     const key = format(day, 'yyyy-MM-dd');

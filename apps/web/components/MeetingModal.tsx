@@ -19,6 +19,8 @@ import { Calendar as CalendarIcon } from "lucide-react";
 import dayjs, { Dayjs } from "dayjs";
 import { TimePicker } from "antd";
 
+import { type MemberApi } from "@scrubin/schemas";
+
 type MemberOption = {
   id: string;            // UserWorkspaceMembership.id (stringified)
   userId: string;        // User.id (Clerk)
@@ -85,9 +87,9 @@ export default function MeetingModal({
         // Clerk user id of the creator
         const creatorUserId =
           mode === "edit" && meeting ? meeting.createdById : currentUserId;
-
-        const mapped: MemberOption[] = (data.members ?? [])
-          .map((m: any) => ({
+          
+        const mapped: MemberOption[] = (data.members  as MemberApi[]?? [])
+          .map((m) => ({
             // membershipId (if backend sends it) or fallback to user id
             id: String(m.membershipId ?? m.id),
             userId: String(m.userId ?? m.id),

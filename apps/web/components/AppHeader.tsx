@@ -14,7 +14,6 @@ export default function AppHeader() {
   const { id } = useParams<{ id: string }>();
   const href_dashboard = `/workspaces/${id}/admin/dashboard`;
   const href_team = `/workspaces/${id}/admin/team`;
-  const href_roles = `/workspaces/${id}/roles`;
   const href_requests = `/workspaces/${id}/admin/requests`;
   
   return (
