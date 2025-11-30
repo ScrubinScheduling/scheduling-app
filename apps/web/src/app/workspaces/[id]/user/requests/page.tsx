@@ -20,98 +20,128 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@clerk/nextjs";
 import { useParams } from "next/navigation";
 import { createApiClient } from "@scrubin/api-client";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
-function MeetingRequests({ workspaceId }: { workspaceId: string }) {
+export function MeetingRequests({ workspaceId }: { workspaceId: string }) {
+    const { getToken } = useAuth();
+    const apiClient = useMemo(
+        () =>
+            createApiClient({
+                baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL!,
+                getToken,
+            }),
+        [getToken]
+    );
+
     const [meetings, setMeetings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // Load meetings
     useEffect(() => {
         if (!workspaceId) return;
+        let alive = true;
         (async () => {
             try {
                 setLoading(true);
-                const res = await fetch(`/api/workspaces/${workspaceId}/meetings`);
-                if (!res.ok) throw new Error("Failed to load meetings");
-                const data = await res.json();
-                setMeetings(data.meetings || []);
+                const result = await apiClient.getMeetingsByWorkspace(workspaceId);
+                if (!alive) return;
+                setMeetings(result.meetings ?? []);
             } catch (err) {
                 console.error(err);
+                if (!alive) return;
                 setError(err instanceof Error ? err.message : "Failed to load meetings");
             } finally {
+                if (!alive) return;
                 setLoading(false);
             }
         })();
-    }, [workspaceId]);
+        return () => {
+            alive = false;
+        };
+    }, [workspaceId, apiClient]);
 
-    const handleVote = async (meetingId: number, vote: "YES" | "NO") => {
+    // Handle voting
+    const handleVote = async (meetingId: number, response: "YES" | "NO") => {
         try {
-            await fetch(`/api/workspaces/${workspaceId}/meetings/${meetingId}/respond`, {
-                method: "POST",
-                headers: { "Content-Type" : "application/json" },
-                body: JSON.stringify({ response: vote }),
-            });
-            setMeetings((prev) =>
-                prev.map((m) =>
-                    m.id === meetingId
-                        ? { ...m, attendees: { ...m.attendees, [vote.toLowerCase()]: ["You"] } } 
-                        : m
-                )
-            );
+            await apiClient.respondToMeeting(workspaceId, meetingId, { response });
+            toast.success("Vote recorded");
+            const refreshed = await apiClient.getMeetingsByWorkspace(workspaceId);
+            setMeetings(refreshed.meetings ?? []);
         } catch (err) {
             console.error(err);
-            alert("Failed to submit response");
+            toast.error("Failed to record vote");
         }
     };
 
-    if (loading) return <p className="text-gray-400 text-sm">Loading meetings...</p>;
-  if (error)
+    if (loading) {
+        return (
+        <div className="w-1/2 space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i} className="bg-zinc-900 border border-zinc-800 p-4 space-y-3">
+                <Skeleton className="h-5 w-1/3 bg-zinc-800" />
+                <Skeleton className="h-3 w-2/3 bg-zinc-800" />
+                <Skeleton className="h-3 w-1/2 bg-zinc-800" />
+                <div className="flex gap-2 mt-3">
+                    <Skeleton className="h-8 w-20 bg-zinc-800" />
+                    <Skeleton className="h-8 w-20 bg-zinc-800" />
+                </div>
+            </Card>
+            ))}
+        </div>
+        );
+    }
+
+    if (error)
+        return (
+        <div className="text-red-400 bg-red-950 border border-red-800 rounded-md p-4 text-sm">
+            Error: {error}
+        </div>
+        );
+
+    if (meetings.length === 0)
+        return <p className="text-gray-500 text-sm">No meeting requests yet.</p>;
+
+    // 🔸 Render the meeting list
     return (
-      <div className="text-red-400 bg-red-950 border border-red-700 rounded p-3 text-sm">
-        Error: {error}
-      </div>
-    );
-
-  if (meetings.length === 0)
-    return <p className="text-gray-400 text-sm">No meeting requests available.</p>;
-
-  return (
-    <div className="w-1/2 space-y-4">
-      {meetings.map((m) => (
-        <Card key={m.id} className="bg-zinc-900 border border-zinc-800 p-4">
-          <div className="flex justify-between items-start">
-            <CardTitle className="text-lg">{m.description}</CardTitle>
-            <Badge>{m.status}</Badge>
-          </div>
-          <CardContent className="mt-3 space-y-2 text-sm text-gray-400">
-            <p>
-              <span className="font-medium text-white">Date: </span>
-              {m.date} at {m.time}
-            </p>
-            <p>
-              <span className="font-medium text-white">Location: </span>
-              {m.location}
-            </p>
-          </CardContent>
-          <div className="flex gap-2 mt-4">
-            <Button
-              className="bg-green-600 hover:bg-green-700"
-              onClick={() => handleVote(m.id, "YES")}
-              size="sm"
+        <div className="w-1/2 space-y-4">
+        {meetings.map((m) => (
+            <Card
+            key={m.id}
+            className="bg-zinc-900 border border-zinc-800 p-4 hover:border-zinc-700 transition-colors"
             >
-              ✅ Yes
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => handleVote(m.id, "NO")}
-              size="sm"
-            >
-              ❌ No
-            </Button>
-          </div>
-        </Card>
-      ))}
-    </div>
+            <CardHeader className="flex justify-between items-start">
+                <CardTitle className="text-white font-medium">{m.description}</CardTitle>
+                <Badge>{m.status}</Badge>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm text-gray-400">
+                <p>
+                <span className="font-medium text-gray-200">Location:</span> {m.location}
+                </p>
+                <p>
+                <span className="font-medium text-gray-200">Scheduled:</span> {m.date} – {m.time}
+                </p>
+                <div className="flex gap-2 pt-3">
+                <Button
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700"
+                    onClick={() => handleVote(m.id, "YES")}
+                >
+                    ✅ Yes
+                </Button>
+                <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => handleVote(m.id, "NO")}
+                >
+                    ❌ No
+                </Button>
+                </div>
+            </CardContent>
+            </Card>
+        ))}
+        </div>
     );
 }
 
