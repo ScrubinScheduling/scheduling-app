@@ -7,6 +7,9 @@ const isWorkspaceRoute = createRouteMatcher([
   "/workspaces/:workspaceId",
   "/workspaces/:workspaceId/:path*",
 ]);
+const isWorkspaceAdminRoute = createRouteMatcher([
+  "/workspaces/:workspaceId/admin/:path*"
+]);
 
 const isWorkspaceRoot = createRouteMatcher(["/workspaces/:workspaceId"])
 
@@ -53,14 +56,23 @@ export default clerkMiddleware(async (auth, req) => {
     const workspaceId = Number(req.url.split("/")[4])
 	  const membershipStatus = await getWorkspaceMembershipStatus(token, workspaceId);
 
+
 		if (membershipStatus === 403 || !token) {
 			return NextResponse.redirect(new URL("/not-found", req.url));
 		}
 
+    const isUserAdmin = await isAdmin(token, userId, workspaceId);
+
     if (isWorkspaceRoot(req)) {
-      const isUserAdmin = await isAdmin(token, userId, workspaceId);
 			return NextResponse.redirect(new URL(`/workspaces/${workspaceId}/${isUserAdmin ? 'admin': 'user'}/dashboard`, req.url));
     }
+
+    if (isWorkspaceAdminRoute(req) && !isUserAdmin) {
+			return NextResponse.redirect(new URL("/not-found", req.url));
+
+    }
+
+    
 
   }
 });
