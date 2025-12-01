@@ -128,14 +128,14 @@ export function MeetingRequests({ workspaceId }: { workspaceId: string }) {
                     className="bg-green-600 hover:bg-green-700"
                     onClick={() => handleVote(m.id, "YES")}
                 >
-                    ✅ Yes
+                    ✓ Yes
                 </Button>
                 <Button
                     size="sm"
                     variant="destructive"
                     onClick={() => handleVote(m.id, "NO")}
                 >
-                    ❌ No
+                    ✕ No
                 </Button>
                 </div>
             </CardContent>
@@ -184,7 +184,13 @@ export default function Page() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [newStartDate, setNewStartDate] = useState<string>("");
     const [newEndDate, setNewEndDate] = useState<string>("");
-
+    const [requestType, setRequestType] = useState<'trade' | 'cover'>('cover');
+    const [selectedShiftId, setSelectedShiftId] = useState('');
+    const [requestedShiftId, setRequestedShiftId] = useState('');
+    const [requestedUserId, setRequestedUserId] = useState('');
+    const [userShifts, setUserShifts] = useState<any[]>([]);
+    const [workspaceUsers, setWorkspaceUsers] = useState<any[]>([]);
+    const [allWorkspaceShifts, setAllWorkspaceShifts] = useState<any[]>([]);
     const { userId } = useAuth();
     function badge(status: DecisionStatus) {
         if (status === "approved") return <Badge variant="secondary">Approved</Badge>;
@@ -239,84 +245,141 @@ export default function Page() {
         <main className="mt-4">
             <div className="w-full flex justify-end px-4">
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="flex items-center gap-2 text-white" onClick={() => setDialogOpen(true)}>
-                            <Plus />
-                            New Request
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Create a shift request</DialogTitle>
-                            <DialogDescription>
-                                Request coverage for a single day or a date range.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <form
-                            className="space-y-4"
-                            onSubmit={(e) => {
-                                e.preventDefault();
-                                if (!newStartDate) return;
-                                const start = newStartDate;
-                                const end = newEndDate || newStartDate;
-                                const startTime = new Date(start).getTime();
-                                const endTime = new Date(end).getTime();
-                                const normalized = startTime <= endTime ? { start, end } : { start: end, end: start };
-                                const newReq: TimeOffReq = {
-                                    id: `out-${Date.now()}`,
-                                    kind: "timeoff",
-                                    requestorId: 1,
-                                    requestedUserId: 0,
-                                    requestedApproval: "pending",
-                                    managerApproval: null,
-                                    requesterNames: ["You"],
-                                    dateRange: normalized,
-                                };
-                                setOutgoing((prev) => [newReq, ...prev]);
-                                setDialogOpen(false);
-                                setNewStartDate("");
-                                setNewEndDate("");
-                            }}
-                        >
-                            <div className="grid gap-2">
-                                <Label htmlFor="start-date">Start date</Label>
-                                <Input
-                                    id="start-date"
-                                    type="date"
-                                    value={newStartDate}
-                                    onChange={(e) => setNewStartDate(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="end-date">End date (optional)</Label>
-                                <Input
-                                    id="end-date"
-                                    type="date"
-                                    value={newEndDate}
-                                    onChange={(e) => setNewEndDate(e.target.value)}
-                                    min={newStartDate || undefined}
-                                />
-                            </div>
-                            <DialogFooter>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => {
-                                        setDialogOpen(false);
-                                        setNewStartDate("");
-                                        setNewEndDate("");
-                                    }}
-                                >
-                                    Cancel
-                                </Button>
-                                <Button type="submit" disabled={!newStartDate}>
-                                    Create
-                                </Button>
-                            </DialogFooter>
-                        </form>
-                    </DialogContent>
-                </Dialog>
+  <DialogTrigger asChild>
+    <Button className="flex items-center gap-2 text-white" onClick={() => setDialogOpen(true)}>
+      <Plus />
+      New Request
+    </Button>
+  </DialogTrigger>
+
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Create a shift request</DialogTitle>
+      <DialogDescription>
+        Request a shift trade or coverage from a teammate.
+      </DialogDescription>
+    </DialogHeader>
+
+    {/* --- New Form --- */}
+    <form
+      className="space-y-4"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        try {
+          if (!selectedShiftId || (!requestedUserId && !requestedShiftId)) {
+            throw new Error('Please fill in all fields.');
+          }
+          await apiClient.createShiftRequest(id, {
+            lendedShiftId: Number(selectedShiftId),
+            requestedShiftId: requestType === 'trade' ? Number(requestedShiftId) : null,
+            requestedUserId: requestType === 'cover' ? requestedUserId : null,
+          });
+
+          setDialogOpen(false);
+          setSelectedShiftId('');
+          setRequestedShiftId('');
+          setRequestedUserId('');
+          setRequestType('cover');
+            toast.success('Shift request created successfully.');
+        } catch (err) {
+          console.error(err);
+          alert('Failed to create shift request. See console for details.');
+        }
+      }}
+    >
+      {/* Type: Cover vs Trade */}
+      <div className="grid gap-2">
+        <Label>Request Type</Label>
+        <select
+          className="border bg-background p-2 rounded-md"
+          value={requestType}
+          onChange={(e) => setRequestType(e.target.value as 'trade' | 'cover')}
+        >
+          <option value="cover">Cover Request</option>
+          <option value="trade">Trade Request</option>
+        </select>
+      </div>
+
+      {/* Select Your Shift */}
+      <div className="grid gap-2">
+        <Label>Your Shift</Label>
+        <select
+          className="border bg-background p-2 rounded-md"
+          value={selectedShiftId}
+          onChange={(e) => setSelectedShiftId(e.target.value)}
+          required
+        >
+          <option value="">Select your shift</option>
+          {userShifts.map((shift) => (
+            <option key={shift.id} value={shift.id}>
+              {new Date(shift.startTime).toLocaleString()} – {new Date(shift.endTime).toLocaleString()}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Conditional render based on request type */}
+      {requestType === 'cover' && (
+        <div className="grid gap-2">
+          <Label>Who should cover?</Label>
+          <select
+            className="border bg-background p-2 rounded-md"
+            value={requestedUserId}
+            onChange={(e) => setRequestedUserId(e.target.value)}
+            required
+          >
+            <option value="">Select user</option>
+            {workspaceUsers.map((user) => (
+              <option key={user.id} value={user.id}>
+                {user.firstName} {user.lastName}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {requestType === 'trade' && (
+        <div className="grid gap-2">
+          <Label>Shift to trade with</Label>
+          <select
+            className="border bg-background p-2 rounded-md"
+            value={requestedShiftId}
+            onChange={(e) => setRequestedShiftId(e.target.value)}
+            required
+          >
+            <option value="">Select another shift</option>
+            {allWorkspaceShifts
+              .filter((s) => s.userId !== userId) // cannot trade with own shift
+              .map((shift) => (
+                <option key={shift.id} value={shift.id}>
+                  {shift.user.firstName} {shift.user.lastName} —{' '}
+                  {new Date(shift.startTime).toLocaleString()} to{' '}
+                  {new Date(shift.endTime).toLocaleString()}
+                </option>
+              ))}
+          </select>
+        </div>
+      )}
+
+      <DialogFooter>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            setDialogOpen(false);
+            setRequestType('cover');
+            setSelectedShiftId('');
+            setRequestedShiftId('');
+            setRequestedUserId('');
+          }}
+        >
+          Cancel
+        </Button>
+        <Button type="submit">Create</Button>
+      </DialogFooter>
+    </form>
+  </DialogContent>
+</Dialog>
             </div>
             <Tabs className="flex w-full justify-center items-center" defaultValue="incoming-requests">
                 <TabsList>
