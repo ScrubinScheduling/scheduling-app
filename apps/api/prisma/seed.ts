@@ -1,193 +1,370 @@
-// /* eslint-disable no-console */
-// import 'dotenv/config'
-// import { PrismaClient, ApprovalStatus } from '@prisma/client'
+import 'dotenv/config'
+import { PrismaClient } from '@prisma/client'
 
-// const prisma = new PrismaClient()
+const prisma = new PrismaClient()
 
-// type SeedWorkspaceInput = {
-// 	name: string
-// 	location: string
-// 	userIds: number[] // users already exist; first one becomes admin
-// }
+function atLocalDate(hour: number, minute = 0, daysFromNow = 0) {
+	const d = new Date()
+	d.setHours(0, 0, 0, 0)
+	d.setDate(d.getDate() + daysFromNow)
+	d.setHours(hour, minute, 0, 0)
+	return d
+}
 
-// function dateAt(hour: number, minute = 0, daysFromNow = 0) {
-// 	const d = new Date()
-// 	d.setHours(0, 0, 0, 0)
-// 	d.setDate(d.getDate() + daysFromNow)
-// 	d.setHours(hour, minute, 0, 0)
-// 	return d
-// }
+async function ensureDemoWorkspaceWithTwoUsers() {
+	// Grab two users to participate in demo data
+	const users = await prisma.user.findMany({
+		orderBy: { createdAt: 'asc' },
+		take: 2,
+	})
+	if (users.length < 2) {
+		console.warn('Fewer than 2 users in DB; cannot seed demo workspace/memberships.')
+		return null
+	}
 
-// async function seedWorkspace({
-// 	name,
-// 	location,
-// 	userIds,
-// }: SeedWorkspaceInput) {
-// 	if (userIds.length < 2) {
-// 		throw new Error('Need at least 2 users to seed a workspace')
-// 	}
-// 	const adminId = userIds[0]
+	// Find or create a demo workspace
+	let workspace = await prisma.workspace.findFirst({
+		where: { name: 'Demo Workspace' },
+	})
+	if (!workspace) {
+		workspace = await prisma.workspace.create({
+			data: {
+				name: 'Demo Workspace',
+				location: 'HQ',
+				adminId: users[0].id,
+			},
+		})
+		console.log(`Created workspace 'Demo Workspace' (id=${workspace.id})`)
+	}
 
-// 	// Create workspace
-// 	const workspace = await prisma.workspace.create({
-// 		data: {
-// 			name,
-// 			location,
-// 			adminId,
-// 		},
-// 	})
-// 	console.log(`Created workspace '${workspace.name}' (id ${workspace.id})`)
+	// Ensure both users are members of this workspace
+	for (const u of users) {
+		await prisma.userWorkspaceMembership
+			.upsert({
+				where: {
+					workspaceId_userId: {
+						workspaceId: workspace.id,
+						userId: u.id,
+					},
+				},
+				create: {
+					workspaceId: workspace.id,
+					userId: u.id,
+				},
+				update: {},
+			})
+			.catch((e) => {
+				console.warn('Failed to upsert membership', { userId: u.id, workspaceId: workspace!.id, e })
+			})
+	}
 
-// 	// Create roles
-// 	const [adminRole, managerRole, memberRole] = await Promise.all([
-// 		prisma.role.create({
-// 			data: { workspaceId: workspace.id, name: 'Admin', permissions: 0 },
-// 		}),
-// 		prisma.role.create({
-// 			data: { workspaceId: workspace.id, name: 'Manager', permissions: 0 },
-// 		}),
-// 		prisma.role.create({
-// 			data: { workspaceId: workspace.id, name: 'Member', permissions: 0 },
-// 		}),
-// 	])
-// 	console.log('Created roles: Admin, Manager, Member')
+	return {
+		workspaceId: workspace.id,
+		userIds: users.map((u) => u.id),
+	}
+}
 
-// 	// Add memberships (unique pair enforced)
-// 	await prisma.userWorkspaceMembership.createMany({
-// 		data: userIds.map((uid) => ({
-// 			userId: uid,
-// 			workspaceId: workspace.id,
-// 		})),
-// 		skipDuplicates: true,
-// 	})
-// 	console.log(`Added ${userIds.length} user workspace memberships`)
+async function createPastShiftsAndTimesheetsForUsers({
+	days = 5,
+	startHour = 9,
+	endHour = 17,
+	breakMinutes = 30,
+	workspaceId,
+	userIds,
+}: {
+	days?: number
+	startHour?: number
+	endHour?: number
+	breakMinutes?: number
+	workspaceId: number
+	userIds: string[]
+}) {
+	const now = new Date()
+	console.log(
+		`Seeding past shifts + timesheets for ${userIds.length} users in workspace ${workspaceId}`,
+	)
 
-// 	// Role memberships
-// 	const roleMembershipCreates = [
-// 		{ userId: adminId, workSpaceId: workspace.id, roleId: adminRole.id },
-// 		...(userIds.slice(1, 2).map((uid) => ({
-// 			userId: uid,
-// 			workSpaceId: workspace.id,
-// 			roleId: managerRole.id,
-// 		}))),
-// 		...(userIds.slice(2).map((uid) => ({
-// 			userId: uid,
-// 			workSpaceId: workspace.id,
-// 			roleId: memberRole.id,
-// 		}))),
-// 	]
-// 	await prisma.userRoleMembership.createMany({
-// 		data: roleMembershipCreates,
-// 		skipDuplicates: true,
-// 	})
-// 	console.log(`Added ${roleMembershipCreates.length} user role memberships`)
+	const shiftLengthMs = (endHour - startHour) * 60 * 60 * 1000
+	const breakMs = breakMinutes * 60 * 1000
 
-// 	// Create shifts for each user (two days)
-// 	const userIdToShiftIds = new Map<number, number[]>()
-// 	for (const uid of userIds) {
-// 		const s1 = await prisma.shift.create({
-// 			data: {
-// 				userId: uid,
-// 				workspaceId: workspace.id,
-// 				startTime: dateAt(9, 0, 1),
-// 				endTime: dateAt(17, 0, 1),
-// 				breakDuration: 0,
-// 			},
-// 		})
-// 		const s2 = await prisma.shift.create({
-// 			data: {
-// 				userId: uid,
-// 				workspaceId: workspace.id,
-// 				startTime: dateAt(9, 0, 2),
-// 				endTime: dateAt(17, 0, 2),
-// 				breakDuration: 0,
-// 			},
-// 		})
-// 		userIdToShiftIds.set(uid, [s1.id, s2.id])
-// 	}
-// 	console.log('Created shifts for users')
+	let createdShifts = 0
+	let createdTimesheets = 0
 
-// 	// Create a time-off (cover) request:
-// 	// userIds[1] asks userIds[2] to cover their shift on day 1
-// 	if (userIds.length >= 3) {
-// 		const requestorId = userIds[1]
-// 		const requestedUserId = userIds[2]
-// 		const lendedShiftId = userIdToShiftIds.get(requestorId)![0]
-// 		await prisma.shiftRequest.create({
-// 			data: {
-// 				requestorId,
-// 				requestedUserId,
-// 				workspaceId: workspace.id,
-// 				lendedShiftId,
-// 				requestedShiftId: null,
-// 				approvedByRequested: ApprovalStatus.PENDING,
-// 				approvedByManager: null,
-// 			},
-// 		})
-// 		console.log(
-// 			`Created time-off request: user ${requestorId} -> user ${requestedUserId}`,
-// 		)
-// 	}
+	for (const userId of userIds) {
+		for (let i = 1; i <= days; i++) {
+			const startTime = atLocalDate(startHour, 0, -i)
+			const endTime = atLocalDate(endHour, 0, -i)
+			if (endTime >= now) continue
 
-// 	// Create a trade request:
-// 	// userIds[1] offers their day-2 shift for userIds[2]'s day-2 shift
-// 	if (userIds.length >= 3) {
-// 		const requestorId = userIds[1]
-// 		const requestedUserId = userIds[2]
-// 		const lendedShiftId = userIdToShiftIds.get(requestorId)![1]
-// 		const requestedShiftId = userIdToShiftIds.get(requestedUserId)![1]
-// 		await prisma.shiftRequest.create({
-// 			data: {
-// 				requestorId,
-// 				requestedUserId,
-// 				workspaceId: workspace.id,
-// 				lendedShiftId,
-// 				requestedShiftId,
-// 				approvedByRequested: ApprovalStatus.PENDING,
-// 				approvedByManager: null,
-// 			},
-// 		})
-// 		console.log(
-// 			`Created trade request between user ${requestorId} and user ${requestedUserId}`,
-// 		)
-// 	}
+			// Avoid overlapping duplicate shifts if re-running
+			const conflict = await prisma.shift.findFirst({
+				where: {
+					userId,
+					workspaceId,
+					startTime: { lt: endTime },
+					endTime: { gt: startTime },
+				},
+				select: { id: true },
+			})
+			if (conflict) {
+				continue
+			}
 
-// 	return workspace
-// }
+			const shift = await prisma.shift.create({
+				data: {
+					userId,
+					workspaceId,
+					startTime,
+					endTime,
+					breakDuration: breakMinutes,
+				},
+				select: { id: true, startTime: true, endTime: true },
+			})
+			createdShifts++
 
-// async function main() {
-// 	// Fetch existing users (users are set in stone)
-// 	const users = await prisma.user.findMany({
-// 		orderBy: { id: 'asc' },
-// 		take: 6,
-// 	})
-// 	if (users.length < 2) {
-// 		throw new Error(
-// 			'Seed requires at least 2 existing users in the database. Found ' +
-// 				users.length,
-// 		)
-// 	}
-// 	const userIds = users.map((u) => u.id)
-// 	console.log(`Found ${userIds.length} users: [${userIds.join(', ')}]`)
+			// Construct plausible timesheet around the shift
+			// clock-in a few minutes after start, clock-out a few minutes before end
+			const clockInTime = new Date(shift.startTime.getTime() + 2 * 60 * 1000)
+			const clockOutTime = new Date(shift.endTime.getTime() - 3 * 60 * 1000)
 
-// 	// Create one or two workspaces using existing users
-// 	await seedWorkspace({
-// 		name: `Seed Clinic A`,
-// 		location: '123 Main St',
-// 		userIds: userIds.slice(0, Math.min(4, userIds.length)),
-// 	})
-// 	await seedWorkspace({
-// 		name: `Seed Clinic B`,
-// 		location: '456 Oak Ave',
-// 		userIds: userIds.slice(0, Math.min(3, userIds.length)),
-// 	})
-// }
+			const midOfShift = new Date(shift.startTime.getTime() + shiftLengthMs / 2)
+			const startBreakTime = new Date(midOfShift.getTime() - breakMs / 2)
+			const endBreakTime = new Date(startBreakTime.getTime() + breakMs)
 
-// main()
-// 	.catch((e) => {
-// 		console.error(e)
-// 		process.exitCode = 1
-// 	})
-// 	.finally(async () => {
-// 		await prisma.$disconnect()
-// 	})
+			await prisma.timesheet.create({
+				data: {
+					shiftId: shift.id,
+					clockInTime,
+					startBreakTime,
+					endBreakTime,
+					clockOutTime,
+				},
+			})
+			createdTimesheets++
+		}
+	}
+
+	console.log(
+		`Created ${createdShifts} past shifts and ${createdTimesheets} timesheets`,
+	)
+	return { createdShifts, createdTimesheets }
+}
+
+async function createFutureShiftsForAllMemberships({
+	days = 5,
+	startHour = 9,
+	endHour = 17,
+	breakMinutes = 30,
+}: {
+	days?: number
+	startHour?: number
+	endHour?: number
+	breakMinutes?: number
+}) {
+	const now = new Date()
+	console.log(`Seeding future shifts (now = ${now.toISOString()})`)
+
+	// Fetch all user-workspace memberships so shifts can be created with proper workspace scope
+	const memberships = await prisma.userWorkspaceMembership.findMany({
+		select: { userId: true, workspaceId: true },
+	})
+	if (memberships.length === 0) {
+		console.warn('No user-workspace memberships found. Skipping shift creation.')
+		return { created: 0 }
+	}
+
+	let created = 0
+
+	for (const m of memberships) {
+		for (let i = 1; i <= days; i++) {
+			const startTime = atLocalDate(startHour, 0, i) // start from tomorrow
+			const endTime = atLocalDate(endHour, 0, i)
+
+			// Ensure strictly in the future
+			if (startTime <= now) continue
+			if (endTime <= startTime) continue
+
+			// Avoid overlap with existing shifts for this user in this workspace
+			const conflict = await prisma.shift.findFirst({
+				where: {
+					userId: m.userId,
+					workspaceId: m.workspaceId,
+					startTime: { lt: endTime },
+					endTime: { gt: startTime },
+				},
+				select: { id: true },
+			})
+			if (conflict) {
+				console.log(
+					`Skip overlap user=${m.userId} workspace=${m.workspaceId} day+${i} (${startTime.toISOString()} - ${endTime.toISOString()})`,
+				)
+				continue
+			}
+
+			await prisma.shift.create({
+				data: {
+					userId: m.userId,
+					workspaceId: m.workspaceId,
+					startTime,
+					endTime,
+					breakDuration: breakMinutes,
+				},
+			})
+			created++
+		}
+	}
+
+	console.log(`Created ${created} future shifts across ${memberships.length} memberships`)
+	return { created }
+}
+
+async function main() {
+	// Ensure we have a workspace with two users to anchor demo data
+	const demo = await ensureDemoWorkspaceWithTwoUsers()
+	if (demo) {
+		await createPastShiftsAndTimesheetsForUsers({
+			days: 7, // last 7 days
+			startHour: 9,
+			endHour: 17,
+			breakMinutes: 30,
+			workspaceId: demo.workspaceId,
+			userIds: demo.userIds,
+		})
+	}
+
+	await createFutureShiftsForAllMemberships({
+		days: 7, // next 7 days
+		startHour: 9,
+		endHour: 17,
+		breakMinutes: 30,
+	})
+
+	// After creating shifts, create sample cover and trade requests
+	await createSampleShiftRequests()
+}
+
+main()
+	.catch((e) => {
+		console.error(e)
+	})
+	.finally(async () => {
+		await prisma.$disconnect()
+	})
+
+// ----- helpers to create shift requests -----
+async function createSampleShiftRequests() {
+	const now = new Date()
+
+	type ShiftRow = {
+		id: number
+		userId: string
+		workspaceId: number
+		startTime: Date
+	}
+
+	const shifts: ShiftRow[] = await prisma.shift.findMany({
+		where: { startTime: { gt: now } },
+		select: { id: true, userId: true, workspaceId: true, startTime: true },
+		orderBy: { startTime: 'asc' },
+	})
+
+	if (shifts.length === 0) {
+		console.warn('No future shifts found. Skipping shift requests.')
+		return
+	}
+
+	// Group shifts by workspace then by user
+	const shiftsByWorkspace = new Map<number, Map<string, ShiftRow[]>>()
+	for (const s of shifts) {
+		let byUser = shiftsByWorkspace.get(s.workspaceId)
+		if (!byUser) {
+			byUser = new Map<string, ShiftRow[]>()
+			shiftsByWorkspace.set(s.workspaceId, byUser)
+		}
+		const list = byUser.get(s.userId) ?? []
+		list.push(s)
+		byUser.set(s.userId, list)
+	}
+
+	let created = 0
+
+	for (const [workspaceId, byUser] of shiftsByWorkspace.entries()) {
+		const userIds = Array.from(byUser.keys())
+		if (userIds.length < 2) {
+			continue
+		}
+		// Take the first two users with at least one shift
+		const uA = userIds[0]
+		const uB = userIds[1]
+		const aShifts = (byUser.get(uA) ?? []).sort(
+			(a, b) => a.startTime.getTime() - b.startTime.getTime(),
+		)
+		const bShifts = (byUser.get(uB) ?? []).sort(
+			(a, b) => a.startTime.getTime() - b.startTime.getTime(),
+		)
+		if (aShifts.length === 0 || bShifts.length === 0) {
+			continue
+		}
+
+		// COVER: uA asks uB to cover uA's earliest shift
+		await prisma.shiftRequest.create({
+			data: {
+				requestorId: uA,
+				requestedUserId: uB,
+				workspaceId,
+				lendedShiftId: aShifts[0].id,
+				requestedShiftId: null,
+				approvedByRequested: 'PENDING',
+				approvedByManager: 'PENDING',
+			},
+		})
+		created++
+
+		// TRADE: uA offers their next (or earliest if only one) for uB's earliest
+		const aForTrade = aShifts[1] ?? aShifts[0]
+		await prisma.shiftRequest.create({
+			data: {
+				requestorId: uA,
+				requestedUserId: uB,
+				workspaceId,
+				lendedShiftId: aForTrade.id,
+				requestedShiftId: bShifts[0].id,
+				approvedByRequested: 'PENDING',
+				approvedByManager: 'PENDING',
+			},
+		})
+		created++
+
+		// Optional symmetry so both users have incoming/outgoing examples:
+		// COVER: uB asks uA
+		await prisma.shiftRequest.create({
+			data: {
+				requestorId: uB,
+				requestedUserId: uA,
+				workspaceId,
+				lendedShiftId: bShifts[0].id,
+				requestedShiftId: null,
+				approvedByRequested: 'PENDING',
+				approvedByManager: 'PENDING',
+			},
+		})
+		created++
+
+		// TRADE: uB offers for uA's earliest
+		const bForTrade = bShifts[1] ?? bShifts[0]
+		await prisma.shiftRequest.create({
+			data: {
+				requestorId: uB,
+				requestedUserId: uA,
+				workspaceId,
+				lendedShiftId: bForTrade.id,
+				requestedShiftId: aShifts[0].id,
+				approvedByRequested: 'PENDING',
+				approvedByManager: 'PENDING',
+			},
+		})
+		created++
+	}
+
+	console.log(`Created ${created} sample shift requests`)
+}
