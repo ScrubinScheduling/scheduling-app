@@ -24,9 +24,15 @@ import eventsRouter from './routes/events.js'
 
 
 const app = express()
-
+const allowedOrigins =
+  process.env.FRONTEND_ORIGIN?.split(',') ?? ['http://localhost:3000']
 app.use(helmet())
-app.use(cors({ origin: '*' }))
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  }),
+)
 app.use(express.json())
 app.use(morgan('dev'))
 app.use(clerkMiddleware())
