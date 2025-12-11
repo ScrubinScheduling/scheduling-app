@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useMemo, useEffect, use, useCallback } from "react";
 import AddShiftModal from "../../../../../../components/AddShiftModal";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import { Spin, Button, DatePicker, Alert } from "antd";
 import { LoadingOutlined } from '@ant-design/icons';
 import { useApiClient } from "@/hooks/useApiClient";
@@ -26,6 +26,7 @@ import {
 } from "date-fns";
 import ShiftModal from "../../../../../../components/ShiftModal";
 import { Shift, User } from "@scrubin/schemas";
+import SingleAddShiftModal from "../../../../../../components/SingleAddShiftModal";
 
 
 type ApiShift = { id: number; startTime: string; endTime: string; breakDuration: number | null };
@@ -50,6 +51,8 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
     const [openShiftDetails, setOpenShiftDeatils] = useState<boolean>(false);
+    const [selectedDay, setSelectedDay] = useState<Dayjs | null>(null); 
+    const [openAddShift, setOpenAddShift] = useState<boolean>(false); 
 
     const apiClient = useApiClient();
     const week = useMemo(() => makeWeek(anchor), [anchor]);
@@ -195,7 +198,13 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
                                         return (
                                             <div key={dayKey} className="p-2 min-h-[100px] flex flex-col gap-1">
                                                 {items.length === 0 ? (
-                                                    <Button type="default" className="flex-1">
+                                                    <Button type="default" className="flex-1"
+                                                    onClick={() => {
+                                                        setSelectedUser(user);
+                                                        setSelectedDay(dayjs(dayKey));
+                                                        setOpenAddShift(true); 
+                                                    }}
+                                                    >
                                                         <Plus />
                                                     </Button>
                                                 ) : (
@@ -245,6 +254,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
                     onSuccess={handleShiftReload}
                 />
             )}
+            <SingleAddShiftModal open={openAddShift} setOpen={setOpenAddShift} user={selectedUser} selectedDay={selectedDay} users={users} workspaceId={workspaceId}/>
             <AddShiftModal open={isModal} setOpen={setIsModal} users={users} workspaceId={Number(id)} onSuccess={handleShiftReload} />
         </div>
     );
