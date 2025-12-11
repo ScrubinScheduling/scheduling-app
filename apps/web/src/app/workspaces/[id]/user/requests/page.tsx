@@ -14,61 +14,62 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@clerk/nextjs";
 import { useParams } from "next/navigation";
-import { createApiClient } from "@scrubin/api-client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { useApiClient } from "@/hooks/useApiClient";
+import { useSSEStream } from "@/hooks/useSSE";
 
 export function MeetingRequests({ workspaceId }: { workspaceId: string }) {
-    const { getToken } = useAuth();
-    const apiClient = useMemo(
-        () =>
-            createApiClient({
-                baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL!,
-                getToken,
-            }),
-        [getToken]
-    );
+    // Check if mounted and clean up if not 
+    const isMounted = useRef(true);
+    useEffect(() => {
+        isMounted.current = true;
+        return () => {
+            isMounted.current = false;
+        }
+    }, []);
+    const apiClient = useApiClient();
 
     const [meetings, setMeetings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    const refreshMeetings = useCallback(async() => {
+        try {
+            if (!workspaceId) return;
+            setLoading(true);
+            const result = await apiClient.getMeetingsByWorkspace(workspaceId);
+            if (!isMounted.current) return;
+            setMeetings(result.meetings ?? []); 
+            setLoading(false);
+        } catch (err) {
+            console.log('Failed to fetch meetings', err);
+            setError('Failed to fetch meetings');
+        } finally {
+            setLoading(false); 
+        }
+         
+    }, [workspaceId, apiClient]); 
+
     // Load meetings
     useEffect(() => {
-        if (!workspaceId) return;
-        let alive = true;
-        (async () => {
-            try {
-                setLoading(true);
-                const result = await apiClient.getMeetingsByWorkspace(workspaceId);
-                if (!alive) return;
-                setMeetings(result.meetings ?? []);
-            } catch (err) {
-                console.error(err);
-                if (!alive) return;
-                setError(err instanceof Error ? err.message : "Failed to load meetings");
-            } finally {
-                if (!alive) return;
-                setLoading(false);
-            }
-        })();
-        return () => {
-            alive = false;
-        };
-    }, [workspaceId, apiClient]);
+        refreshMeetings(); 
+    }, [refreshMeetings]); 
+
+    useSSEStream(Number(workspaceId), {'meeting-updated' : () => {
+        refreshMeetings(); 
+    }})
 
     // Handle voting
     const handleVote = async (meetingId: number, response: "YES" | "NO") => {
         try {
             await apiClient.respondToMeeting(workspaceId, meetingId, { response });
             toast.success("Vote recorded");
-            const refreshed = await apiClient.getMeetingsByWorkspace(workspaceId);
-            setMeetings(refreshed.meetings ?? []);
         } catch (err) {
             console.error(err);
             toast.error("Failed to record vote");
@@ -166,16 +167,9 @@ export default function Page() {
     };
     type AnyRequest = TradeReq | TimeOffReq;
 
-    const { getToken } = useAuth();
+    const apiClient = useApiClient(); 
     const { id } = useParams<{ id: string }>();
-    const apiClient = useMemo(
-        () =>
-            createApiClient({
-                baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL as string,
-                getToken,
-            }),
-        [getToken]
-    );
+    const isMounted = useRef(true);
 
     const [incoming, setIncoming] = useState<AnyRequest[]>([]);
     const [outgoing, setOutgoing] = useState<AnyRequest[]>([]);
@@ -198,6 +192,7 @@ export default function Page() {
         return <Badge variant="outline">Pending</Badge>;
     }
 
+    useEffect(() => () => {isMounted.current = false},[]);
     useEffect(() => {
         if (!userId) return;  // Guard clause
         let alive = true;
