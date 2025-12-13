@@ -142,8 +142,82 @@ router.get('/:id', async (req: Request<{workspaceId: string; id: string}>, res) 
  * TODO: Implement create time off request
  */
 router.post('/', async (req, res) => {
-    // TODO: Implement create time off request
-    return res.status(501).json({ error: 'Not implemented' })
+    try {
+        const workspaceId = Number(req.params.workspaceId)
+
+        if (!workspaceId || Number.isNaN(workspaceId)) {
+            return res.status(400).json({ error: 'Invalid workspace id' })
+        }
+
+        const { userId, startDate, endDate, reason } = req.body
+
+        // Validation
+        if (!userId || !startDate || !endDate) {
+            return res.status(400).json({ 
+                error: 'Missing required fields: userId, startDate, endDate' 
+            })
+        }
+
+        const start = new Date(startDate)
+        const end = new Date(endDate)
+
+        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+            return res.status(400).json({ error: 'Invalid date format' })
+        }
+
+        if (start > end) {
+            return res.status(400).json({ 
+                error: 'Start date must be before or equal to end date' 
+            })
+        }
+
+        // Verify user exists and belongs to workspace
+        const user = await prisma.user.findFirst({
+            where: { 
+                id: Number(userId),
+                workspaceMemberships: {
+                    some: { workspaceId }
+                }
+            }
+        })
+
+        if (!user) {
+            return res.status(404).json({ 
+                error: 'User not found or not a member of this workspace' 
+            })
+        }
+
+        // Create the time off request
+        const newRequest = await prisma.timeOffRequest.create({
+            data: {
+                workspaceId,
+                userId: Number(userId),
+                startDate: start,
+                endDate: end,
+                status: STATUS.pending,
+                // If you have a reason field in your schema:
+                // reason: reason || null,
+            },
+            include: { user: true },
+        })
+
+        const request = {
+            id: String(newRequest.id),
+            status: statusToString(newRequest.status),
+            kind: 'timeoff' as const,
+            requesterNames: [fullName(newRequest.user)],
+            dateRange: {
+                start: formatDate(newRequest.startDate),
+                end: formatDate(newRequest.endDate),
+            },
+        }
+
+        return res.status(201).json({ request })
+    } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error(err)
+        return res.status(500).json({ error: 'Failed to create time off request' })
+    }
 })
 
 /**
