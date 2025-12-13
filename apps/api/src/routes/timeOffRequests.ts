@@ -149,7 +149,7 @@ router.post('/', async (req, res) => {
             return res.status(400).json({ error: 'Invalid workspace id' })
         }
 
-        const { userId, startDate, endDate, reason } = req.body
+        const { userId, startDate, endDate } = req.body
 
         // Validation
         if (!userId || !startDate || !endDate) {
@@ -172,10 +172,11 @@ router.post('/', async (req, res) => {
         }
 
         // Verify user exists and belongs to workspace
+        // CORRECTED: Use 'UserWorkspaceMembership' (the actual field name in schema)
         const user = await prisma.user.findFirst({
             where: { 
-                id: Number(userId),
-                workspaceMemberships: {
+                id: userId,
+                UserWorkspaceMembership: {
                     some: { workspaceId }
                 }
             }
@@ -191,12 +192,10 @@ router.post('/', async (req, res) => {
         const newRequest = await prisma.timeOffRequest.create({
             data: {
                 workspaceId,
-                userId: Number(userId),
+                userId,
                 startDate: start,
                 endDate: end,
                 status: STATUS.pending,
-                // If you have a reason field in your schema:
-                // reason: reason || null,
             },
             include: { user: true },
         })
@@ -233,7 +232,7 @@ router.patch('/:id', async (req, res) => {
             return res.status(400).json({ error: 'Invalid id' })
         }
 
-        const { startDate, endDate, reason } = req.body
+        const { startDate, endDate } = req.body
 
         // Check if request exists
         const existing = await prisma.timeOffRequest.findFirst({
@@ -277,10 +276,6 @@ router.patch('/:id', async (req, res) => {
             return res.status(400).json({ 
                 error: 'Start date must be before or equal to end date' 
             })
-        }
-
-        if (reason !== undefined) {
-            updateData.reason = reason
         }
 
         if (Object.keys(updateData).length === 0) {

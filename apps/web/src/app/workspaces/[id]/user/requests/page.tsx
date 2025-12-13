@@ -145,6 +145,104 @@ export function MeetingRequests({ workspaceId }: { workspaceId: string }) {
     );
 }
 
+// Time Off Requests
+export function TimeOffRequests({ workspaceId, userId }: { workspaceId: string; userId: string }) {
+    const { getToken } = useAuth();
+    const apiClient = useMemo(
+        () =>
+            createApiClient({
+                baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL!,
+                getToken,
+            }),
+        [getToken]
+    );
+
+    const [timeOffRequests, setTimeOffRequests] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const loadTimeOffRequests = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const result = await apiClient.getTimeOffRequests(workspaceId);
+            setTimeOffRequests(result.requests ?? []);
+        } catch (err) {
+            console.error(err);
+            setError(err instanceof Error ? err.message : "Failed to load time off requests");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (!workspaceId) return;
+        let alive = true;
+        (async () => {
+            await loadTimeOffRequests();
+        })();
+        return () => {
+            alive = false;
+        };
+    }, [workspaceId]);
+
+    if (loading) {
+        return (
+            <div className="w-1/2 space-y-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                    <Card key={i} className="bg-zinc-900 border border-zinc-800 p-4 space-y-3">
+                        <Skeleton className="h-5 w-1/3 bg-zinc-800" />
+                        <Skeleton className="h-3 w-2/3 bg-zinc-800" />
+                        <Skeleton className="h-3 w-1/2 bg-zinc-800" />
+                    </Card>
+                ))}
+            </div>
+        );
+    }
+
+    if (error)
+        return (
+            <div className="text-red-400 bg-red-950 border border-red-800 rounded-md p-4 text-sm">
+                Error: {error}
+            </div>
+        );
+
+    if (timeOffRequests.length === 0)
+        return <p className="text-gray-500 text-sm">No time off requests yet.</p>;
+
+    const badge = (status: string) => {
+        if (status === "approved") return <Badge className="bg-green-600">Approved</Badge>;
+        if (status === "denied") return <Badge variant="destructive">Denied</Badge>;
+        return <Badge variant="outline">Pending</Badge>;
+    };
+
+    return (
+        <div className="w-1/2 space-y-4">
+            {timeOffRequests.map((req) => (
+                <Card
+                    key={req.id}
+                    className="bg-zinc-900 border border-zinc-800 p-4 hover:border-zinc-700 transition-colors"
+                >
+                    <CardHeader className="flex justify-between items-start">
+                        <CardTitle className="text-white font-medium">
+                            Time Off Request: {req.requesterNames.join(", ")}
+                        </CardTitle>
+                        {badge(req.status)}
+                    </CardHeader>
+                    <CardContent className="space-y-2 text-sm text-gray-400">
+                        <div className="rounded-md border border-zinc-700 bg-zinc-800/50 p-3">
+                            <div className="text-sm font-medium text-gray-200">Date Range</div>
+                            <div className="text-sm text-gray-400">
+                                {req.dateRange.start} – {req.dateRange.end}
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
+    );
+}
+
 export default function Page() {
     type DecisionStatus = "pending" | "approved" | "denied";
     type BaseReq = {
