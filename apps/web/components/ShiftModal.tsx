@@ -15,12 +15,11 @@ type ShiftModalProps  = {
     onDelete?: (shiftId: number) => void | Promise<void>;
     setIsVisiable: React.Dispatch<React.SetStateAction<boolean>>;
     users: User[] | [];
-    onSuccess: () => void | Promise<void>; 
 }
 
 
 
-function ShiftModal({user, shift, onDelete, workspaceId, isVisiable, setIsVisiable, users, onSuccess} : ShiftModalProps) {
+function ShiftModal({user, shift, onDelete, workspaceId, isVisiable, setIsVisiable, users} : ShiftModalProps) {
   const apiClient = useApiClient(); 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [openModal, setOpenModal] = useState<boolean>(false);
@@ -64,7 +63,6 @@ function ShiftModal({user, shift, onDelete, workspaceId, isVisiable, setIsVisiab
 
       setIsLoading(true);
       await apiClient.updateShift(workspaceId, shift.id, payload);
-      await onSuccess();
       resetEditState();
       setIsVisiable(false);
       setIsEditing(false);  

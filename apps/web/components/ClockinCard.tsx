@@ -390,7 +390,7 @@ export default function ClockinCard() {
                     <div className="grid grid-cols-2 gap-4">
                         {status === "scheduled" && (
                             <Button 
-                                className="w-full h-12 text-base" 
+                                className="w-full h-12" 
                                 onClick={handleClockIn}
                                 disabled={!currentShift}
                             >

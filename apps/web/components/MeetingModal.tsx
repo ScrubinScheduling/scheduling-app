@@ -1,5 +1,6 @@
 "use client";
 
+import "antd/dist/reset.css";
 import React from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useParams } from "next/navigation";
