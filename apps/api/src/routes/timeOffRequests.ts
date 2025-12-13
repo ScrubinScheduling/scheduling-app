@@ -225,8 +225,91 @@ router.post('/', async (req, res) => {
  * TODO: Implement update time off request
  */
 router.patch('/:id', async (req, res) => {
-    // TODO: Implement update time off request
-    return res.status(501).json({ error: 'Not implemented' })
+    try {
+        const workspaceId = Number(req.params.workspaceId)
+        const id = Number(req.params.id)
+
+        if (!workspaceId || Number.isNaN(workspaceId) || Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid id' })
+        }
+
+        const { startDate, endDate, reason } = req.body
+
+        // Check if request exists
+        const existing = await prisma.timeOffRequest.findFirst({
+            where: { id, workspaceId },
+        })
+
+        if (!existing) {
+            return res.status(404).json({ error: 'Time off request not found' })
+        }
+
+        // Only allow updates to pending requests
+        if (existing.status !== STATUS.pending) {
+            return res.status(400).json({ 
+                error: 'Cannot update time off request that has already been approved or denied' 
+            })
+        }
+
+        const updateData: any = {}
+
+        if (startDate) {
+            const start = new Date(startDate)
+            if (Number.isNaN(start.getTime())) {
+                return res.status(400).json({ error: 'Invalid start date format' })
+            }
+            updateData.startDate = start
+        }
+
+        if (endDate) {
+            const end = new Date(endDate)
+            if (Number.isNaN(end.getTime())) {
+                return res.status(400).json({ error: 'Invalid end date format' })
+            }
+            updateData.endDate = end
+        }
+
+        // Validate date range if both are being updated or one is being updated
+        const finalStartDate = updateData.startDate || existing.startDate
+        const finalEndDate = updateData.endDate || existing.endDate
+
+        if (finalStartDate > finalEndDate) {
+            return res.status(400).json({ 
+                error: 'Start date must be before or equal to end date' 
+            })
+        }
+
+        if (reason !== undefined) {
+            updateData.reason = reason
+        }
+
+        if (Object.keys(updateData).length === 0) {
+            return res.status(400).json({ error: 'No valid fields to update' })
+        }
+
+        const updated = await prisma.timeOffRequest.update({
+            where: { id },
+            data: updateData,
+            include: { user: true },
+        })
+
+        const request = {
+            id: String(updated.id),
+            status: statusToString(updated.status),
+            kind: 'timeoff' as const,
+            requesterNames: [fullName(updated.user)],
+            dateRange: {
+                start: formatDate(updated.startDate),
+                end: formatDate(updated.endDate),
+            },
+        }
+
+        return res.status(200).json({ request })
+    } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error(err)
+        return res.status(500).json({ error: 'Failed to update time off request' })
+    }
 })
 
 /**
