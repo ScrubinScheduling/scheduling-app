@@ -2,6 +2,7 @@ import express from 'express';
 import { getAuth } from '@clerk/express';
 import { prisma } from '../db';
 import { getWorkspaceMembership } from '../utils/authz';
+import { emitUpdateMeetings } from './events';
 
 const router = express.Router({ mergeParams: true });
 
@@ -101,7 +102,7 @@ router.get('/', async (req, res) => {
 		}
 
 		// Ensure the caller is a member of this workspace
-		const membership = await getWorkspaceMembership(userId ?? null, workspaceId);
+		const membership = await getWorkspaceMembership(userId ?? '', workspaceId);
 		if (!membership) {
 			return res.status(403).json({ error: 'Not a member of this workspace' });
 		}
@@ -263,7 +264,7 @@ router.post('/', async (req, res) => {
 				},
 			},
 		});
-
+		emitUpdateMeetings(workspaceId); 
 		return res.status(201).json({ meeting: mapMeetingForResponse(created) });
 	} catch (err) {
 		// eslint-disable-next-line no-console
@@ -309,6 +310,7 @@ router.delete('/:id', async (req, res) => {
 			where: { id: meetingId },
 		});
 
+		emitUpdateMeetings(workspaceId);
 		return res.status(204).send();
 	} catch (err) {
 		// eslint-disable-next-line no-console
@@ -359,7 +361,7 @@ router.post('/:id/finalize', async (req, res) => {
 				},
 			},
 		});
-
+		emitUpdateMeetings(workspaceId); 
 		return res.json({ meeting: mapMeetingForResponse(updated) });
 	} catch (err) {
 		// eslint-disable-next-line no-console
@@ -410,7 +412,7 @@ router.post('/:id/cancel', async (req, res) => {
 				},
 			},
 		});
-
+		emitUpdateMeetings(workspaceId); 
 		return res.json({ meeting: mapMeetingForResponse(updated) });
 	} catch (err) {
 		// eslint-disable-next-line no-console
@@ -552,6 +554,7 @@ router.post("/:id/reschedule", async (req, res) => {
       return res.status(500).json({ error: "Failed to load updated meeting" });
     }
 
+	emitUpdateMeetings(workspaceId); 
     return res.json({ meeting: mapMeetingForResponse(updated) });
   } catch (err) {
     // eslint-disable-next-line no-console
@@ -614,6 +617,7 @@ router.post('/:id/respond', async (req, res) => {
 			},
 		});
 
+		emitUpdateMeetings(workspaceId); 
 		return res.status(200).json({
 			message: 'Respose recorded',
 			invite: updated,

@@ -1,15 +1,17 @@
 import express from 'express'
 import { prisma } from '../db.js'
 import type { Request, Response } from 'express'
-import type { Prisma } from '@prisma/client'
+import { type Prisma } from '@prisma/client'
+import { emitUpdateShift } from './events.js'
 
 const router = express.Router({ mergeParams: true })
 type ShiftWithUserAndTimesheet = Prisma.ShiftGetPayload<{
     include: {
-      user: { select: { id: true; firstName: true; lastName: true } };
-      timesheet: true;
-    };
-  }>;
+        user: { select: { id: true; firstName: true; lastName: true } }
+        timesheet: true
+    }
+}>
+
 router.get(
     '/',
     async (
@@ -26,7 +28,7 @@ router.get(
             const startDate = new Date(start)
             const endDate = new Date(end)
 
-            const shifts: ShiftWithUserAndTimesheet[]  = await prisma.shift.findMany({
+            const shifts: ShiftWithUserAndTimesheet[] = await prisma.shift.findMany({
                 where: { workspaceId, startTime: { lt: endDate }, endTime: { gt: startDate } },
                 orderBy: { startTime: 'asc' },
                 include: {
@@ -136,6 +138,7 @@ router.post('/', async (req, res) => {
         )
 
         const result = await prisma.shift.createMany({ data: rows })
+        emitUpdateShift(workspaceId)
         console.log(result.count)
         res.status(201).json({ inserted: result.count })
     } catch (error) {
@@ -147,6 +150,8 @@ router.post('/', async (req, res) => {
 router.patch('/:id', async (req, res) => {
     try {
         const id = Number(req.params.id)
+        const workspaceId = Number(req.params.workspaceId)
+
         if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid Id' })
 
         const shift = await prisma.shift.findUnique({ where: { id: id } })
@@ -192,7 +197,7 @@ router.patch('/:id', async (req, res) => {
             where: { id: id },
             data: updateData,
         })
-
+        emitUpdateShift(workspaceId)
         return res.status(200).json(updated)
     } catch (error) {
         console.log('Error in shifts route', error)
@@ -203,9 +208,11 @@ router.patch('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
     try {
         const id = Number(req.params.id)
+        const workspaceId = Number(req.params.workspaceId)
+
         if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid id' })
         await prisma.shift.delete({ where: { id: Number(id) } })
-
+        emitUpdateShift(workspaceId)
         res.status(200).json({ message: 'Shift deleted' })
     } catch (err) {
         console.log('Error in shifts route', err)

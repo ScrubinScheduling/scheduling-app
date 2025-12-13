@@ -2,6 +2,8 @@ import express from 'express'
 import { getAuth } from '@clerk/express'
 import { prisma } from '../db.js'
 import { getWorkspaceMembership } from '../utils/authz.js'
+import { emitWorkspaceCreated } from './events.js'
+
 
 const router = express.Router()
 
@@ -80,6 +82,7 @@ router.post('/', async (req, res) => {
         },
     })
 
+    emitWorkspaceCreated(userId); 
     res.status(200).json(workspace)
 })
 

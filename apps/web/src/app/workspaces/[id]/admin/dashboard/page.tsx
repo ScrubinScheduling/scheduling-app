@@ -5,6 +5,8 @@ import dayjs, { Dayjs } from "dayjs";
 import { Spin, Button, DatePicker, Alert } from "antd";
 import { LoadingOutlined } from '@ant-design/icons';
 import { useApiClient } from "@/hooks/useApiClient";
+import { useSSEStream } from "@/hooks/useSSE";
+
 import {
     getToday,
     makeWeek,
@@ -98,19 +100,6 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
         }
     }, [hasValidWorkspace, apiClient, week, id]);
 
-    const handleShiftReload = async () => {
-        try {
-            setIsLoading(true);
-            await getShifts();
-            setIsModal(false);
-            setIsLoading(false);
-        } catch (error) {
-            console.log(error);
-        } finally {
-            setIsLoading(false);
-        }
-
-    }
 
     const handleDelete = async (shiftId: number) => {
         if (!confirm) return;
@@ -118,7 +107,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
         try {
             setIsLoading(true);
             await apiClient.deleteShift(id, shiftId);
-            await handleShiftReload();
+            //await handleShiftReload();
             setOpenShiftDeatils(false);
             setSelectedShift(null);
             setSelectedUser(null);
@@ -134,6 +123,10 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
         getUsers();
         getShifts(); // Refetch when workspace changes or week window moves
     }, [hasValidWorkspace, getUsers, getShifts]);
+    
+    useSSEStream(workspaceId, {'shift-updated' : () => {
+        getShifts(); 
+    }}); 
 
     return (
         <div className="min-h-screen border-b border-border bg-card px-6 py-4">
@@ -251,11 +244,11 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
                     isVisiable={openShiftDetails}
                     setIsVisiable={setOpenShiftDeatils}
                     users={users}
-                    onSuccess={handleShiftReload}
+                    
                 />
             )}
             <SingleAddShiftModal open={openAddShift} setOpen={setOpenAddShift} user={selectedUser} selectedDay={selectedDay} users={users} workspaceId={workspaceId}/>
-            <AddShiftModal open={isModal} setOpen={setIsModal} users={users} workspaceId={Number(id)} onSuccess={handleShiftReload} />
+            <AddShiftModal open={isModal} setOpen={setIsModal} users={users} workspaceId={Number(id)} />
         </div>
     );
 }

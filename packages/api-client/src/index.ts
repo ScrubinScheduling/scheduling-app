@@ -255,7 +255,12 @@ export function createApiClient({ baseUrl, getToken }) {
 			request({ method: 'POST', path: `/workspaces/${workspaceId}/meetings`, body: data }),
 		deleteMeeting: (workspaceId, id) =>
 			request({ method: 'DELETE', path: `/workspaces/${workspaceId}/meetings/${id}` }),
-
+		updateMeetingStatus: (workspaceId, meetingId, action) =>
+			request({
+				method: "POST",
+				path: `/workspaces/${workspaceId}/meetings/${meetingId}/${action}`,
+				body: {}
+			}),			
 		// Timesheets
 		getWorkspaceTimesheets: (workspaceId, params?) =>
 			request({ method: 'GET', path: `/workspaces/${workspaceId}/timesheets`, params }),

@@ -15,6 +15,7 @@ import { useAuth } from "@clerk/nextjs"
 import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import { useApiClient } from "@/hooks/useApiClient"
+import { useSSEStream } from '@/hooks/useSSE';
 import { format, startOfWeek, endOfWeek, isToday, isTomorrow, parseISO } from "date-fns"
 import type { Shift } from "@scrubin/schemas"
 
@@ -30,11 +31,9 @@ export default function UpcomingScheduleCard() {
   }>>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isAlive, setIsAlive] = useState<boolean>(true); 
 
-  useEffect(() => {
-    let alive = true
-
-    async function fetchShifts() {
+      async function fetchShifts() {
       if (!userId || !workspaceId) return
 
       try {
@@ -55,7 +54,7 @@ export default function UpcomingScheduleCard() {
           end: weekEnd.toISOString(),
         }) as { shifts: Shift[] }
 
-        if (!alive) return
+        if (!isAlive) return
 
         // Filter out shifts that have been clocked out
         const activeShifts = response.shifts.filter(shift => {
@@ -98,21 +97,26 @@ export default function UpcomingScheduleCard() {
 
         setShifts(userShifts)
       } catch (err) {
-        if (!alive) return
+        if (!isAlive) return
         setError(err instanceof Error ? err.message : "Failed to load shifts")
       } finally {
-        if (alive) {
+        if (isAlive) {
           setLoading(false)
         }
       }
     }
-
+  useEffect(() => {
+    setIsAlive(true); 
     fetchShifts()
 
     return () => {
-      alive = false
+      setIsAlive(false); 
     }
   }, [userId, workspaceId, apiClient])
+
+  useSSEStream(Number(workspaceId), {'shift-updated' : () => {
+    fetchShifts(); 
+  }});
 
   if (loading) {
     return (
