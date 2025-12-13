@@ -317,8 +317,39 @@ router.patch('/:id', async (req, res) => {
  * TODO: Implement delete time off request
  */
 router.delete('/:id', async (req, res) => {
-    // TODO: Implement delete time off request
-    return res.status(501).json({ error: 'Not implemented' })
+    try {
+        const workspaceId = Number(req.params.workspaceId)
+        const id = Number(req.params.id)
+
+        if (!workspaceId || Number.isNaN(workspaceId) || Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid id' })
+        }
+
+        const existing = await prisma.timeOffRequest.findFirst({
+            where: { id, workspaceId },
+        })
+
+        if (!existing) {
+            return res.status(404).json({ error: 'Time off request not found' })
+        }
+
+        // Optional: Only allow deletion of pending requests
+        if (existing.status !== STATUS.pending) {
+            return res.status(400).json({ 
+                error: 'Cannot delete time off request that has already been approved or denied' 
+            })
+        }
+
+        await prisma.timeOffRequest.delete({
+            where: { id },
+        })
+
+        return res.status(204).send()
+    } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error(err)
+        return res.status(500).json({ error: 'Failed to delete time off request' })
+    }
 })
 
 /**
