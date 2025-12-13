@@ -42,7 +42,9 @@ class ApiClient {
 		}
 
 		const url = `${API_URL}/users/${userId}/shifts?${params.toString()}`;
-		return this.fetchWithAuth(url);
+		const data = await this.fetchWithAuth(url);
+		// API currently wraps the array in { shifts }, so tolerate either shape
+		return Array.isArray(data) ? data : data?.shifts ?? [];
 	}
 
 	// get the current authenticated user

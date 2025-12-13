@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useCallback, useMemo, useRef } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,6 +11,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useApiClient } from "@/hooks/useApiClient";
+import { useSSEStream } from "@/hooks/useSSE";
 import { useAuth } from "@clerk/nextjs";
 import { useParams } from "next/navigation";
 import {
@@ -23,7 +25,8 @@ import {
 } from "lucide-react";
 import MeetingModal, { MeetingForModal } from "../../../../../../../components/MeetingModal";
 
-const API = process.env.NEXT_PUBLIC_API_BASE_URL as string;
+
+
 
 /**** Types ****/
 
@@ -66,12 +69,16 @@ function statusChip(status: MeetingStatus) {
 export default function MeetingRequestsPage() {
   const { getToken } = useAuth();
   const { id: workspaceId } = useParams<{ id: string }>();
+  const apiClient = useApiClient(); 
 
   const [meetings, setMeetings] = React.useState<Meeting[]>([]);
   const [selectedId, setSelectedId] = React.useState<string>("");
 
   const [loading, setLoading] = React.useState<boolean>(false);
   const [error, setError] = React.useState<string | null>(null);
+
+
+
 
   // Delete confirmation dialog
   const [deleteConfirm, setDeleteConfirm] = React.useState<{
@@ -90,15 +97,21 @@ export default function MeetingRequestsPage() {
     [meetings, selectedId]
   );
 
+
   const [editorOpen, setEditorOpen] = React.useState(false);
   const [editorMode, setEditorMode] = React.useState<"create" | "edit">("create");
   const [editorMeeting, setEditorMeeting] = React.useState<MeetingForModal | null>(null);
   
   const [reloadToken, setReloadToken] = React.useState(0);
-  function refreshMeetings() {
-    setReloadToken((t) => t + 1);
-  }
 
+  const refreshMeetings = useCallback( () => {
+    setReloadToken((t) => t + 1); 
+  }, []);
+
+  useSSEStream(Number(workspaceId), useMemo( () => ({
+    'meeting-updated' :  () => refreshMeetings(),
+  }), [refreshMeetings]));
+  
   React.useEffect(() => {
     let alive = true;
 
@@ -107,20 +120,7 @@ export default function MeetingRequestsPage() {
       setError(null);
 
       try {
-        const token = await getToken();
-        const headers: HeadersInit = {
-          Authorization: `Bearer ${token ?? ""}`,
-        };
-
-        const res = await fetch(`${API}/workspaces/${workspaceId}/meetings`, {
-          headers,
-        });
-
-        if (!res.ok) {
-          throw new Error(`Meetings HTTP ${res.status}`);
-        }
-
-        const data = await res.json();
+        const data = await apiClient.getMeetingsByWorkspace(workspaceId);
 
         // Backend now returns:
         // { meetings: [{ id, location, description, date, time, status, attendees: { yes, no, pending } }, ...] }
@@ -174,20 +174,8 @@ export default function MeetingRequestsPage() {
     const meetingId = deleteConfirm.meeting.id;
 
     try {
-      const token = await getToken();
-      const res = await fetch(
-        `${API}/workspaces/${workspaceId}/meetings/${meetingId}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token ?? ""}`,
-          },
-        }
-      );
 
-      if (!res.ok && res.status !== 204) {
-        throw new Error(`HTTP ${res.status}`);
-      }
+      await apiClient.deleteMeeting(workspaceId, meetingId); 
 
       setMeetings((prev) => {
         const idx = prev.findIndex((m) => m.id === meetingId);
@@ -226,21 +214,8 @@ export default function MeetingRequestsPage() {
     const path = action === "FINALIZED" ? "finalize" : "cancel";
 
     try {
-      const token = await getToken();
-      const res = await fetch(
-        `${API}/workspaces/${workspaceId}/meetings/${meetingId}/${path}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token ?? ""}`,
-          },
-        }
-      );
 
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
-      }
+      await apiClient.updateMeetingStatus(workspaceId, meetingId, path); 
 
       setMeetings((prev) =>
         prev.map((m) =>

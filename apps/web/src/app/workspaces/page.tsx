@@ -1,10 +1,11 @@
 "use client";
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import WorkspaceList from "../../../components/WorkspaceList";
 import { useAuth, UserButton } from "@clerk/nextjs";
 
 import { createApiClient } from "@scrubin/api-client";
 import type { Workspace } from "@scrubin/schemas";
+import { useSSEStream } from "@/hooks/useSSE";
 
 export default function Page() {
 
@@ -18,14 +19,32 @@ export default function Page() {
             getToken,
         }),[getToken]);
 
-    useEffect(() => {
-
-        (async () => {
-            
+    const fetchWorkspaces = useCallback(async() => {
+        try {
             const list  = await apiClient.getWorkspaces();
             setWorkspaces(list)
-        })();
-    }, [apiClient]);
+        } catch (error) {
+            console.log("Unable to fetch workspaces", error);
+        }
+    }, [apiClient])
+    
+
+    useEffect(() => {
+        fetchWorkspaces(); 
+    }, [fetchWorkspaces]);
+
+    const workspaceHandlers = useMemo(
+        () => ({
+            'workspace-created': () => {
+                fetchWorkspaces();
+            }
+        }), [fetchWorkspaces]
+    );
+
+    useSSEStream(null, workspaceHandlers); 
+
+
+    
 
     
     return (

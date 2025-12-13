@@ -19,12 +19,10 @@ type AddShiftModalProps = {
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   users: User[];
   workspaceId: number;
-  onSuccess?: ()=> void | Promise<void>;  
-
 };
 
 
-const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen, users, workspaceId, onSuccess }) => {
+const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen, users, workspaceId }) => {
   const [user, setUser] = useState<string | undefined>(undefined);
   const [dates, setDates] = useState<Dayjs[] | null>(null);
   const [timeRange, setTimeRange] = useState<[Dayjs, Dayjs] | null>(null);
@@ -68,14 +66,8 @@ const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen, users, wor
       setUser(undefined);
       setDates(null);
       setTimeRange(null);
-      
-      if (onSuccess) {
-        await onSuccess();
-      }
-      else {
-        setOpen(false); 
-      }
 
+      setOpen(false); 
       setIsSubmitting(false);
 
     } catch (e) {

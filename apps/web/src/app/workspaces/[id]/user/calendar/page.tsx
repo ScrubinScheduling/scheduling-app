@@ -4,6 +4,7 @@ import { Button, DatePicker, Spin } from 'antd';
 import { LoadingOutlined, RightOutlined, LeftOutlined } from '@ant-design/icons';
 import React, { useState, useMemo, use, useEffect, useCallback } from 'react';
 import { useApiClient } from '@/hooks/useApiClient';
+import { useSSEStream } from '@/hooks/useSSE';
 import { useAuth } from '@clerk/nextjs';
 import dayjs from 'dayjs';
 import {
@@ -21,7 +22,6 @@ import {
   startOfDay,
   addDays
 } from 'date-fns';
-
 
 
 type Shift = {
@@ -126,6 +126,7 @@ const expandTimeOffRequests = (requests: ApiTimeOffRequest[]): TimeOffEvent[] =>
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const apiClient = useApiClient();
   const { id } = use(params);
+  const workspaceId = Number(id); 
   const { userId } = useAuth();  
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(currentDate); 
@@ -243,14 +244,15 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
         .filter(entry => entry.shifts.length > 0);
   }, [teamSchedule, selectedDate, userId]);
 
-  
-
-
   const previousMonth = () =>
     setCurrentDate((d) => subMonths(d, 1));
 
   const nextMonth = () =>
     setCurrentDate((d) => addMonths(d, 1));
+
+  useSSEStream(workspaceId, {'shift-updated' : () => {
+    fetchShifts();
+  }})
   
 
   return (
