@@ -59,7 +59,7 @@ router.get('/:id', async (req, res) => {
         return res.status(404).json({ error: 'User Not Found' })
     }
 
-    const { fullName, primaryEmailAddress } = await clerkClient.users.getUser(clerkId)
+    const { fullName, primaryEmailAddress } = await clerkClient.users.getUser(user.id)
 
     res.status(200).json({
         workspaceName: workspace.name,
