@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useAuth } from "@clerk/nextjs";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { createApiClient } from "@scrubin/api-client";
 import { InvitationInfo } from "@scrubin/schemas";
 
@@ -23,7 +23,8 @@ export default function InvitationCard({ workspaceName, workspaceOwnerName, work
 
     const [isLoading, setIsLoading] = useState(false);
     const { getToken } = useAuth();
-    
+    const router = useRouter();
+
 	const apiClient = useMemo(
 		() =>
 			createApiClient({
@@ -37,7 +38,7 @@ export default function InvitationCard({ workspaceName, workspaceOwnerName, work
         setIsLoading(true);
         try {
             await apiClient.acceptInvitation(invitationId);
-            redirect("/workspaces");
+            router.push("/workspaces");
         } catch (error) {
             console.error("Something went wrong", error);
             setIsLoading(false);
