@@ -142,8 +142,81 @@ router.get('/:id', async (req: Request<{workspaceId: string; id: string}>, res) 
  * TODO: Implement create time off request
  */
 router.post('/', async (req, res) => {
-    // TODO: Implement create time off request
-    return res.status(501).json({ error: 'Not implemented' })
+    try {
+        const workspaceId = Number(req.params.workspaceId)
+
+        if (!workspaceId || Number.isNaN(workspaceId)) {
+            return res.status(400).json({ error: 'Invalid workspace id' })
+        }
+
+        const { userId, startDate, endDate } = req.body
+
+        // Validation
+        if (!userId || !startDate || !endDate) {
+            return res.status(400).json({ 
+                error: 'Missing required fields: userId, startDate, endDate' 
+            })
+        }
+
+        const start = new Date(startDate)
+        const end = new Date(endDate)
+
+        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+            return res.status(400).json({ error: 'Invalid date format' })
+        }
+
+        if (start > end) {
+            return res.status(400).json({ 
+                error: 'Start date must be before or equal to end date' 
+            })
+        }
+
+        // Verify user exists and belongs to workspace
+        // CORRECTED: Use 'UserWorkspaceMembership' (the actual field name in schema)
+        const user = await prisma.user.findFirst({
+            where: { 
+                id: userId,
+                UserWorkspaceMembership: {
+                    some: { workspaceId }
+                }
+            }
+        })
+
+        if (!user) {
+            return res.status(404).json({ 
+                error: 'User not found or not a member of this workspace' 
+            })
+        }
+
+        // Create the time off request
+        const newRequest = await prisma.timeOffRequest.create({
+            data: {
+                workspaceId,
+                userId,
+                startDate: start,
+                endDate: end,
+                status: STATUS.pending,
+            },
+            include: { user: true },
+        })
+
+        const request = {
+            id: String(newRequest.id),
+            status: statusToString(newRequest.status),
+            kind: 'timeoff' as const,
+            requesterNames: [fullName(newRequest.user)],
+            dateRange: {
+                start: formatDate(newRequest.startDate),
+                end: formatDate(newRequest.endDate),
+            },
+        }
+
+        return res.status(201).json({ request })
+    } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error(err)
+        return res.status(500).json({ error: 'Failed to create time off request' })
+    }
 })
 
 /**
@@ -151,8 +224,87 @@ router.post('/', async (req, res) => {
  * TODO: Implement update time off request
  */
 router.patch('/:id', async (req, res) => {
-    // TODO: Implement update time off request
-    return res.status(501).json({ error: 'Not implemented' })
+    try {
+        const workspaceId = Number(req.params.workspaceId)
+        const id = Number(req.params.id)
+
+        if (!workspaceId || Number.isNaN(workspaceId) || Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid id' })
+        }
+
+        const { startDate, endDate } = req.body
+
+        // Check if request exists
+        const existing = await prisma.timeOffRequest.findFirst({
+            where: { id, workspaceId },
+        })
+
+        if (!existing) {
+            return res.status(404).json({ error: 'Time off request not found' })
+        }
+
+        // Only allow updates to pending requests
+        if (existing.status !== STATUS.pending) {
+            return res.status(400).json({ 
+                error: 'Cannot update time off request that has already been approved or denied' 
+            })
+        }
+
+        const updateData: any = {}
+
+        if (startDate) {
+            const start = new Date(startDate)
+            if (Number.isNaN(start.getTime())) {
+                return res.status(400).json({ error: 'Invalid start date format' })
+            }
+            updateData.startDate = start
+        }
+
+        if (endDate) {
+            const end = new Date(endDate)
+            if (Number.isNaN(end.getTime())) {
+                return res.status(400).json({ error: 'Invalid end date format' })
+            }
+            updateData.endDate = end
+        }
+
+        // Validate date range if both are being updated or one is being updated
+        const finalStartDate = updateData.startDate || existing.startDate
+        const finalEndDate = updateData.endDate || existing.endDate
+
+        if (finalStartDate > finalEndDate) {
+            return res.status(400).json({ 
+                error: 'Start date must be before or equal to end date' 
+            })
+        }
+
+        if (Object.keys(updateData).length === 0) {
+            return res.status(400).json({ error: 'No valid fields to update' })
+        }
+
+        const updated = await prisma.timeOffRequest.update({
+            where: { id },
+            data: updateData,
+            include: { user: true },
+        })
+
+        const request = {
+            id: String(updated.id),
+            status: statusToString(updated.status),
+            kind: 'timeoff' as const,
+            requesterNames: [fullName(updated.user)],
+            dateRange: {
+                start: formatDate(updated.startDate),
+                end: formatDate(updated.endDate),
+            },
+        }
+
+        return res.status(200).json({ request })
+    } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error(err)
+        return res.status(500).json({ error: 'Failed to update time off request' })
+    }
 })
 
 /**
@@ -160,8 +312,39 @@ router.patch('/:id', async (req, res) => {
  * TODO: Implement delete time off request
  */
 router.delete('/:id', async (req, res) => {
-    // TODO: Implement delete time off request
-    return res.status(501).json({ error: 'Not implemented' })
+    try {
+        const workspaceId = Number(req.params.workspaceId)
+        const id = Number(req.params.id)
+
+        if (!workspaceId || Number.isNaN(workspaceId) || Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid id' })
+        }
+
+        const existing = await prisma.timeOffRequest.findFirst({
+            where: { id, workspaceId },
+        })
+
+        if (!existing) {
+            return res.status(404).json({ error: 'Time off request not found' })
+        }
+
+        // Optional: Only allow deletion of pending requests
+        if (existing.status !== STATUS.pending) {
+            return res.status(400).json({ 
+                error: 'Cannot delete time off request that has already been approved or denied' 
+            })
+        }
+
+        await prisma.timeOffRequest.delete({
+            where: { id },
+        })
+
+        return res.status(204).send()
+    } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error(err)
+        return res.status(500).json({ error: 'Failed to delete time off request' })
+    }
 })
 
 /**

@@ -245,6 +245,26 @@ export function createApiClient({ baseUrl, getToken }) {
 		// Time Off Requests
 		getTimeOffRequests: (workspaceId, params?) =>
 			request({method: 'GET', path: `/workspaces/${workspaceId}/timeoff-requests`, params}),
+		getTimeOffRequest: (workspaceId, id) =>
+			request({ method: 'GET', path: `/workspaces/${workspaceId}/timeoff-requests/${id}` }),
+		createTimeOffRequest: (workspaceId, data) =>
+			request({ method: 'POST', path: `/workspaces/${workspaceId}/timeoff-requests`, body: data }),
+		updateTimeOffRequest: (workspaceId, id, data) =>
+			request({ method: 'PATCH', path: `/workspaces/${workspaceId}/timeoff-requests/${id}`, body: data }),
+		deleteTimeOffRequest: (workspaceId, id) =>
+			request({ method: 'DELETE', path: `/workspaces/${workspaceId}/timeoff-requests/${id}` }),
+		approveTimeOffRequest: (workspaceId, id) =>
+			request({
+				method: 'POST',
+				path: `/workspaces/${workspaceId}/timeoff-requests/${id}/admin/approve`,
+				body: {}
+			}),
+		rejectTimeOffRequest: (workspaceId, id) =>
+			request({
+				method: 'POST',
+				path: `/workspaces/${workspaceId}/timeoff-requests/${id}/admin/reject`,
+				body: {}
+			}),
 
 		// Meetings
 		getMeetingsByWorkspace: (workspaceId, params?) =>
@@ -274,6 +294,12 @@ export function createApiClient({ baseUrl, getToken }) {
 			request({
 				method: 'POST',
 				path: `/workspaces/${workspaceId}/meetings/${meetingId}/respond`,
+				body: data
+			}),
+		updateTimesheet: (workspaceId, timesheetId, data) =>
+			request({
+				method: 'PATCH',
+				path: `/workspaces/${workspaceId}/timesheets/${timesheetId}`,
 				body: data
 			})
 	};

@@ -106,4 +106,86 @@ router.get(
     },
 )
 
+/**
+ * PATCH /workspaces/:workspaceId/timesheets/:id
+ * Update timesheet times (admin only)
+ */
+router.patch(
+    '/:id',
+    async (req: Request<{ workspaceId: string; id: string }>, res: Response) => {
+        try {
+            const workspaceId = Number(req.params.workspaceId)
+            const timesheetId = Number(req.params.id)
+            
+            if (!Number.isInteger(workspaceId) || !Number.isInteger(timesheetId)) {
+                return res.status(400).json({ error: 'Invalid id' })
+            }
+
+            const { clockInTime, clockOutTime, startBreakTime, endBreakTime } = req.body
+
+            // Verify timesheet exists and belongs to workspace
+            const existing = await prisma.timesheet.findFirst({
+                where: {
+                    id: timesheetId,
+                    shift: { workspaceId }
+                }
+            })
+
+            if (!existing) {
+                return res.status(404).json({ error: 'Timesheet not found' })
+            }
+
+            // Build update data
+            const updateData: any = {}
+
+            if (clockInTime !== undefined) {
+                updateData.clockInTime = clockInTime ? new Date(clockInTime) : null
+            }
+            if (clockOutTime !== undefined) {
+                updateData.clockOutTime = clockOutTime ? new Date(clockOutTime) : null
+            }
+            if (startBreakTime !== undefined) {
+                updateData.startBreakTime = startBreakTime ? new Date(startBreakTime) : null
+            }
+            if (endBreakTime !== undefined) {
+                updateData.endBreakTime = endBreakTime ? new Date(endBreakTime) : null
+            }
+
+            // Validate times if both clock in and clock out are present
+            const finalClockIn = updateData.clockInTime ?? existing.clockInTime
+            const finalClockOut = updateData.clockOutTime ?? existing.clockOutTime
+            
+            if (finalClockIn && finalClockOut && finalClockIn > finalClockOut) {
+                return res.status(400).json({ 
+                    error: 'Clock in time must be before clock out time' 
+                })
+            }
+
+            const updated = await prisma.timesheet.update({
+                where: { id: timesheetId },
+                data: updateData,
+                include: {
+                    shift: {
+                        select: {
+                            id: true,
+                            userId: true,
+                            workspaceId: true,
+                            startTime: true,
+                            endTime: true,
+                            breakDuration: true,
+                            user: { select: { id: true, firstName: true, lastName: true } },
+                        },
+                    },
+                }
+            })
+
+            return res.status(200).json(updated)
+        } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error('Error updating timesheet', err)
+            return res.status(500).json({ error: 'Internal server error' })
+        }
+    },
+)
+
 export default router;
