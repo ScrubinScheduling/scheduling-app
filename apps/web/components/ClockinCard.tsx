@@ -6,10 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
     Dialog,
     DialogContent,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
@@ -17,26 +19,205 @@ import {
 import { useApiClient } from "@/hooks/useApiClient";
 import { useAuth } from "@clerk/nextjs";
 import { useParams } from "next/navigation";
+import { toast } from "sonner";
 import type { Shift } from "@scrubin/schemas";
 
-function ShiftTradeDialog({ children }: { children: React.ReactNode }) {
+function ShiftTradeDialog({ 
+    children, 
+    currentShift 
+}: { 
+    children: React.ReactNode;
+    currentShift: Shift | null;
+}) {
+    const { userId } = useAuth();
+    const { id } = useParams<{ id: string }>();
+    const apiClient = useApiClient();
+    
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [requestType, setRequestType] = useState<'trade' | 'cover'>('cover');
+    const [requestedShiftId, setRequestedShiftId] = useState('');
+    const [requestedUserId, setRequestedUserId] = useState('');
+    const [workspaceUsers, setWorkspaceUsers] = useState<any[]>([]);
+    const [allWorkspaceShifts, setAllWorkspaceShifts] = useState<any[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    // Load workspace data when dialog opens
+    useEffect(() => {
+        if (!dialogOpen || !userId) return;
+        
+        let alive = true;
+        (async () => {
+            try {
+                setLoading(true);
+                const now = new Date();
+                const futureDate = new Date();
+                futureDate.setDate(futureDate.getDate() + 30);
+                
+                const [membersRes, workspaceShiftsRes] = await Promise.all([
+                    apiClient.getWorkspaceMembers(Number(id)),
+                    apiClient.getWorkspaceShifts(Number(id), {
+                        start: now.toISOString(), 
+                        end: futureDate.toISOString()
+                    })
+                ]);
+                
+                if (!alive) return;
+                
+                // Flatten and deduplicate shifts
+                const allShiftsRaw = Object.values(workspaceShiftsRes.buckets).flatMap(userBuckets =>
+                    Object.values(userBuckets).flat()
+                );
+                
+                const uniqueShiftsMap = new Map();
+                allShiftsRaw.forEach(shift => {
+                    uniqueShiftsMap.set(shift.id, shift);
+                });
+                const allShifts = Array.from(uniqueShiftsMap.values());
+                
+                setWorkspaceUsers(membersRes.members);
+                setAllWorkspaceShifts(allShifts);
+            } catch (err) {
+                console.error('Failed to load workspace data:', err);
+                toast.error('Failed to load workspace data');
+            } finally {
+                if (alive) setLoading(false);
+            }
+        })();
+        
+        return () => {
+            alive = false;
+        };
+    }, [dialogOpen, userId, id, apiClient]);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        if (!currentShift) {
+            toast.error('No shift selected');
+            return;
+        }
+        
+        try {
+            if (!requestedUserId && !requestedShiftId) {
+                toast.error('Please fill in all fields.');
+                return;
+            }
+            
+            await apiClient.createShiftRequest(id, {
+                lendedShiftId: currentShift.id,
+                requestedShiftId: requestType === 'trade' ? Number(requestedShiftId) : null,
+                requestedUserId: requestType === 'cover' ? requestedUserId : null,
+            });
+
+            setDialogOpen(false);
+            setRequestedShiftId('');
+            setRequestedUserId('');
+            setRequestType('cover');
+            toast.success('Shift request created successfully.');
+        } catch (err) {
+            console.error(err);
+            toast.error('Failed to create shift request.');
+        }
+    };
+
     return (
-        <Dialog>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
                 {children}
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="bg-card border-border h-[350px] flex flex-col">
                 <DialogHeader>
                     <DialogTitle>Find Cover / Trade Shift</DialogTitle>
                     <DialogDescription>
                         Request a shift trade or find cover for your shift.
                     </DialogDescription>
                 </DialogHeader>
-                <div className="py-4">
-                    <p className="text-sm text-muted-foreground">
-                        Shift trade functionality coming soon...
-                    </p>
-                </div>
+
+                {loading ? (
+                    <div className="flex-1 flex items-center justify-center">
+                        <p className="text-sm text-muted-foreground">Loading...</p>
+                    </div>
+                ) : (
+                    <form className="space-y-4 flex-1 flex flex-col" onSubmit={handleSubmit}>
+                        <div className="grid gap-2">
+                            <Label>Request Type</Label>
+                            <select
+                                className="border bg-background border-border p-2 rounded-md w-full"
+                                value={requestType}
+                                onChange={(e) => setRequestType(e.target.value as 'trade' | 'cover')}
+                            >
+                                <option value="cover">Cover Request</option>
+                                <option value="trade">Trade Request</option>
+                            </select>
+                        </div>
+
+                        <div className="min-h-[88px]">
+                            {requestType === 'cover' && (
+                                <div className="grid gap-2">
+                                    <Label>Who should cover?</Label>
+                                    <select
+                                        className="border bg-background border-border p-2 rounded-md w-full"
+                                        value={requestedUserId}
+                                        onChange={(e) => setRequestedUserId(e.target.value)}
+                                        required
+                                    >
+                                        <option value="">Select user</option>
+                                        {workspaceUsers.map((user) => (
+                                            <option key={user.id} value={user.id}>
+                                                {user.firstName} {user.lastName}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+
+                            {requestType === 'trade' && (
+                                <div className="grid gap-2">
+                                    <Label>Shift to trade with</Label>
+                                    <select
+                                        className="border bg-background border-border p-2 rounded-md w-full"
+                                        value={requestedShiftId}
+                                        onChange={(e) => setRequestedShiftId(e.target.value)}
+                                        required
+                                    >
+                                        <option value="">Select another shift</option>
+                                        {allWorkspaceShifts
+                                            .filter((s) => s.userId !== userId && s.id !== currentShift?.id)
+                                            .map((shift) => {
+                                                const userName = shift.user 
+                                                    ? `${shift.user.firstName || ''} ${shift.user.lastName || ''}`.trim() || 'Unknown User'
+                                                    : 'Unknown User';
+                                                
+                                                return (
+                                                    <option key={shift.id} value={shift.id}>
+                                                        {userName} —{' '}
+                                                        {new Date(shift.startTime).toLocaleString()} to{' '}
+                                                        {new Date(shift.endTime).toLocaleString()}
+                                                    </option>
+                                                );
+                                            })}
+                                    </select>
+                                </div>
+                            )}
+                        </div>
+
+                        <DialogFooter className="mt-auto">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => {
+                                    setDialogOpen(false);
+                                    setRequestType('cover');
+                                    setRequestedShiftId('');
+                                    setRequestedUserId('');
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button type="submit">Create Request</Button>
+                        </DialogFooter>
+                    </form>
+                )}
             </DialogContent>
         </Dialog>
     );
@@ -71,10 +252,6 @@ export default function ClockinCard() {
     const clockInTime = currentShift?.timesheet?.clockInTime ? parseISO(currentShift.timesheet.clockInTime) : null;
     const clockOutTime = currentShift?.timesheet?.clockOutTime ? parseISO(currentShift.timesheet.clockOutTime) : null;
     const breakStartTime = currentShift?.timesheet?.startBreakTime ? parseISO(currentShift.timesheet.startBreakTime) : null;
-    // const breakEndTime = currentShift?.timesheet?.endBreakTime ? parseISO(currentShift.timesheet.endBreakTime) : null;
-
-    // Fetch coworkers working during overlapping shift times
-   
 
     // Refresh shift data after API calls
     const refreshShift = async () => {
@@ -152,7 +329,6 @@ export default function ClockinCard() {
 
     // Fetch upcoming shift
     useEffect(() => {
-
         const fetchCoworkers = async (shift: Shift) => {
             if (!workspaceId || !userId) return;
             
@@ -160,8 +336,6 @@ export default function ClockinCard() {
                 const shiftStart = parseISO(shift.startTime);
                 const shiftEnd = parseISO(shift.endTime);
                 
-                // Fetch all shifts in the workspace during this time period
-                // Expand the range slightly to catch overlapping shifts
                 const searchStart = new Date(shiftStart);
                 searchStart.setHours(0, 0, 0, 0);
                 const searchEnd = new Date(shiftEnd);
@@ -176,20 +350,9 @@ export default function ClockinCard() {
                     buckets: Record<string, Record<string, Array<{ id: number; startTime: string; endTime: string }>>>;
                 };
                 
-                // Extract shifts that overlap with the current shift
                 const overlappingUserIds = new Set<string>();
                 
-                // Create a map of userId (from buckets) to user id (from users array)
-                // The buckets use userId (string) as keys, but we need to match with user.id
-                const userIdToUserMap = new Map<string, string>();
-                response.users.forEach(user => {
-                    // The buckets key is the userId from the shift, which matches user.id
-                    userIdToUserMap.set(user.id, user.id);
-                });
-                
-                // Iterate through buckets to find overlapping shifts
                 for (const userIdKey in response.buckets) {
-                    // Skip the current user
                     if (userIdKey === userId) continue;
                     
                     const userBuckets = response.buckets[userIdKey];
@@ -199,22 +362,18 @@ export default function ClockinCard() {
                             const sStart = parseISO(s.startTime);
                             const sEnd = parseISO(s.endTime);
                             
-                            // Check if shifts overlap: shift1 starts before shift2 ends AND shift1 ends after shift2 starts
                             if (sStart < shiftEnd && sEnd > shiftStart) {
-                                // userIdKey is the userId from the shift, which should match user.id
                                 overlappingUserIds.add(userIdKey);
-                                break; // Found overlap, no need to check more shifts for this user
+                                break;
                             }
                         }
                     }
                 }
                 
-                // Get user details for overlapping users
                 const coworkerUsers = response.users.filter(user => overlappingUserIds.has(user.id));
                 setCoworkers(coworkerUsers);
             } catch (err) {
                 console.error("Error fetching coworkers:", err);
-                // Don't set error state for coworkers, just log it
             }
         };
 
@@ -229,7 +388,7 @@ export default function ClockinCard() {
                 
                 const now = new Date();
                 const endDate = new Date();
-                endDate.setDate(endDate.getDate() + 7); // Look ahead 7 days
+                endDate.setDate(endDate.getDate() + 7);
                 
                 const response = await apiClient.getUserShifts(workspaceId!, userId, {
                     start: now.toISOString(),
@@ -238,9 +397,7 @@ export default function ClockinCard() {
                 
                 if (!alive) return;
                 
-                // Filter out shifts that have been clocked out (completed)
                 const activeShifts = response.shifts.filter(s => {
-                    // Exclude shifts that have a timesheet with clockOutTime set
                     return !s.timesheet || !s.timesheet.clockOutTime;
                 });
                 
@@ -248,7 +405,6 @@ export default function ClockinCard() {
                 
                 setCurrentShift(shift || null);
                 
-                // Fetch coworkers working during the same shift time
                 if (shift) {
                     await fetchCoworkers(shift);
                 }
@@ -269,8 +425,6 @@ export default function ClockinCard() {
             alive = false;
         };
     }, [userId, workspaceId, apiClient]);
-
-    
 
     return (
         <Card className="border-border bg-card text-card-foreground shadow-sm">
@@ -420,9 +574,9 @@ export default function ClockinCard() {
                             </Button>
                         )}
 
-                        {/* Find Cover / Trade Button - Only visible when not clocked in or active */}
+                        {/* Find Cover / Trade Button - Only visible when scheduled */}
                         {status === "scheduled" && (
-                            <ShiftTradeDialog>
+                            <ShiftTradeDialog currentShift={currentShift}>
                                 <Button variant="outline" className="w-full h-12 text-base border-dashed">
                                     <RefreshCw className="mr-2 h-4 w-4" /> Find Cover / Trade
                                 </Button>
@@ -434,4 +588,3 @@ export default function ClockinCard() {
         </Card>
     );
 }
-
