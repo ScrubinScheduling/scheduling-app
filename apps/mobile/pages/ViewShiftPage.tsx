@@ -6,7 +6,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useApiClient } from '@/hooks/useApiClient';
 
 // Temporarily here until workspaces are implemented on mobile
-import { useApiClient as useOldApiClient } from '@/api/client';
 import { useAuth } from '@clerk/clerk-expo';
 
 const months = [
@@ -24,6 +23,27 @@ const months = [
 	'December'
 ];
 const { height } = Dimensions.get('window');
+
+type Shift = {
+	id: number;
+	startTime: string
+	endTime: string;
+	userId: string;
+	breakDuration: number;
+	workspaceId: number;
+	user?: {
+		id: string;
+		firstName: string | null;
+		lastName: string | null;
+	};
+	timesheet?: any;
+	workspace?: {
+		id: number;
+		name: string;
+		location: string;
+		adminId: string;
+	};
+};
 
 type FormattedShift = {
 	day: string;
@@ -155,32 +175,90 @@ const getMonthDateRange = (month: string, year: number = new Date().getFullYear(
 };
 
 export default function ViewShiftPage() {
-	const [selectedMonth, setSelectedMonth] = useState<string>(months[new Date().getMonth()]);
+	const [selectedMonth, setSelectedMonth] = useState(months[new Date().getMonth()]);
 	const [shiftsData, setShiftsDate] = useState<Record<string, WeekData[]>>({});
 	const [loading, setLoading] = useState(true);
+	const [workspaces, setWorkspaces] = useState([]);
+	const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<number | null>(null);
+	const [workspaceMap, setWorkspaceMap] = useState<Record<number, any>>({});
+
 	const { userId } = useAuth();
 	const apiClient = useApiClient();
-	const oldApiClient = useOldApiClient();
 
 	useEffect(() => {
 		if (userId) {
+			fetchWorkspaces();
+		}
+	}, [userId]);
+
+	useEffect(() => {
+		if (selectedWorkspaceId && userId) {
 			fetchShiftsForMonth(selectedMonth);
 		}
-	}, [selectedMonth, userId]);
+	}, [selectedMonth, selectedWorkspaceId, userId]);	
+
+	const fetchWorkspaces = async () => {
+		try {
+			const workspacesData = await apiClient.getWorkspaces();
+			setWorkspaces(workspacesData);
+
+			const map: Record<number, any> = {};
+			workspacesData.forEach((workspace: any) => {
+				map[workspace.id] = workspace;
+			});
+			setWorkspaceMap(map);
+
+			if (workspaces.length > 0) {
+				setSelectedWorkspaceId(workspacesData[0].id);
+			}
+		} catch (err) {
+			console.error('Error fetching workspaces:', err);
+		}
+	};
 
 	// fetch shifts for the selected month
 	const fetchShiftsForMonth = async (month: string) => {
-		if (!userId) return;
+		if (!selectedWorkspaceId || !userId) {
+			console.log('Workspace ID or User ID is missing');
+			return;
+		}
 
 		try {
 			setLoading(true);
+			console.log('Fetching shifts for:', {
+				workspaceId: selectedWorkspaceId,
+				userId,
+				month
+			});
+
 			const { startDate, endDate } = getMonthDateRange(month);
 
-			const shifts = await oldApiClient.getUserShifts(userId, startDate, endDate);
-			const formattedData = formatShiftData(shifts);
-			setShiftsDate(formattedData);
-		} catch (error) {
-			console.error('Error fetching shifts:', error);
+			const response = await apiClient.getUserShifts(selectedWorkspaceId, {
+				start: startDate.toISOString(),
+				end: endDate.toISOString()
+			});
+
+			console.log('API response:', response);
+
+			let shifts: Shift[] = [];
+			if (Array.isArray(response)) {
+				shifts = response;
+			} else if (response?.shifts) {
+				shifts = response.shifts;
+			} else {
+				shifts = [];
+			}
+
+			console.log(`Found ${shifts.length} shifts for ${month}`);
+
+			const enhancedShifts = shifts.map((shift) => ({
+				...shift,
+				workspace: workspaceMap[shift.workspaceId]
+			}));
+
+			setShiftsDate(formatShiftData(enhancedShifts));
+		} catch (err) {
+			console.error('Error fetching shifts:', err);
 		} finally {
 			setLoading(false);
 		}
