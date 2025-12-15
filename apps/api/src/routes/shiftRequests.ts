@@ -325,6 +325,61 @@ router.post('/', async (req, res) => {
     }
 })
 
+router.post('/:id/approve', async (req, res) => {
+    try {
+        const workspaceId = Number(req.params.workspaceId);
+        const id = Number(req.params.id);
+
+        if (!workspaceId || Number.isNaN(workspaceId) || Number.isNaN(id)) {
+            return res.status(400).json({ error: "Invalid id" });
+        }
+
+        const existing = await prisma.shiftRequest.findFirst({
+            where: { id, workspaceId },
+        });
+        if (!existing) {
+            return res.status(404).json({ error: "Shift request not found" });
+        }
+
+        await prisma.shiftRequest.update({
+            where: { id },
+            data: { approvedByRequested: 'APPROVED' },
+        });
+
+        return res.status(204).send();
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Failed to approve shift request" });
+    }
+});
+
+router.post('/:id/reject', async (req, res) => {
+    try {
+        const workspaceId = Number(req.params.workspaceId);
+        const id = Number(req.params.id);
+
+        if (!workspaceId || Number.isNaN(workspaceId) || Number.isNaN(id)) {
+            return res.status(400).json({ error: "Invalid id" });
+        }
+
+        const existing = await prisma.shiftRequest.findFirst({
+            where: { id, workspaceId },
+        });
+        if (!existing) {
+            return res.status(404).json({ error: "Shift request not found" });
+        }
+
+        await prisma.shiftRequest.update({
+            where: { id },
+            data: { approvedByRequested: 'DENIED' },
+        });
+
+        return res.status(204).send();
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Failed to reject shift request" });
+    }
+});
 router.patch('/:id', async (req, res) => {
     // TODO: Implement update shift request
     res.status(501).json({ error: 'Not implemented' })

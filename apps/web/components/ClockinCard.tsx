@@ -244,22 +244,7 @@ export default function ClockinCard() {
                     return !s.timesheet || !s.timesheet.clockOutTime;
                 });
                 
-                // Find today's shift or the next upcoming shift
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const tomorrow = new Date(today);
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                
-                // First try to find today's shift
-                let shift = activeShifts.find(s => {
-                    const shiftDate = parseISO(s.startTime);
-                    return shiftDate >= today && shiftDate < tomorrow;
-                });
-                
-                // If no shift today, get the next upcoming one
-                if (!shift && activeShifts.length > 0) {
-                    shift = activeShifts[0];
-                }
+                let shift = activeShifts[0]
                 
                 setCurrentShift(shift || null);
                 
