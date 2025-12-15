@@ -14,7 +14,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
-import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@clerk/nextjs";
@@ -25,7 +25,6 @@ import { useApiClient } from "@/hooks/useApiClient";
 import { useSSEStream } from "@/hooks/useSSE";
 
 export function MeetingRequests({ workspaceId }: { workspaceId: string }) {
-    // Check if mounted and clean up if not 
     const isMounted = useRef(true);
     useEffect(() => {
         isMounted.current = true;
@@ -53,10 +52,8 @@ export function MeetingRequests({ workspaceId }: { workspaceId: string }) {
         } finally {
             setLoading(false); 
         }
-         
     }, [workspaceId, apiClient]); 
 
-    // Load meetings
     useEffect(() => {
         refreshMeetings(); 
     }, [refreshMeetings]); 
@@ -65,14 +62,27 @@ export function MeetingRequests({ workspaceId }: { workspaceId: string }) {
         refreshMeetings(); 
     }})
 
-    // Handle voting
     const handleVote = async (meetingId: number, response: "YES" | "NO") => {
         try {
             await apiClient.respondToMeeting(workspaceId, meetingId, { response });
             toast.success("Vote recorded");
+            refreshMeetings(); // Refresh to show updated response
         } catch (err) {
             console.error(err);
             toast.error("Failed to record vote");
+        }
+    };
+
+    // Helper function to format badge based on user response
+    const getResponseBadge = (response: string) => {
+        switch(response) {
+            case 'YES':
+                return <Badge className="bg-green-600">Accepted</Badge>;
+            case 'NO':
+                return <Badge variant="destructive">Declined</Badge>;
+            case 'PENDING':
+            default:
+                return <Badge variant="outline">Pending</Badge>;
         }
     };
 
@@ -113,7 +123,8 @@ export function MeetingRequests({ workspaceId }: { workspaceId: string }) {
                 >
                     <CardHeader className="flex justify-between items-start">
                         <CardTitle className="text-white font-medium">{m.description}</CardTitle>
-                        <Badge>{m.status}</Badge>
+                        {/* Show user's response instead of meeting status */}
+                        {getResponseBadge(m.userResponse)}
                     </CardHeader>
                     <CardContent className="space-y-2 text-sm text-gray-400">
                         <p>
@@ -127,6 +138,7 @@ export function MeetingRequests({ workspaceId }: { workspaceId: string }) {
                                 size="sm"
                                 className="bg-green-600 hover:bg-green-700"
                                 onClick={() => handleVote(m.id, "YES")}
+                                disabled={m.userResponse === 'YES'}
                             >
                                 ✓ Yes
                             </Button>
@@ -134,6 +146,7 @@ export function MeetingRequests({ workspaceId }: { workspaceId: string }) {
                                 size="sm"
                                 variant="destructive"
                                 onClick={() => handleVote(m.id, "NO")}
+                                disabled={m.userResponse === 'NO'}
                             >
                                 ✕ No
                             </Button>
@@ -147,21 +160,13 @@ export function MeetingRequests({ workspaceId }: { workspaceId: string }) {
 
 // 🆕 Time Off Requests Component
 export function TimeOffRequests({ workspaceId, userId }: { workspaceId: string; userId: string }) {
-    const { getToken } = useAuth();
-    const apiClient = useMemo(
-        () =>
-            createApiClient({
-                baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL!,
-                getToken,
-            }),
-        [getToken]
-    );
+    const apiClient = useApiClient(); // ✅ Fixed: Use the hook
 
     const [timeOffRequests, setTimeOffRequests] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const loadTimeOffRequests = async () => {
+    const loadTimeOffRequests = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -173,18 +178,12 @@ export function TimeOffRequests({ workspaceId, userId }: { workspaceId: string; 
         } finally {
             setLoading(false);
         }
-    };
+    }, [workspaceId, apiClient]);
 
     useEffect(() => {
         if (!workspaceId) return;
-        let alive = true;
-        (async () => {
-            await loadTimeOffRequests();
-        })();
-        return () => {
-            alive = false;
-        };
-    }, [workspaceId]);
+        loadTimeOffRequests();
+    }, [workspaceId, loadTimeOffRequests]);
 
     if (loading) {
         return (
@@ -264,8 +263,9 @@ export default function Page() {
     };
     type AnyRequest = TradeReq | TimeOffReq;
 
-    const { getToken, userId } = useAuth();
+    const { userId } = useAuth();
     const { id } = useParams<{ id: string }>();
+    const apiClient = useApiClient(); // ✅ Fixed: Added apiClient
     const isMounted = useRef(true);
 
     const [incoming, setIncoming] = useState<AnyRequest[]>([]);
@@ -284,7 +284,7 @@ export default function Page() {
     const [workspaceUsers, setWorkspaceUsers] = useState<any[]>([]);
     const [allWorkspaceShifts, setAllWorkspaceShifts] = useState<any[]>([]);
     
-    // 🆕 Time off request states
+    // Time off request states
     const [timeOffStartDate, setTimeOffStartDate] = useState('');
     const [timeOffEndDate, setTimeOffEndDate] = useState('');
 
@@ -295,6 +295,7 @@ export default function Page() {
     }
 
     useEffect(() => () => {isMounted.current = false},[]);
+    
     useEffect(() => {
         if (!userId) return;
         let alive = true;
@@ -311,7 +312,6 @@ export default function Page() {
                     apiClient.getUserShifts(Number(id), userId, { start: now.toISOString(), end: futureDate.toISOString()}),
                     apiClient.getWorkspaceMembers(Number(id)),
                     apiClient.getWorkspaceShifts(Number(id), {start: now.toISOString(), end: futureDate.toISOString()})
-
                 ]);
                 if (!alive) return;
                 const allShifts = Object.values(workspaceShiftsRes.buckets).flatMap(userBuckets =>
@@ -322,7 +322,6 @@ export default function Page() {
                 setUserShifts(userShiftRes.shifts);
                 setWorkspaceUsers(membersRes.members);
                 setAllWorkspaceShifts(allShifts);
-
             } catch (err) {
                 if (!alive) return;
                 setError(err instanceof Error ? err.message : "Failed to load requests");
@@ -336,7 +335,6 @@ export default function Page() {
         };
     }, [id, apiClient, userId]);
 
-
     async function approve(idStr: string) {
         await apiClient.approveShiftRequest(id, idStr);
         setIncoming((prev) =>
@@ -345,6 +343,7 @@ export default function Page() {
             )
         );
     }
+    
     async function reject(idStr: string) {
         await apiClient.rejectShiftRequest(id, idStr);
         setIncoming((prev) =>
@@ -352,7 +351,7 @@ export default function Page() {
         );
     }
 
-    // 🆕 Handle time off request submission
+    // Handle time off request submission
     const handleTimeOffSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!userId) {
@@ -381,7 +380,6 @@ export default function Page() {
         }
     };
 
-    // 🆕 Determine dialog content based on active tab
     const isTimeOffTab = activeTab === "time-off-requests";
 
     return (
@@ -397,7 +395,6 @@ export default function Page() {
 
                     <DialogContent className="bg-zinc-900 border-zinc-800">
                         {isTimeOffTab ? (
-                            // 🆕 Time Off Request Form
                             <>
                                 <DialogHeader>
                                     <DialogTitle className="text-white">Request Time Off</DialogTitle>
@@ -449,7 +446,6 @@ export default function Page() {
                                 </form>
                             </>
                         ) : (
-                            // Original Shift Request Form
                             <>
                                 <DialogHeader>
                                     <DialogTitle className="text-white">Create a shift request</DialogTitle>
@@ -722,7 +718,6 @@ export default function Page() {
                     <MeetingRequests workspaceId={id} />
                 </TabsContent>
 
-                {/* 🆕 Time Off Requests Tab */}
                 <TabsContent className="w-full flex justify-center" value="time-off-requests">
                     {userId && <TimeOffRequests workspaceId={id} userId={userId} />}
                 </TabsContent>

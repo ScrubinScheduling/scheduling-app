@@ -40,12 +40,19 @@ function parseMeetingId(req: express.Request): number | null {
 /**
  * Utility: shape meeting + invitations into the front-end format
  * expected by your Meeting Requests page.
+ * 
+ * @param meeting - The meeting with invitations
+ * @param currentUserMembershipId - The membership ID of the current user (optional)
  */
-function mapMeetingForResponse(meeting: any) {
+function mapMeetingForResponse(meeting: any, currentUserMembershipId?: number) {
   const yes: string[] = [];
   const no: string[] = [];
   const pending: string[] = [];
   const inviteMembershipIds: number[] = [];
+  
+  // Find the current user's response
+  let userResponse: 'PENDING' | 'YES' | 'NO' = 'PENDING';
+  let userInviteId: number | undefined;
 
   for (const invite of meeting.invitations ?? []) {
     const user = invite.membership?.user;
@@ -54,7 +61,13 @@ function mapMeetingForResponse(meeting: any) {
       user?.email ||
       "Unnamed";
 
-    inviteMembershipIds.push(invite.membershipId); // requires MeetingInvite.membershipId
+    inviteMembershipIds.push(invite.membershipId);
+
+    // Check if this is the current user's invite
+    if (currentUserMembershipId && invite.membershipId === currentUserMembershipId) {
+      userResponse = invite.response || 'PENDING';
+      userInviteId = invite.id;
+    }
 
     switch (invite.response) {
       case "YES":
@@ -76,7 +89,9 @@ function mapMeetingForResponse(meeting: any) {
     description: meeting.description,
     date: formatDate(d),   // "Nov 21, 2025"
     time: formatTime(d),   // e.g. "10:00"
-    status: meeting.status,
+    status: meeting.status, // Overall meeting status (PENDING, FINALIZED, etc.)
+    userResponse,          // Current user's personal response (PENDING, YES, NO)
+    userInviteId,          // The invite ID for this user
     inviteMembershipIds,
 	createdById: meeting.createdById,
     attendees: {
@@ -123,7 +138,8 @@ router.get('/', async (req, res) => {
 			},
 		});
 
-		const shaped = meetings.map(mapMeetingForResponse);
+		// Pass the current user's membershipId to mapMeetingForResponse
+		const shaped = meetings.map(m => mapMeetingForResponse(m, membership.id));
 		return res.json({ meetings: shaped });
 	} catch (err) {
 		// eslint-disable-next-line no-console
@@ -170,7 +186,7 @@ router.get('/:id', async (req, res) => {
 			return res.status(404).json({ error: 'Meeting not found' });
 		}
 
-		return res.json({ meeting: mapMeetingForResponse(meeting) });
+		return res.json({ meeting: mapMeetingForResponse(meeting, membership.id) });
 	} catch (err) {
 		// eslint-disable-next-line no-console
 		console.error('GET /meetings/:id error', err);
@@ -243,7 +259,6 @@ router.post('/', async (req, res) => {
 		const created = await prisma.meeting.create({
 			data: {
 				workspaceId,
-				// NOTE: assuming Meeting.createdById is an Int FK to User.id
 				createdById: membership.userId,
 				location,
 				description: description ?? '',
@@ -265,7 +280,7 @@ router.post('/', async (req, res) => {
 			},
 		});
 		emitUpdateMeetings(workspaceId); 
-		return res.status(201).json({ meeting: mapMeetingForResponse(created) });
+		return res.status(201).json({ meeting: mapMeetingForResponse(created, membership.id) });
 	} catch (err) {
 		// eslint-disable-next-line no-console
 		console.error('POST /meetings error', err);
@@ -362,7 +377,7 @@ router.post('/:id/finalize', async (req, res) => {
 			},
 		});
 		emitUpdateMeetings(workspaceId); 
-		return res.json({ meeting: mapMeetingForResponse(updated) });
+		return res.json({ meeting: mapMeetingForResponse(updated, membership.id) });
 	} catch (err) {
 		// eslint-disable-next-line no-console
 		console.error('POST /meetings/:id/finalize error', err);
@@ -413,7 +428,7 @@ router.post('/:id/cancel', async (req, res) => {
 			},
 		});
 		emitUpdateMeetings(workspaceId); 
-		return res.json({ meeting: mapMeetingForResponse(updated) });
+		return res.json({ meeting: mapMeetingForResponse(updated, membership.id) });
 	} catch (err) {
 		// eslint-disable-next-line no-console
 		console.error('POST /meetings/:id/cancel error', err);
@@ -555,7 +570,7 @@ router.post("/:id/reschedule", async (req, res) => {
     }
 
 	emitUpdateMeetings(workspaceId); 
-    return res.json({ meeting: mapMeetingForResponse(updated) });
+    return res.json({ meeting: mapMeetingForResponse(updated, membership.id) });
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error("POST /meetings/:id/reschedule error", err);
@@ -564,8 +579,8 @@ router.post("/:id/reschedule", async (req, res) => {
 });
 
 /**
- * POST /workspaces/:workspaceId/meetings/:id/reschedule
- * Allows a workspace member to reschedule a meeting invite,
+ * POST /workspaces/:workspaceId/meetings/:id/respond
+ * Allows a workspace member to respond to a meeting invite
  * 
  * Expected body: { response : "YES" | "NO" }
  */
@@ -619,7 +634,7 @@ router.post('/:id/respond', async (req, res) => {
 
 		emitUpdateMeetings(workspaceId); 
 		return res.status(200).json({
-			message: 'Respose recorded',
+			message: 'Response recorded',
 			invite: updated,
 		});
 	} catch (err) {
