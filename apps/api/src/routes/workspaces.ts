@@ -61,15 +61,15 @@ router.post('/', async (req, res) => {
         return res.status(401).json({ error: 'User not authenticated' })
 
     }
-    const user = await prisma.user.findFirst({
+    const user = await prisma.user.upsert({
         where: {
             id: userId,
         },
+        update: {},
+        create: {
+            id: userId,
+        },
     })
-
-    if (!user) {
-        return res.status(404).json({ error: 'User not found in db' })
-    }
 
     const workspace = await prisma.workspace.create({
         data: {

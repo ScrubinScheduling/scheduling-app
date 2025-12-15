@@ -6,7 +6,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useApiClient } from '@/hooks/useApiClient';
 
 // Temporarily here until workspaces are implemented on mobile
-import { useApiClient as useOldApiClient } from '@/api/client';
 import { useAuth } from '@clerk/clerk-expo';
 
 const months = [
@@ -155,32 +154,54 @@ const getMonthDateRange = (month: string, year: number = new Date().getFullYear(
 };
 
 export default function ViewShiftPage() {
-	const [selectedMonth, setSelectedMonth] = useState<string>(months[new Date().getMonth()]);
+	const [selectedMonth, setSelectedMonth] = useState(months[new Date().getMonth()]);
 	const [shiftsData, setShiftsDate] = useState<Record<string, WeekData[]>>({});
+	const [workspaceId, setWorkspaceId] = useState<number | null>(null);
 	const [loading, setLoading] = useState(true);
+
 	const { userId } = useAuth();
 	const apiClient = useApiClient();
-	const oldApiClient = useOldApiClient();
 
 	useEffect(() => {
-		if (userId) {
-			fetchShiftsForMonth(selectedMonth);
-		}
-	}, [selectedMonth, userId]);
+		const fetchWorkspace = async () => {
+			if (!userId) return;
+	
+			try {
+				const workspaces = await apiClient.getWorkspaces();
+				if (workspaces.length > 0) {
+					setWorkspaceId(workspaces[0].id); // temporary default
+				}
+			} catch (err) {
+				console.error('Error fetching workspaces:', err);
+			}
+		};
+	
+		fetchWorkspace();
+	}, [userId]);	
+
+	useEffect(() => {
+		if (!workspaceId || !userId) return;
+		fetchShiftsForMonth(selectedMonth);
+	}, [selectedMonth, workspaceId, userId]);
 
 	// fetch shifts for the selected month
 	const fetchShiftsForMonth = async (month: string) => {
-		if (!userId) return;
-
+		if (!workspaceId) return;
+		
 		try {
 			setLoading(true);
 			const { startDate, endDate } = getMonthDateRange(month);
 
-			const shifts = await oldApiClient.getUserShifts(userId, startDate, endDate);
-			const formattedData = formatShiftData(shifts);
-			setShiftsDate(formattedData);
-		} catch (error) {
-			console.error('Error fetching shifts:', error);
+			const shifts = await apiClient.getWorkspaceShifts(
+				workspaceId,
+				{
+					start: startDate.toISOString(),
+					end: endDate.toISOString()
+				}
+			);
+			setShiftsDate(formatShiftData(shifts));
+		} catch (err) {
+			console.error('Error fetching shifts:', err);
 		} finally {
 			setLoading(false);
 		}
