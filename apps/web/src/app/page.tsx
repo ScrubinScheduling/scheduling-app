@@ -3,9 +3,25 @@ import { auth } from '@clerk/nextjs/server';
 
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ArrowRight, Calendar, Zap } from 'lucide-react';
+import { ArrowRight, Calendar, UserCheck, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+
+
+type StaffMember = {
+  name: string;
+  role: string;
+  shift: string;
+  color: string;
+}
+
+const staff: StaffMember[] = [
+                    {name: "Dr. Inoka Gamage", role: "Veterimarian", shift: "8:00AM - 6:00PM", color: "emerald"},
+                    {name: "Sabrina Rogers", role: "Vet Tech", shift: "10:00AM - 4:00PM", color: "blue"},
+                    {name: "Denae Myers", role: "Vet Tech", shift: "8:00AM - 6:00PM", color: "purple"},
+                    {name: "Megan Camper", role: "General", shift: "9:00AM - 6:00PM", color: "orange"},
+                    {name: "Alaina Malaina", role: "Veterimarian", shift: "8:00AM - 5:00PM", color: "red"},
+                   ]
 
 export default async function Home() {
 	const { userId } = await auth();
@@ -98,21 +114,54 @@ export default async function Home() {
 								{/* Stats */}
 								<div className="grid grid-cols-3 gap-8 border-t pt-8">
 									<div className="space-y-1">
-										<div className="text-4xl font-bold">5hr</div>
-                    <div className='text-sm text-muted-foreground'>Saved Weekly</div>
+										<div className="text-4xl font-bold">0hr</div>
+										<div className="text-muted-foreground text-sm">Saved Weekly</div>
 									</div>
-                  <div className="space-y-1">
-										<div className="text-4xl font-bold">92%</div>
-                    <div className='text-sm text-muted-foreground'>Staff Satisfaction</div>
+									<div className="space-y-1">
+										<div className="text-4xl font-bold">100%</div>
+										<div className="text-muted-foreground text-sm">Staff Satisfaction</div>
 									</div>
-                  <div className="space-y-1">
+									<div className="space-y-1">
 										<div className="text-4xl font-bold">Zero</div>
-                    <div className='text-sm text-muted-foreground'>Scheduling Conflicts</div>
+										<div className="text-muted-foreground text-sm">Scheduling Conflicts</div>
 									</div>
 								</div>
 							</div>
 
-              {/* Right Content */}
+							{/* Right Content */}
+							<div className="relative">
+								<div className="border-border bg-card relative overflow-hidden rounded-2xl border shadow-2xl">
+									<div className="bg-emerald-600 px-6 py-4 text-white">
+                      <div className='flex items-center justify-between'>
+                        <div>
+                            <div className='text-sm opacity-90'>Week of January 27</div>
+                            <div className='text-xl font-semibold mt-1'>Staff Scheduling</div>
+                        </div>
+                        <Badge variant={"secondary"} className='gap-1.5 bg-white/50 text-white border-0 hover:bg-white/30'>
+                          <div className='size-2 rounded-full bg-white animate-pulse'/>
+                          Live
+                        </Badge>
+                      </div>
+                  </div>
+
+                  <div className='p-6 space-y-3'>
+                   {staff.map((staff, index) => (
+                    <div key={staff.name} className='flex items-center gap-4 rounded-xl bg-muted/50 p-4 border border-border hover:bg-muted transition-colors'>
+                      <div className={`size-12 rounded-full bg-${staff.color}-100 flex items-center justify-center shrink-0`}>
+                        <UserCheck className={`size-6 text-${staff.color}-600`}/>
+                      </div>
+                      <div className='flex-1 min-w-0'>
+                        <div className='font-semibold text-sm truncate'>{staff.name}</div>
+                        <div className='text-xs text-muted-foreground'>{staff.role}</div>
+                      </div>
+                      <div className='text-right shrink-0'>
+                        <div className='text-xs font-medium text-emerald-600'>{staff.shift}</div>
+                      </div>
+                    </div>
+                   ))}
+                  </div>  
+								</div>
+							</div>
 						</div>
 					</div>
 				</section>
