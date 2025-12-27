@@ -1,7 +1,7 @@
 import React from "react";
 import { getServerApiClient } from "@/lib/apiClient";
-import UserSelect from "../../../../../../components/UserSelect";
-import TimesheetTable from "../../../../../../components/TimesheetTable";
+import UserSelect from "@/components/UserSelect";
+import TimesheetTable from "@/components/TimesheetTable";
 
 export default async function Page({ params, searchParams }: { params: { id: string }; searchParams: Record<string, string | null> }) {
     const apiClient = await getServerApiClient()

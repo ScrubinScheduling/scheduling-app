@@ -1,6 +1,6 @@
 "use client";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
-import Navbar from "../../../../../components/Navbar";
+import Navbar from "@/components/Navbar";
 import { useParams } from "next/navigation";
 
 type NavLink = {
