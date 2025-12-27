@@ -1,52 +1,59 @@
-import {
-  SignedOut,
-} from '@clerk/nextjs';
+import { SignedOut } from '@clerk/nextjs';
 import { auth } from '@clerk/nextjs/server';
 
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { Calendar } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default async function Home() {
+	const { userId } = await auth();
+	if (userId) redirect('/workspaces');
+	return (
+		<div className="bg-background min-h-screen">
+			<SignedOut>
+				{/* Header */}
+				<header className="border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 border-b ">
+					<div className="container mx-auto px-4 lg:px-8">
+						<div className="flex h-16 items-center justify-between">
+							<div className="flex items-center gap-2">
+								<div className="flex size-9 items-center justify-center rounded-lg bg-emerald-600">
+									<Calendar className="size-5 text-white" />
+								</div>
+								<span className="text-xl font-semibold">Scrub In</span>
+							</div>
 
-  const { userId } = await auth();
-  if (userId) redirect('/workspaces');
-  return (
-    <main className="mx-auto max-w-2xl p-8">
-      <SignedOut>
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome</h1>
-          <p className="text-lg text-gray-600 mb-8">Please sign in or create an account to get started.</p>
-        </div>
+							<nav className="hidden items-center gap-8 md:flex">
+								<a
+									href="#features"
+									className="text-muted-foreground hover:text-foreground text-md font-medium transition-colors"
+								>
+									Features
+								</a>
+								<a
+									href="#features"
+									className="text-muted-foreground hover:text-foreground text-md font-medium transition-colors"
+								>
+									Why Us
+								</a>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            href="/sign-in"
-            className="rounded-lg border-2 border-blue-600 px-6 py-3 text-blue-600 font-medium hover:bg-blue-50 transition-colors duration-200 text-center"
-          >
-            Sign in
-          </Link>
-          <Link
-            href="/sign-up"
-            className="rounded-lg bg-blue-600 px-6 py-3 text-white font-medium hover:bg-blue-700 transition-colors duration-200 text-center shadow-md"
-          >
-            Create account
-          </Link>
-        </div>
-      </SignedOut>
-
-      {/* <SignedIn>
-          <div className="flex items-center justify-between">
-            <p className="text-lg">You’re signed in.</p>
-            <UserButton afterSignOutUrl="/" />
-          </div>
-          <Link
-            href="/dashboard"
-            prefetch={false} // protected route; avoids noisy prefetch in dev
-            className="mt-6 inline-block rounded-lg bg-black px-4 py-2 text-white"
-          >
-            Go to dashboard
-          </Link>
-        </SignedIn> */}
-    </main>
-  );
+								<a
+									href="#features"
+									className="text-muted-foreground hover:text-foreground text-md font-medium transition-colors"
+								>
+									Future
+								</a>
+							</nav>
+							<div className="flex items-center gap-3">
+								<Button variant="ghost" size={"sm"}>
+									Log in
+								</Button>
+								<Button size={"sm"}>Get Started</Button>
+							</div>
+						</div>
+					</div>
+				</header>
+			</SignedOut>
+		</div>
+	);
 }
