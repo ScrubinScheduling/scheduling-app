@@ -3,25 +3,70 @@ import { auth } from '@clerk/nextjs/server';
 
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ArrowRight, Calendar, UserCheck, Zap } from 'lucide-react';
+import { ArrowRight, Bell, Calendar, LucideIcon, UserCheck, Zap, Users, Clock, BarChart3, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-
+import { Card } from '@/components/ui/card';
 
 type StaffMember = {
-  name: string;
-  role: string;
-  shift: string;
-  color: string;
-}
+	name: string;
+	role: string;
+	shift: string;
+	color: string;
+};
+
+type Feature = {
+	icon: LucideIcon;
+	title: string;
+	description: string;
+};
 
 const staff: StaffMember[] = [
-                    {name: "Dr. Inoka Gamage", role: "Veterimarian", shift: "8:00AM - 6:00PM", color: "emerald"},
-                    {name: "Sabrina Rogers", role: "Vet Tech", shift: "10:00AM - 4:00PM", color: "blue"},
-                    {name: "Denae Myers", role: "Vet Tech", shift: "8:00AM - 6:00PM", color: "purple"},
-                    {name: "Megan Camper", role: "General", shift: "9:00AM - 6:00PM", color: "orange"},
-                    {name: "Alaina Malaina", role: "Veterimarian", shift: "8:00AM - 5:00PM", color: "red"},
-                   ]
+	{ name: 'Dr. Inoka Gamage', role: 'Veterimarian', shift: '8:00AM - 6:00PM', color: 'emerald' },
+	{ name: 'Sabrina Rogers', role: 'Vet Tech', shift: '10:00AM - 4:00PM', color: 'blue' },
+	{ name: 'Denae Myers', role: 'Vet Tech', shift: '8:00AM - 6:00PM', color: 'purple' },
+	{ name: 'Megan Camper', role: 'General', shift: '9:00AM - 6:00PM', color: 'orange' },
+	{ name: 'Alaina Malaina', role: 'Veterimarian', shift: '8:00AM - 5:00PM', color: 'red' }
+];
+
+const features: Feature[] = [
+	{
+		icon: Calendar,
+		title: 'Shift Scheduling',
+		description:
+			'Create and manage staff schedules with drag-and-drop simplicity. Set recurring shifts and handle changes instantly.'
+	},
+	{
+		icon: Users,
+		title: 'Team Availability',
+		description:
+			"See who else is working on the day of, to see if it might be a busy day or not."
+	},
+	{
+		icon: Clock,
+		title: 'Time Tracking',
+		description:
+			'Automatic clock-in and clock-out tracking. Monitor overtime and ensure compliance with labor laws.'
+	},
+	{
+		icon: Bell,
+		title: 'Shift Notifications',
+		description:
+			'Automated reminders for upcoming shifts. Instant notifications for schedule changes and updates.'
+	},
+	{
+		icon: BarChart3,
+		title: 'Labor Analytics',
+		description:
+			'Track labor costs, overtime trends, and staffing efficiency with detailed reports and insights.'
+	},
+	{
+		icon: CheckCircle2,
+		title: 'Shift Swapping',
+		description:
+			'Let staff request shift swaps with approval workflows. Maintain coverage without the phone tag.'
+	}
+];
 
 export default async function Home() {
 	const { userId } = await auth();
@@ -132,39 +177,95 @@ export default async function Home() {
 							<div className="relative">
 								<div className="border-border bg-card relative overflow-hidden rounded-2xl border shadow-2xl">
 									<div className="bg-emerald-600 px-6 py-4 text-white">
-                      <div className='flex items-center justify-between'>
-                        <div>
-                            <div className='text-sm opacity-90'>Week of January 27</div>
-                            <div className='text-xl font-semibold mt-1'>Staff Scheduling</div>
-                        </div>
-                        <Badge variant={"secondary"} className='gap-1.5 bg-white/50 text-white border-0 hover:bg-white/30'>
-                          <div className='size-2 rounded-full bg-white animate-pulse'/>
-                          Live
-                        </Badge>
-                      </div>
-                  </div>
+										<div className="flex items-center justify-between">
+											<div>
+												<div className="text-sm opacity-90">Week of January 27</div>
+												<div className="mt-1 text-xl font-semibold">Staff Scheduling</div>
+											</div>
+											<Badge
+												variant={'secondary'}
+												className="gap-1.5 border-0 bg-white/50 text-white hover:bg-white/30"
+											>
+												<div className="size-2 animate-pulse rounded-full bg-white" />
+												Live
+											</Badge>
+										</div>
+									</div>
 
-                  <div className='p-6 space-y-3'>
-                   {staff.map((staff, index) => (
-                    <div key={staff.name} className='flex items-center gap-4 rounded-xl bg-muted/50 p-4 border border-border hover:bg-muted transition-colors'>
-                      <div className={`size-12 rounded-full bg-${staff.color}-100 flex items-center justify-center shrink-0`}>
-                        <UserCheck className={`size-6 text-${staff.color}-600`}/>
-                      </div>
-                      <div className='flex-1 min-w-0'>
-                        <div className='font-semibold text-sm truncate'>{staff.name}</div>
-                        <div className='text-xs text-muted-foreground'>{staff.role}</div>
-                      </div>
-                      <div className='text-right shrink-0'>
-                        <div className='text-xs font-medium text-emerald-600'>{staff.shift}</div>
-                      </div>
-                    </div>
-                   ))}
-                  </div>  
+									<div className="space-y-3 p-6">
+										{staff.map((staff, index) => (
+											<div
+												key={staff.name}
+												className="bg-muted/50 border-border hover:bg-muted flex items-center gap-4 rounded-xl border p-4 transition-colors"
+											>
+												<div
+													className={`size-12 rounded-full bg-${staff.color}-100 flex shrink-0 items-center justify-center`}
+												>
+													<UserCheck className={`size-6 text-${staff.color}-600`} />
+												</div>
+												<div className="min-w-0 flex-1">
+													<div className="truncate text-sm font-semibold">{staff.name}</div>
+													<div className="text-muted-foreground text-xs">{staff.role}</div>
+												</div>
+												<div className="shrink-0 text-right">
+													<div className="text-xs font-medium text-emerald-600">{staff.shift}</div>
+												</div>
+											</div>
+										))}
+									</div>
 								</div>
+
+								{/* Floating Feedback Card */}
+								<Card className="bg-card absolute -right-4 -bottom-4 hidden max-w-xs border border-emerald-200 p-4 shadow-xl lg:block">
+									<div className="flex items-start gap-3">
+										<div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100">
+											<Bell className="size-5 text-emerald-600" />
+										</div>
+										<div className="flex-1">
+											<div className="text-sm font-semibold">Shifts Added</div>
+											<div className="text-muted-foreground mt-1 text-xs">
+												Shifts were successfully added to your schedule!
+											</div>
+										</div>
+									</div>
+								</Card>
 							</div>
 						</div>
 					</div>
 				</section>
+
+				{/* Features */}
+				<section id="features" className="bg-muted/30 py-20 lg:py-32">
+					<div className="container mx-auto px-4 lg:px-8">
+						<div className=",ax-w-3xl mx-auto mb-16 space-y-4 text-center">
+							<Badge variant={'secondary'} className="mx-auto w-fit">
+								Features
+							</Badge>
+							<h2 className="text-4xl font-bold tracking-tight text-balance lg:text-5xl">
+								Everything for staff management
+							</h2>
+							<p className="text-muted-foreground text-lg leading-relaxed">
+								Powerful tools designed to specifically for veterinary clinic workforce scheduling
+							</p>
+						</div>
+
+						<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {features.map((feature, i) => (
+                <Card key={i} className='p-6 space-y-4 hover:shadow-lg transition-all hover:border-emerald-200 bg-card'>
+                  <div className='size-12 rounded-xl bg-emerald-100 flex items-center justify-center'>
+                    <feature.icon className='size-6 text-emerald-600'/>
+                  </div>
+                  <div className='space-y-2'>
+                    <h3 className='text-xl font-semibold'>{feature.title}</h3>
+                    <p className='text-muted-foreground leading-relaxed text-sm'>{feature.description}</p>
+                  </div>
+                </Card>
+              ))}
+            </div>
+					</div>
+				</section>
+
+        {}
 			</SignedOut>
 		</div>
 	);
