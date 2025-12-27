@@ -160,7 +160,7 @@ export function MeetingRequests({ workspaceId }: { workspaceId: string }) {
 
 // 🆕 Time Off Requests Component
 export function TimeOffRequests({ workspaceId, userId }: { workspaceId: string; userId: string }) {
-    const apiClient = useApiClient(); // ✅ Fixed: Use the hook
+    const apiClient = useApiClient();
 
     const [timeOffRequests, setTimeOffRequests] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -265,7 +265,7 @@ export default function Page() {
 
     const { userId } = useAuth();
     const { id } = useParams<{ id: string }>();
-    const apiClient = useApiClient(); // ✅ Fixed: Added apiClient
+    const apiClient = useApiClient();
     const isMounted = useRef(true);
 
     const [incoming, setIncoming] = useState<AnyRequest[]>([]);
@@ -314,9 +314,17 @@ export default function Page() {
                     apiClient.getWorkspaceShifts(Number(id), {start: now.toISOString(), end: futureDate.toISOString()})
                 ]);
                 if (!alive) return;
-                const allShifts = Object.values(workspaceShiftsRes.buckets).flatMap(userBuckets =>
+                const allShiftsRaw = Object.values(workspaceShiftsRes.buckets).flatMap(userBuckets =>
                     Object.values(userBuckets).flat()
                 );
+
+                // Deduplicate shifts by ID using a Map
+                const uniqueShiftsMap = new Map();
+                allShiftsRaw.forEach(shift => {
+                    uniqueShiftsMap.set(shift.id, shift);
+                });
+                const allShifts = Array.from(uniqueShiftsMap.values());
+
                 setIncoming((incomingRes?.requests ?? []) as AnyRequest[]);
                 setOutgoing((outgoingRes?.requests ?? []) as AnyRequest[]);
                 setUserShifts(userShiftRes.shifts);
@@ -393,185 +401,192 @@ export default function Page() {
                         </Button>
                     </DialogTrigger>
 
-                    <DialogContent className="bg-zinc-900 border-zinc-800">
-                        {isTimeOffTab ? (
-                            <>
-                                <DialogHeader>
-                                    <DialogTitle className="text-white">Request Time Off</DialogTitle>
-                                    <DialogDescription className="text-gray-400">
-                                        Submit a time off request for manager approval.
-                                    </DialogDescription>
-                                </DialogHeader>
+                    <DialogContent className="bg-zinc-900 border-zinc-800 h-[450px] flex flex-col">
+    {isTimeOffTab ? (
+        <>
+            <DialogHeader>
+                <DialogTitle className="text-white">Request Time Off</DialogTitle>
+                <DialogDescription className="text-gray-400">
+                    Submit a time off request for manager approval.
+                </DialogDescription>
+            </DialogHeader>
 
-                                <form className="space-y-4" onSubmit={handleTimeOffSubmit}>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="start-date" className="text-gray-200">Start Date</Label>
-                                        <Input
-                                            id="start-date"
-                                            type="date"
-                                            className="bg-zinc-800 border-zinc-700 text-white"
-                                            value={timeOffStartDate}
-                                            onChange={(e) => setTimeOffStartDate(e.target.value)}
-                                            required
-                                        />
-                                    </div>
+            <form className="space-y-4 flex-1 flex flex-col" onSubmit={handleTimeOffSubmit}>
+                <div className="grid gap-2">
+                    <Label htmlFor="start-date" className="text-gray-200">Start Date</Label>
+                    <Input
+                        id="start-date"
+                        type="date"
+                        className="bg-zinc-800 border-zinc-700 text-white"
+                        value={timeOffStartDate}
+                        onChange={(e) => setTimeOffStartDate(e.target.value)}
+                        required
+                    />
+                </div>
 
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="end-date" className="text-gray-200">End Date</Label>
-                                        <Input
-                                            id="end-date"
-                                            type="date"
-                                            className="bg-zinc-800 border-zinc-700 text-white"
-                                            value={timeOffEndDate}
-                                            onChange={(e) => setTimeOffEndDate(e.target.value)}
-                                            required
-                                        />
-                                    </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="end-date" className="text-gray-200">End Date</Label>
+                    <Input
+                        id="end-date"
+                        type="date"
+                        className="bg-zinc-800 border-zinc-700 text-white"
+                        value={timeOffEndDate}
+                        onChange={(e) => setTimeOffEndDate(e.target.value)}
+                        required
+                    />
+                </div>
 
-                                    <DialogFooter>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            className="border-zinc-700"
-                                            onClick={() => {
-                                                setDialogOpen(false);
-                                                setTimeOffStartDate('');
-                                                setTimeOffEndDate('');
-                                            }}
-                                        >
-                                            Cancel
-                                        </Button>
-                                        <Button type="submit">Submit Request</Button>
-                                    </DialogFooter>
-                                </form>
-                            </>
-                        ) : (
-                            <>
-                                <DialogHeader>
-                                    <DialogTitle className="text-white">Create a shift request</DialogTitle>
-                                    <DialogDescription className="text-gray-400">
-                                        Request a shift trade or coverage from a teammate.
-                                    </DialogDescription>
-                                </DialogHeader>
+                <DialogFooter className="mt-auto">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className="border-zinc-700"
+                        onClick={() => {
+                            setDialogOpen(false);
+                            setTimeOffStartDate('');
+                            setTimeOffEndDate('');
+                        }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button type="submit">Submit Request</Button>
+                </DialogFooter>
+            </form>
+        </>
+    ) : (
+        <>
+            <DialogHeader>
+                <DialogTitle className="text-white">Create a shift request</DialogTitle>
+                <DialogDescription className="text-gray-400">
+                    Request a shift trade or coverage from a teammate.
+                </DialogDescription>
+            </DialogHeader>
 
-                                <form
-                                    className="space-y-4"
-                                    onSubmit={async (e) => {
-                                        e.preventDefault();
-                                        try {
-                                            if (!selectedShiftId || (!requestedUserId && !requestedShiftId)) {
-                                                throw new Error('Please fill in all fields.');
-                                            }
-                                            await apiClient.createShiftRequest(id, {
-                                                lendedShiftId: Number(selectedShiftId),
-                                                requestedShiftId: requestType === 'trade' ? Number(requestedShiftId) : null,
-                                                requestedUserId: requestType === 'cover' ? requestedUserId : null,
-                                            });
+            <form
+                className="space-y-4 flex-1 flex flex-col"
+                onSubmit={async (e) => {
+                    e.preventDefault();
+                    try {
+                        if (!selectedShiftId || (!requestedUserId && !requestedShiftId)) {
+                            throw new Error('Please fill in all fields.');
+                        }
+                        await apiClient.createShiftRequest(id, {
+                            lendedShiftId: Number(selectedShiftId),
+                            requestedShiftId: requestType === 'trade' ? Number(requestedShiftId) : null,
+                            requestedUserId: requestType === 'cover' ? requestedUserId : null,
+                        });
 
-                                            setDialogOpen(false);
-                                            setSelectedShiftId('');
-                                            setRequestedShiftId('');
-                                            setRequestedUserId('');
-                                            setRequestType('cover');
-                                            toast.success('Shift request created successfully.');
-                                        } catch (err) {
-                                            console.error(err);
-                                            toast.error('Failed to create shift request.');
-                                        }
-                                    }}
-                                >
-                                    <div className="grid gap-2">
-                                        <Label className="text-gray-200">Request Type</Label>
-                                        <select
-                                            className="border bg-zinc-800 border-zinc-700 text-white p-2 rounded-md"
-                                            value={requestType}
-                                            onChange={(e) => setRequestType(e.target.value as 'trade' | 'cover')}
-                                        >
-                                            <option value="cover">Cover Request</option>
-                                            <option value="trade">Trade Request</option>
-                                        </select>
-                                    </div>
+                        setDialogOpen(false);
+                        setSelectedShiftId('');
+                        setRequestedShiftId('');
+                        setRequestedUserId('');
+                        setRequestType('cover');
+                        toast.success('Shift request created successfully.');
+                    } catch (err) {
+                        console.error(err);
+                        toast.error('Failed to create shift request.');
+                    }
+                }}
+            >
+                <div className="grid gap-2">
+                    <Label className="text-gray-200">Request Type</Label>
+                    <select
+                        className="border bg-zinc-800 border-zinc-700 text-white p-2 rounded-md"
+                        value={requestType}
+                        onChange={(e) => setRequestType(e.target.value as 'trade' | 'cover')}
+                    >
+                        <option value="cover">Cover Request</option>
+                        <option value="trade">Trade Request</option>
+                    </select>
+                </div>
 
-                                    <div className="grid gap-2">
-                                        <Label className="text-gray-200">Your Shift</Label>
-                                        <select
-                                            className="border bg-zinc-800 border-zinc-700 text-white p-2 rounded-md"
-                                            value={selectedShiftId}
-                                            onChange={(e) => setSelectedShiftId(e.target.value)}
-                                            required
-                                        >
-                                            <option value="">Select your shift</option>
-                                            {userShifts.map((shift) => (
-                                                <option key={shift.id} value={shift.id}>
-                                                    {new Date(shift.startTime).toLocaleString()} – {new Date(shift.endTime).toLocaleString()}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
+                <div className="grid gap-2">
+                    <Label className="text-gray-200">Your Shift</Label>
+                    <select
+                        className="border bg-zinc-800 border-zinc-700 text-white p-2 rounded-md"
+                        value={selectedShiftId}
+                        onChange={(e) => setSelectedShiftId(e.target.value)}
+                        required
+                    >
+                        <option value="">Select your shift</option>
+                        {userShifts.map((shift) => (
+                            <option key={shift.id} value={shift.id}>
+                                {new Date(shift.startTime).toLocaleString()} – {new Date(shift.endTime).toLocaleString()}
+                            </option>
+                        ))}
+                    </select>
+                </div>
 
-                                    {requestType === 'cover' && (
-                                        <div className="grid gap-2">
-                                            <Label className="text-gray-200">Who should cover?</Label>
-                                            <select
-                                                className="border bg-zinc-800 border-zinc-700 text-white p-2 rounded-md"
-                                                value={requestedUserId}
-                                                onChange={(e) => setRequestedUserId(e.target.value)}
-                                                required
-                                            >
-                                                <option value="">Select user</option>
-                                                {workspaceUsers.map((user) => (
-                                                    <option key={user.id} value={user.id}>
-                                                        {user.firstName} {user.lastName}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    )}
+                {requestType === 'cover' && (
+                    <div className="grid gap-2">
+                        <Label className="text-gray-200">Who should cover?</Label>
+                        <select
+                            className="border bg-zinc-800 border-zinc-700 text-white p-2 rounded-md"
+                            value={requestedUserId}
+                            onChange={(e) => setRequestedUserId(e.target.value)}
+                            required
+                        >
+                            <option value="">Select user</option>
+                            {workspaceUsers.map((user) => (
+                                <option key={user.id} value={user.id}>
+                                    {user.firstName} {user.lastName}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                )}
 
-                                    {requestType === 'trade' && (
-                                        <div className="grid gap-2">
-                                            <Label className="text-gray-200">Shift to trade with</Label>
-                                            <select
-                                                className="border bg-zinc-800 border-zinc-700 text-white p-2 rounded-md"
-                                                value={requestedShiftId}
-                                                onChange={(e) => setRequestedShiftId(e.target.value)}
-                                                required
-                                            >
-                                                <option value="">Select another shift</option>
-                                                {allWorkspaceShifts
-                                                    .filter((s) => s.userId !== userId)
-                                                    .map((shift) => (
-                                                        <option key={shift.id} value={shift.id}>
-                                                            {shift.user.firstName} {shift.user.lastName} —{' '}
-                                                            {new Date(shift.startTime).toLocaleString()} to{' '}
-                                                            {new Date(shift.endTime).toLocaleString()}
-                                                        </option>
-                                                    ))}
-                                            </select>
-                                        </div>
-                                    )}
+                {requestType === 'trade' && (
+                    <div className="grid gap-2">
+                        <Label className="text-gray-200">Shift to trade with</Label>
+                        <select
+                            className="border bg-zinc-800 border-zinc-700 text-white p-2 rounded-md w-full max-w-full"
+                            value={requestedShiftId}
+                            onChange={(e) => setRequestedShiftId(e.target.value)}
+                            required
+                        >
+                            <option value="">Select another shift</option>
+                            {allWorkspaceShifts
+                                .filter((s) => s.userId !== userId)
+                                .map((shift) => {
+                                    const userName = shift.user 
+                                        ? `${shift.user.firstName || ''} ${shift.user.lastName || ''}`.trim() || 'Unknown User'
+                                        : 'Unknown User';
+                                    
+                                    const startTime = new Date(shift.startTime).toLocaleString();
+                                    const endTime = new Date(shift.endTime).toLocaleString();
+                                    
+                                    return (
+                                        <option key={shift.id} value={shift.id}>
+                                            {userName} — {startTime} to {endTime}
+                                        </option>
+                                    );
+                                })}
+                        </select>
+                    </div>
+                )}
 
-                                    <DialogFooter>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            className="border-zinc-700"
-                                            onClick={() => {
-                                                setDialogOpen(false);
-                                                setRequestType('cover');
-                                                setSelectedShiftId('');
-                                                setRequestedShiftId('');
-                                                setRequestedUserId('');
-                                            }}
-                                        >
-                                            Cancel
-                                        </Button>
-                                        <Button type="submit">Create</Button>
-                                    </DialogFooter>
-                                </form>
-                            </>
-                        )}
-                    </DialogContent>
+                <DialogFooter className="mt-auto">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className="border-zinc-700"
+                        onClick={() => {
+                            setDialogOpen(false);
+                            setRequestType('cover');
+                            setSelectedShiftId('');
+                            setRequestedShiftId('');
+                            setRequestedUserId('');
+                        }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button type="submit">Create</Button>
+                </DialogFooter>
+            </form>
+        </>
+    )}
+</DialogContent>
                 </Dialog>
             </div>
             <Tabs 
