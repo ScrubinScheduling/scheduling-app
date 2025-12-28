@@ -12,7 +12,7 @@ import {
 	Zap,
 	Users,
 	Clock,
-	BarChart3,
+	UserPen,
 	CheckCircle2,
 	Sparkle
 } from 'lucide-react';
@@ -53,6 +53,14 @@ const staff: StaffMember[] = [
 	{ name: 'Alaina Malaina', role: 'Receptionist', shift: '8:00AM - 5:00PM', color: 'red' }
 ] as const;
 
+const colorMap: Record<string, { bg: string; text: string }> = {
+  emerald: { bg: 'bg-emerald-100', text: 'text-emerald-600' },
+  blue: { bg: 'bg-blue-100', text: 'text-blue-600' },
+  purple: { bg: 'bg-purple-100', text: 'text-purple-600' },
+  orange: { bg: 'bg-orange-100', text: 'text-orange-600' },
+  red: { bg: 'bg-red-100', text: 'text-red-600' },
+};
+
 const features: Feature[] = [
 	{
 		icon: Calendar,
@@ -63,7 +71,8 @@ const features: Feature[] = [
 	{
 		icon: Users,
 		title: 'Team Availability',
-		description: 'See who else is working on the day, to see if your favourite co-worker is working.'
+		description:
+			'See who else is working on the day, to see if your favourite co-worker is working.'
 	},
 	{
 		icon: Clock,
@@ -78,10 +87,9 @@ const features: Feature[] = [
 			'Reminders for upcoming shifts. Instant notifications for schedule changes and updates.'
 	},
 	{
-		icon: BarChart3,
-		title: 'Labor Analytics',
-		description:
-			'Track labor costs, overtime trends, and staffing efficiency with detailed reports and insights.'
+		icon: UserPen,
+		title: 'Team Management',
+		description: 'Invite staff, assign roles, and keep your team organized as your clinic grows.'
 	},
 	{
 		icon: CheckCircle2,
@@ -94,7 +102,7 @@ const features: Feature[] = [
 const stats: Stat[] = [
 	{ label: 'Staff Capacity', value: 'Unlimited', subtext: 'Grow without limits' },
 	{ label: 'Schedule Types', value: 'Flexible', subtext: 'Fixed, rotating, or open' },
-	{ label: 'Payroll Export', value: 'Instant', subtext: 'One-click generation' }
+	{ label: 'Time Sheet Export', value: 'Instant', subtext: 'One-click generation' }
 ];
 
 const futureFeatures: FutureFeature[] = [
@@ -167,17 +175,19 @@ export default async function Home() {
 								</a>
 
 								<a
-									href="#features"
+									href="#future"
 									className="text-muted-foreground hover:text-foreground text-md font-medium transition-colors"
 								>
 									Future
 								</a>
 							</nav>
 							<div className="flex items-center gap-3">
-								<Button variant="ghost" size={'sm'}>
-									Log in
+								<Button variant="ghost" size={'sm'} asChild>
+									<Link href="/sign-in">Log in</Link>
 								</Button>
-								<Button size={'sm'}>Get Started</Button>
+								<Button size={'sm'} asChild>
+									<Link href="/sign-up">Get Started</Link>
+								</Button>
 							</div>
 						</div>
 					</div>
@@ -210,16 +220,23 @@ export default async function Home() {
 									<Button
 										size={'lg'}
 										className="h-12 gap-2 bg-emerald-600 px-8 text-base hover:bg-emerald-700"
+										asChild
 									>
-										Begin
-										<ArrowRight className="size-4" />
+										<Link href="/sign-in">
+											Begin
+											<ArrowRight className="size-4" />
+										</Link>
 									</Button>
 									<Button
-										size={'lg'}
-										variant={'outline'}
-										className="h-12 bg-transparent px-8 text-base"
+										size="lg"
+										variant="outline"
+										className="relative h-12 bg-transparent px-8 text-base"
+                    disabled
 									>
 										Demo
+										<Badge variant={"secondary"} className="pointer-events-none absolute -top-3 -right-10 px-2 py-0 text-xs ">
+											On the way
+										</Badge>
 									</Button>
 								</div>
 
@@ -266,9 +283,9 @@ export default async function Home() {
 												className="bg-muted/50 border-border hover:bg-muted flex items-center gap-4 rounded-xl border p-4 transition-colors"
 											>
 												<div
-													className={`size-12 rounded-full bg-${staff.color}-100 flex shrink-0 items-center justify-center`}
+													className={`size-12 rounded-full ${colorMap[staff.color].bg} flex shrink-0 items-center justify-center`}
 												>
-													<UserCheck className={`size-6 text-${staff.color}-600`} />
+													<UserCheck className={`size-6 ${colorMap[staff.color].text}`} />
 												</div>
 												<div className="min-w-0 flex-1">
 													<div className="truncate text-sm font-semibold">{staff.name}</div>
@@ -365,9 +382,11 @@ export default async function Home() {
 										</div>
 									))}
 								</div>
-								<Button size={'lg'} className="gap-2 bg-emerald-600 hover:bg-emerald-700">
-									Get Started
-									<ArrowRight className="size-4" />
+								<Button size={'lg'} className="gap-2 bg-emerald-600 hover:bg-emerald-700" asChild>
+									<Link href="/sign-up">
+										Get Started
+										<ArrowRight className="size-4" />
+									</Link>
 								</Button>
 							</div>
 
@@ -407,7 +426,8 @@ export default async function Home() {
 						</div>
 					</div>
 				</section>
-
+        
+        {/* Future Section */}
 				<section id="future" className="bg-muted/30 py-20 lg:py-32">
 					<div className="container mx-auto px-4 lg:px-8">
 						<div className="mx-auto mb-16 max-w-3xl space-y-4 text-center">
@@ -444,9 +464,9 @@ export default async function Home() {
 											</Badge>
 										</div>
 										<h3 className="mv-2 text-xl font-semibold">{feature.title}</h3>
-                    <p className='text-muted-foreground leading-relaxed text-sm'>
-                        {feature.description}
-                    </p>
+										<p className="text-muted-foreground text-sm leading-relaxed">
+											{feature.description}
+										</p>
 									</div>
 								</Card>
 							))}
@@ -454,30 +474,32 @@ export default async function Home() {
 					</div>
 				</section>
 
-        <footer className='border-t py-12 bg-muted.20'>
-            <div className='container mx-auto px-4 lg:px-8'>
-              <div className='flex flex-col md:flex-row items-center justify-between gap-6'>
-                <div className='flex items-center gap-2'>
-                  <div className='size-9 rounded-lg bg-emerald-600 flex items-center justify-center'>
-                    <Calendar  className='size-5 text-white'/>
-                  </div>
-                  <span className='font-semibold text-xl'> Scrub In</span>
-                </div>
-                <div className='flex items-center gap-8 text-sm text-muted-foreground'>
-                  <a href='#' className='hover:text-foreground transition-colors'>
-                    Privacy Policy
-                  </a>
-                  <a href='#' className='hover:text-foreground transition-colors'>
-                    Terms of Service
-                  </a>
-                  <a href='#' className='hover:text-foreground transition-colors'>
-                    Contact Us
-                  </a>
-                </div>
-                <div className='text-sm text-muted-foreground'>@ 2025 Scrub In, All rights reserved</div>
-              </div>
-            </div>
-        </footer>
+				<footer className="bg-muted.20 border-t py-12">
+					<div className="container mx-auto px-4 lg:px-8">
+						<div className="flex flex-col items-center justify-between gap-6 md:flex-row">
+							<div className="flex items-center gap-2">
+								<div className="flex size-9 items-center justify-center rounded-lg bg-emerald-600">
+									<Calendar className="size-5 text-white" />
+								</div>
+								<span className="text-xl font-semibold"> Scrub In</span>
+							</div>
+							<div className="text-muted-foreground flex items-center gap-8 text-sm">
+								<a href="#" className="hover:text-foreground transition-colors">
+									Privacy Policy
+								</a>
+								<a href="#" className="hover:text-foreground transition-colors">
+									Terms of Service
+								</a>
+								<a href="#" className="hover:text-foreground transition-colors">
+									Contact Us
+								</a>
+							</div>
+							<div className="text-muted-foreground text-sm">
+								@ 2025 Scrub In, All rights reserved
+							</div>
+						</div>
+					</div>
+				</footer>
 			</SignedOut>
 		</div>
 	);
