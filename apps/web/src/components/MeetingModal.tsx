@@ -33,7 +33,7 @@ type MemberOption = {
 type ModalMode = "create" | "edit";
 
 export type MeetingForModal = {
-  id: string;
+  id: number;
   location: string;
   description: string;
   date: string;
