@@ -162,7 +162,7 @@ router.get('/:id', async (req, res) => {
 			return res.status(400).json({ error: 'Invalid workspaceId or meeting id' });
 		}
 
-		const membership = await getWorkspaceMembership(userId ?? null, workspaceId);
+		const membership = await getWorkspaceMembership(userId ?? '', workspaceId);
 		if (!membership) {
 			return res.status(403).json({ error: 'Not a member of this workspace' });
 		}
@@ -215,7 +215,7 @@ router.post('/', async (req, res) => {
 			return res.status(400).json({ error: 'Invalid workspaceId' });
 		}
 
-		const membership = await getWorkspaceMembership(userId ?? null, workspaceId);
+		const membership = await getWorkspaceMembership(userId ?? '', workspaceId);
 		if (!membership) {
 			return res.status(403).json({ error: 'Not a member of this workspace' });
 		}
@@ -302,7 +302,7 @@ router.delete('/:id', async (req, res) => {
 			return res.status(400).json({ error: 'Invalid workspaceId or meeting id' });
 		}
 
-		const membership = await getWorkspaceMembership(userId ?? null, workspaceId);
+		const membership = await getWorkspaceMembership(userId ?? '', workspaceId);
 		if (!membership) {
 			return res.status(403).json({ error: 'Not a member of this workspace' });
 		}
@@ -348,7 +348,7 @@ router.post('/:id/finalize', async (req, res) => {
 			return res.status(400).json({ error: 'Invalid workspaceId or meeting id' });
 		}
 
-		const membership = await getWorkspaceMembership(userId ?? null, workspaceId);
+		const membership = await getWorkspaceMembership(userId ?? '', workspaceId);
 		if (!membership) {
 			return res.status(403).json({ error: 'Not a member of this workspace' });
 		}
@@ -399,7 +399,7 @@ router.post('/:id/cancel', async (req, res) => {
 			return res.status(400).json({ error: 'Invalid workspaceId or meeting id' });
 		}
 
-		const membership = await getWorkspaceMembership(userId ?? null, workspaceId);
+		const membership = await getWorkspaceMembership(userId ?? '', workspaceId);
 		if (!membership) {
 			return res.status(403).json({ error: 'Not a member of this workspace' });
 		}
@@ -448,7 +448,7 @@ router.post("/:id/reschedule", async (req, res) => {
         .json({ error: "Invalid workspaceId or meeting id" });
     }
 
-    const membership = await getWorkspaceMembership(userId ?? null, workspaceId);
+    const membership = await getWorkspaceMembership(userId ?? '', workspaceId);
     if (!membership) {
       return res
         .status(403)
@@ -656,7 +656,7 @@ router.post('/:id/respond/reset', async (req, res) => {
 		return res.status(400).json({ error: 'Invalid workspaceId or meeting id' });
 	}
 
-	const membership = await getWorkspaceMembership(userId ?? null, workspaceId);
+	const membership = await getWorkspaceMembership(userId ?? '', workspaceId);
 	if (!membership) {
 		return res.status(403).json({ error: 'Not a member of this workspace' });
 	}

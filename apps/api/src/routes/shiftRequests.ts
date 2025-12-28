@@ -327,7 +327,7 @@ router.post('/', async (req, res) => {
 
 router.post('/:id/approve', async (req, res) => {
     try {
-        const workspaceId = Number(req.params.workspaceId);
+        const workspaceId = Number((req.params as any).workspaceId);
         const id = Number(req.params.id);
 
         if (!workspaceId || Number.isNaN(workspaceId) || Number.isNaN(id)) {
@@ -355,7 +355,7 @@ router.post('/:id/approve', async (req, res) => {
 
 router.post('/:id/reject', async (req, res) => {
     try {
-        const workspaceId = Number(req.params.workspaceId);
+        const workspaceId = Number((req.params as any).workspaceId);
         const id = Number(req.params.id);
 
         if (!workspaceId || Number.isNaN(workspaceId) || Number.isNaN(id)) {
@@ -371,7 +371,7 @@ router.post('/:id/reject', async (req, res) => {
 
         await prisma.shiftRequest.update({
             where: { id },
-            data: { approvedByRequested: 'DENIED' },
+            data: { approvedByRequested: 'REJECTED' },
         });
 
         return res.status(204).send();

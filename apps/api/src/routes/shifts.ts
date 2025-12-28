@@ -150,7 +150,7 @@ router.post('/', async (req, res) => {
 router.patch('/:id', async (req, res) => {
     try {
         const id = Number(req.params.id)
-        const workspaceId = Number(req.params.workspaceId)
+        const workspaceId = Number((req.params as any).workspaceId)
 
         if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid Id' })
 
@@ -208,7 +208,7 @@ router.patch('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
     try {
         const id = Number(req.params.id)
-        const workspaceId = Number(req.params.workspaceId)
+        const workspaceId = Number((req.params as any).workspaceId)
 
         if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid id' })
         await prisma.shift.delete({ where: { id: Number(id) } })

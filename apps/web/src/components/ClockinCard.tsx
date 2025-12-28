@@ -64,9 +64,12 @@ function ShiftTradeDialog({
                 if (!alive) return;
                 
                 // Flatten and deduplicate shifts
-                const allShiftsRaw = Object.values(workspaceShiftsRes.buckets).flatMap(userBuckets =>
-                    Object.values(userBuckets).flat()
+                const allShiftsRaw = Object.values(workspaceShiftsRes.buckets ?? {}).flatMap(userBuckets =>
+                    Array.isArray(userBuckets)
+                        ? userBuckets
+                        : Object.values(userBuckets ?? {}).flat()
                 );
+
                 
                 const uniqueShiftsMap = new Map();
                 allShiftsRaw.forEach(shift => {

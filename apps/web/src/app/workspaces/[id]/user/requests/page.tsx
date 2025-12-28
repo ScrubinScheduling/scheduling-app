@@ -23,6 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useApiClient } from "@/hooks/useApiClient";
 import { useSSEStream } from "@/hooks/useSSE";
+import { Shift } from "@scrubin/schemas";
 
 export function MeetingRequests({ workspaceId }: { workspaceId: string }) {
     const isMounted = useRef(true);
@@ -314,12 +315,16 @@ export default function Page() {
                     apiClient.getWorkspaceShifts(Number(id), {start: now.toISOString(), end: futureDate.toISOString()})
                 ]);
                 if (!alive) return;
-                const allShiftsRaw = Object.values(workspaceShiftsRes.buckets).flatMap(userBuckets =>
-                    Object.values(userBuckets).flat()
+
+                const allShiftsRaw = Object.values(workspaceShiftsRes.buckets ?? {}).flatMap(userBuckets =>
+                    Array.isArray(userBuckets)
+                        ? userBuckets
+                        : Object.values(userBuckets ?? {}).flat()
                 );
 
                 // Deduplicate shifts by ID using a Map
                 const uniqueShiftsMap = new Map();
+
                 allShiftsRaw.forEach(shift => {
                     uniqueShiftsMap.set(shift.id, shift);
                 });

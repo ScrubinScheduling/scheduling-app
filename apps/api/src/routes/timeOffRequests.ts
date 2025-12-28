@@ -143,7 +143,7 @@ router.get('/:id', async (req: Request<{workspaceId: string; id: string}>, res) 
  */
 router.post('/', async (req, res) => {
     try {
-        const workspaceId = Number(req.params.workspaceId)
+        const workspaceId = Number((req.params as any).workspaceId)
 
         if (!workspaceId || Number.isNaN(workspaceId)) {
             return res.status(400).json({ error: 'Invalid workspace id' })
@@ -225,7 +225,7 @@ router.post('/', async (req, res) => {
  */
 router.patch('/:id', async (req, res) => {
     try {
-        const workspaceId = Number(req.params.workspaceId)
+        const workspaceId = Number((req.params as any).workspaceId)
         const id = Number(req.params.id)
 
         if (!workspaceId || Number.isNaN(workspaceId) || Number.isNaN(id)) {
@@ -313,7 +313,7 @@ router.patch('/:id', async (req, res) => {
  */
 router.delete('/:id', async (req, res) => {
     try {
-        const workspaceId = Number(req.params.workspaceId)
+        const workspaceId = Number((req.params as any).workspaceId)
         const id = Number(req.params.id)
 
         if (!workspaceId || Number.isNaN(workspaceId) || Number.isNaN(id)) {
