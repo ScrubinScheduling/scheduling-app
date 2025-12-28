@@ -35,7 +35,7 @@ export default function RootLayout({
       signInFallbackRedirectUrl="/workspaces"
       signUpFallbackRedirectUrl="/workspaces"
     >
-      <html lang="en" className={roboto.variable}>
+      <html lang="en" className={roboto.variable} suppressHydrationWarning>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >

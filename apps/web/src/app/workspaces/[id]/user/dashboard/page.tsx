@@ -1,6 +1,6 @@
 import React from "react";
-import ClockinCard from "../../../../../../components/ClockinCard";
-import UpcomingSchedule from "../../../../../../components/UpcomingScheduleCard";
+import ClockinCard from "@/components/ClockinCard";
+import UpcomingSchedule from "@/components/UpcomingScheduleCard";
 
 export default function Page() {
     return (

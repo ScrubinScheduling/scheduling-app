@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useMemo, useCallback } from "react";
-import WorkspaceList from "../../../components/WorkspaceList";
+import WorkspaceList from "@/components/WorkspaceList";
 import { useAuth, UserButton } from "@clerk/nextjs";
 
 import { createApiClient } from "@scrubin/api-client";

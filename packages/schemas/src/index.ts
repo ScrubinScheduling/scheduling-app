@@ -1,4 +1,5 @@
 // Shared application DTO types
+import * as z from "zod"; 
 
 export type Timesheet = {
     id: number;
@@ -104,3 +105,45 @@ export type MemberApi = {
   isAdmin: boolean;
 
 };
+
+const Workspace = z.object({
+	id: z.number(),
+	name: z.string(),
+	adminId: z.string(),
+	location: z.string()
+});
+
+const InvitationInfo = z.object({
+	workspaceName: z.string(),
+	workspaceOwnerName: z.string(),
+	workspaceOwnerEmail: z.email(),
+	invitationId: z.string(),
+});
+
+const Shift = z.object({
+	id: z.number(),
+	startTime: z.string(),
+	endTime: z.string(),
+	breakDuration: z.number().default(0),
+	userId: z.string(),
+	workspaceId: z.number()
+});
+
+const Timesheet = z.object({
+	id: z.number(),
+    clockInTime: z.string().nullable(),
+    clockOutTime: z.string().nullable(),
+    startBreakTime: z.string().nullable(),
+    endBreakTime: z.string().nullable(),
+    shift: {
+        id: z.number(),
+        startTime: z.string(),
+        endTime: z.string(),
+        breakDuration: z.number().default(0),
+        user: {
+            id: z.string(),
+            firstName: z.string().nullable(),
+            lastName: z.string().nullable()
+        }
+    }
+});

@@ -398,6 +398,10 @@ importers:
         version: 5.9.3
 
   packages/schemas:
+    dependencies:
+      zod:
+        specifier: ^4.1.12
+        version: 4.1.12
     devDependencies:
       typescript:
         specifier: ^5.9.3
