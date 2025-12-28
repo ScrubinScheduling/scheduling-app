@@ -23,7 +23,7 @@ import {
   MapPin,
   Users,
 } from "lucide-react";
-import MeetingModal, { MeetingForModal } from "../../../../../../../components/MeetingModal";
+import MeetingModal, { MeetingForModal } from "@/components/MeetingModal";
 
 
 

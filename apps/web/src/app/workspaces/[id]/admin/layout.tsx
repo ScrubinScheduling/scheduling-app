@@ -1,7 +1,7 @@
 "use client";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
 import { useParams } from "next/navigation";
-import Navbar from "../../../../../components/Navbar";
+import Navbar from "@/components/Navbar";
 
 export default function AppLayout({
   children,

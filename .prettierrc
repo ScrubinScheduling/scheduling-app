@@ -8,7 +8,6 @@
 		{
 			"files": ["apps/web/**/*.{js,jsx,ts,tsx,mdx}"],
 			"options": {
-				"tailwindConfig": "apps/web/tailwind.config.ts",
 				"tailwindFunctions": ["clsx", "cn", "cva", "twMerge"]
 			}
 		},
