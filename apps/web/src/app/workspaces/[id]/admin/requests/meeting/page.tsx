@@ -30,7 +30,6 @@ export default function MeetingRequestsPage() {
 	);
 
 	const [editorOpen, setEditorOpen] = useState(false);
-	const [editorMode, setEditorMode] = useState<"create" | "edit">("create");
 	const [editorMeeting, setEditorMeeting] = useState<MeetingForModal | null>(null);
 
 	const [reloadToken, setReloadToken] = useState(0);
@@ -122,7 +121,6 @@ export default function MeetingRequestsPage() {
 					<button
 						type="button"
 						onClick={() => {
-							setEditorMode("create");
 							setEditorMeeting(null);
 							setEditorOpen(true);
 						}}
@@ -175,7 +173,6 @@ export default function MeetingRequestsPage() {
 						<MeetingDetails
 							selected={selected}
 							onReschedule={() => {
-								setEditorMode("edit");
 								setEditorMeeting({
 									id: selected.id,
 									location: selected.location,
@@ -195,7 +192,6 @@ export default function MeetingRequestsPage() {
 
 			<MeetingModal
 				open={editorOpen}
-				mode={editorMode}
 				meeting={editorMeeting}
 				onClose={() => setEditorOpen(false)}
 				onSaved={refreshMeetings}

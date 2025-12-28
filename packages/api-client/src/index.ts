@@ -280,7 +280,14 @@ export function createApiClient({ baseUrl, getToken }) {
 				method: "POST",
 				path: `/workspaces/${workspaceId}/meetings/${meetingId}/${action}`,
 				body: {}
-			}),			
+			}),
+		rescheduleMeeting: (workspaceId, meetingId, data) => 
+			request({ 
+				method: 'POST', 
+				path: `/workspaces/${workspaceId}/meetings/${meetingId}/reschedule`, 
+				body: data 
+			}),
+			
 		// Timesheets
 		getWorkspaceTimesheets: (workspaceId, params?) =>
 			request({ method: 'GET', path: `/workspaces/${workspaceId}/timesheets`, params }),

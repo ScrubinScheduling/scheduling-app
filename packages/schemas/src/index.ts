@@ -29,17 +29,6 @@ export type ShiftLegacy = {
 	};
 };
 
-export type Member = {
-  userId: string;
-	id: string; 
-	membershipId: number; 
-	role: string;
-	firstName: string;
-	lastName: string;
-	email?: string;
-	phone?: string;
-};
-
 export type User = {
 	id: string;
 	firstName: string;
@@ -52,19 +41,7 @@ export type UserShiftsResponseLegacy = {
 	shifts: ShiftLegacy[];
 };
 
-export type MemberApi = {
-  membershipId?: number | string;
-  id?: number | string;
-  userId?: number | string;
-  firstName?: string | null;
-  lastName?: string | null;
-  role?: string | null;
-  email?: string;
-  phone: string;
-  roleId: string;
-  isAdmin: boolean;
 
-};
 export type MeetingStatus = "PENDING" | "FINALIZED" | "CANCELLED" | "RESCHEDULED";
 const WorkspaceSchema = z.object({
 	id: z.number(),
@@ -139,3 +116,20 @@ const MeetingSchema = z.object({
 export type Meeting = z.infer<typeof MeetingSchema>;
 export const MeetingsSchema = z.array(MeetingSchema);
 export type Meetings = z.infer<typeof MeetingSchema>;
+
+
+const MemberSchema = z.object({
+  membershipId: z.number(),
+  id: z.string(),
+  firstName: z.string().nullable().optional(),
+  lastName: z.string().nullable().optional(),
+  role: z.string().nullable().optional(),
+  email: z.string().optional(),
+  phone: z.string(),
+  roleId: z.string(),
+  isAdmin: z.boolean(),
+});
+
+export type Member = z.infer<typeof MemberSchema>;
+export const MembersSchema = z.array(MemberSchema);
+export type Members = z.infer<typeof MemberSchema>;
