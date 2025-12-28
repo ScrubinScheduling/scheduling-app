@@ -1,9 +1,5 @@
 # README
 
-course: CMPT 370 (https://www.notion.so/CMPT-370-262b470ff8ce81a6a2cee8e7ad9c742e?pvs=21)
-mastery: none
-progress: not started
-
 ## Scheduling App Monorepo
 
 Web, Mobile, and API for a team scheduling app.
