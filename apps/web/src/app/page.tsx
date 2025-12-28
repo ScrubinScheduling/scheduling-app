@@ -58,12 +58,12 @@ const features: Feature[] = [
 		icon: Calendar,
 		title: 'Shift Scheduling',
 		description:
-			'Create and manage staff schedules with drag-and-drop simplicity. Set recurring shifts and handle changes instantly.'
+			'Create and manage staff schedules with. Set recurring shifts and handle changes instantly.'
 	},
 	{
 		icon: Users,
 		title: 'Team Availability',
-		description: 'See who else is working on the day of, to see if it might be a busy day or not.'
+		description: 'See who else is working on the day, to see if your favourite co-worker is working.'
 	},
 	{
 		icon: Clock,
@@ -75,7 +75,7 @@ const features: Feature[] = [
 		icon: Bell,
 		title: 'Shift Notifications',
 		description:
-			'Automated reminders for upcoming shifts. Instant notifications for schedule changes and updates.'
+			'Reminders for upcoming shifts. Instant notifications for schedule changes and updates.'
 	},
 	{
 		icon: BarChart3,
@@ -357,7 +357,6 @@ export default async function Home() {
 										'Stop wrestling with spreadsheets and streamline your scheduling workflow.',
 										'Improve team reliability with automated shift reminders and updates.',
 										'Spot coverage gaps instantly with visual conflict detection.',
-										'Track certifications and ensure qualified staff per shift',
 										'Export accurate, error-free timesheets directly to your payroll provider.'
 									].map((benifit, i) => (
 										<div key={i} className="flex items-start gap-3">
@@ -455,7 +454,30 @@ export default async function Home() {
 					</div>
 				</section>
 
-        
+        <footer className='border-t py-12 bg-muted.20'>
+            <div className='container mx-auto px-4 lg:px-8'>
+              <div className='flex flex-col md:flex-row items-center justify-between gap-6'>
+                <div className='flex items-center gap-2'>
+                  <div className='size-9 rounded-lg bg-emerald-600 flex items-center justify-center'>
+                    <Calendar  className='size-5 text-white'/>
+                  </div>
+                  <span className='font-semibold text-xl'> Scrub In</span>
+                </div>
+                <div className='flex items-center gap-8 text-sm text-muted-foreground'>
+                  <a href='#' className='hover:text-foreground transition-colors'>
+                    Privacy Policy
+                  </a>
+                  <a href='#' className='hover:text-foreground transition-colors'>
+                    Terms of Service
+                  </a>
+                  <a href='#' className='hover:text-foreground transition-colors'>
+                    Contact Us
+                  </a>
+                </div>
+                <div className='text-sm text-muted-foreground'>@ 2025 Scrub In, All rights reserved</div>
+              </div>
+            </div>
+        </footer>
 			</SignedOut>
 		</div>
 	);
