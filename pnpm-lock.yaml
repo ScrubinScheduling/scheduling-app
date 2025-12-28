@@ -92,7 +92,7 @@ importers:
         specifier: ^3.6.2
         version: 3.6.2
       prisma:
-        specifier: ^6.17.1
+        specifier: 6.17.1
         version: 6.17.1(typescript@5.9.3)
       supabase:
         specifier: ^2.54.11
