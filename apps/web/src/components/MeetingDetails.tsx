@@ -54,7 +54,7 @@ export default function MeetingDetails({ selected, onReschedule, onStatusChange 
                         className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold 
                             ${mapStatusChip(selected.status)}`}
                     >
-                        {status}
+                        {selected.status}
                     </span>
                 </div>
 
