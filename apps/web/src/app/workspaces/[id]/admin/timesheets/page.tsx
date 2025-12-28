@@ -3,11 +3,11 @@ import { getServerApiClient } from "@/lib/apiClient";
 import UserSelect from "@/components/UserSelect";
 import TimesheetTable from "@/components/TimesheetTable";
 
-export default async function Page({ params, searchParams }: { params: { id: string }; searchParams: Record<string, string | null> }) {
+export default async function Page({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | null>> }) {
     const apiClient = await getServerApiClient()
 
-    const { userId } = searchParams;
-    const { id: workspaceId } = params;
+    const { userId } = await searchParams;
+    const { id: workspaceId } = await params;
     const { members: users } = await apiClient.getWorkspaceMembers(workspaceId);
     const selectedUserId = userId ?? undefined as string | undefined;
 

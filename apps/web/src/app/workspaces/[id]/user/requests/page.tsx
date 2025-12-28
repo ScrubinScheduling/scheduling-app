@@ -23,9 +23,20 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useApiClient } from "@/hooks/useApiClient";
 import { useSSEStream } from "@/hooks/useSSE";
-import { Shift } from "@scrubin/schemas";
+type MeetingRequest = {
+    id: number;
+    location: string;
+    description: string;
+    date: string;
+    time: string;
+    status: string;
+    inviteMembershipIds: number[];
+    createdById: string;
+    attendees: { yes: string[]; no: string[]; pending: string[] };
+    userResponse?: string;
+};
 
-export function MeetingRequests({ workspaceId }: { workspaceId: string }) {
+function MeetingRequests({ workspaceId }: { workspaceId: string }) {
     const isMounted = useRef(true);
     useEffect(() => {
         isMounted.current = true;
@@ -35,7 +46,7 @@ export function MeetingRequests({ workspaceId }: { workspaceId: string }) {
     }, []);
     const apiClient = useApiClient();
 
-    const [meetings, setMeetings] = useState<any[]>([]);
+    const [meetings, setMeetings] = useState<MeetingRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -125,7 +136,7 @@ export function MeetingRequests({ workspaceId }: { workspaceId: string }) {
                     <CardHeader className="flex justify-between items-start">
                         <CardTitle className="text-white font-medium">{m.description}</CardTitle>
                         {/* Show user's response instead of meeting status */}
-                        {getResponseBadge(m.userResponse)}
+                        {getResponseBadge(m.userResponse ?? "PENDING")}
                     </CardHeader>
                     <CardContent className="space-y-2 text-sm text-gray-400">
                         <p>
@@ -160,10 +171,10 @@ export function MeetingRequests({ workspaceId }: { workspaceId: string }) {
 }
 
 // 🆕 Time Off Requests Component
-export function TimeOffRequests({ workspaceId, userId }: { workspaceId: string; userId: string }) {
+function TimeOffRequests({ workspaceId }: { workspaceId: string }) {
     const apiClient = useApiClient();
 
-    const [timeOffRequests, setTimeOffRequests] = useState<any[]>([]);
+    const [timeOffRequests, setTimeOffRequests] = useState<{ id: string; status: string; kind: string; requesterNames: string[]; dateRange: { start: string; end: string } }[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -281,9 +292,9 @@ export default function Page() {
     const [selectedShiftId, setSelectedShiftId] = useState('');
     const [requestedShiftId, setRequestedShiftId] = useState('');
     const [requestedUserId, setRequestedUserId] = useState('');
-    const [userShifts, setUserShifts] = useState<any[]>([]);
-    const [workspaceUsers, setWorkspaceUsers] = useState<any[]>([]);
-    const [allWorkspaceShifts, setAllWorkspaceShifts] = useState<any[]>([]);
+    const [userShifts, setUserShifts] = useState<{ id: number; startTime: string; endTime: string }[]>([]);
+    const [workspaceUsers, setWorkspaceUsers] = useState<{ id: string; firstName: string; lastName: string }[]>([]);
+    const [allWorkspaceShifts, setAllWorkspaceShifts] = useState<{ id: number; startTime: string; endTime: string; userId: string; user?: { firstName?: string | null; lastName?: string | null } }[]>([]);
     
     // Time off request states
     const [timeOffStartDate, setTimeOffStartDate] = useState('');
@@ -739,7 +750,7 @@ export default function Page() {
                 </TabsContent>
 
                 <TabsContent className="w-full flex justify-center" value="time-off-requests">
-                    {userId && <TimeOffRequests workspaceId={id} userId={userId} />}
+                    {userId && <TimeOffRequests workspaceId={id} />}
                 </TabsContent>
             </Tabs>
         </main>

@@ -60,10 +60,10 @@ export default function Future() {
 						Coming Soon
 					</Badge>
 					<h2 className="text-4xl font-bold tracking-tight text-balance lg:text-5xl">
-						What's next for Scrub In
+						What&apos;s next for Scrub In
 					</h2>
 					<p className="text-muted-foreground text-lg leading-relaxed">
-						we're constantly improving. Here are the features we're building next based on feedback
+						we&apos;re constantly improving. Here are the features we&apos;re building next based on feedback
 						from veterinary clinics like yours.
 					</p>
 				</div>

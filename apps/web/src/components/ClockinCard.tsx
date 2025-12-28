@@ -37,8 +37,8 @@ function ShiftTradeDialog({
     const [requestType, setRequestType] = useState<'trade' | 'cover'>('cover');
     const [requestedShiftId, setRequestedShiftId] = useState('');
     const [requestedUserId, setRequestedUserId] = useState('');
-    const [workspaceUsers, setWorkspaceUsers] = useState<any[]>([]);
-    const [allWorkspaceShifts, setAllWorkspaceShifts] = useState<any[]>([]);
+    const [workspaceUsers, setWorkspaceUsers] = useState<{ id: string; firstName: string; lastName: string }[]>([]);
+    const [allWorkspaceShifts, setAllWorkspaceShifts] = useState<{ id: number; startTime: string; endTime: string; userId: string; user?: { firstName?: string | null; lastName?: string | null } }[]>([]);
     const [loading, setLoading] = useState(false);
 
     // Load workspace data when dialog opens
@@ -404,7 +404,7 @@ export default function ClockinCard() {
                     return !s.timesheet || !s.timesheet.clockOutTime;
                 });
                 
-                let shift = activeShifts[0]
+                const shift = activeShifts[0]
                 
                 setCurrentShift(shift || null);
                 

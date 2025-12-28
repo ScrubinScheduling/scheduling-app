@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import { DatePicker, Modal, Select, TimePicker, Alert, Button } from 'antd';
-import dayjs, {Dayjs} from 'dayjs';
-import { User, Shift } from '@scrubin/schemas';
+import {Dayjs} from 'dayjs';
+import { User } from '@scrubin/schemas';
 import { useApiClient } from '@/hooks/useApiClient';
 
 type Props = {
@@ -102,7 +102,7 @@ const SingleAddShiftModal = ({open, setOpen, user, selectedDay, users, workspace
             <TimePicker.RangePicker
             className='min-w-[150px]'
             format={'HH:mm'}
-            onChange={(dates, dateStrings)=> {
+            onChange={(dates)=> {
               setTimeRange(dates ?? [null, null]);
             }}
             

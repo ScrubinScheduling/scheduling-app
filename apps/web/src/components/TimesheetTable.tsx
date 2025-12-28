@@ -80,7 +80,7 @@ export default function TimesheetTable({ timesheets }: { timesheets: Timesheet[]
         try {
             setSaving(true);
 
-            const updateData: any = {};
+            const updateData: Record<string, string | null> = {};
             
             // Only send fields that have values
             if (editValues.clockInTime) {

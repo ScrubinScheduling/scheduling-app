@@ -116,7 +116,7 @@ export default function Hero() {
 							</div>
 
 							<div className="space-y-3 p-6">
-								{staff.map((staff, index) => (
+								{staff.map((staff) => (
 									<div
 										key={staff.name}
 										className="bg-muted/50 border-border hover:bg-muted flex items-center gap-4 rounded-xl border p-4 transition-colors"
