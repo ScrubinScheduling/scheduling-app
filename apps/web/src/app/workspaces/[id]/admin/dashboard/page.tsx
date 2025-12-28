@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useMemo, useEffect, use, useCallback } from "react";
-import AddShiftModal from "../../../../../../components/AddShiftModal";
+import AddShiftModal from "@/components/AddShiftModal";
 import dayjs, { Dayjs } from "dayjs";
 import { Spin, Button, DatePicker, Alert } from "antd";
 import { LoadingOutlined } from '@ant-design/icons';
@@ -26,9 +26,9 @@ import {
     format,
     parseISO,
 } from "date-fns";
-import ShiftModal from "../../../../../../components/ShiftModal";
+import ShiftModal from "@/components/ShiftModal";
 import { Shift, User } from "@scrubin/schemas";
-import SingleAddShiftModal from "../../../../../../components/SingleAddShiftModal";
+import SingleAddShiftModal from "@/components/SingleAddShiftModal";
 
 
 type ApiShift = { id: number; startTime: string; endTime: string; breakDuration: number | null };

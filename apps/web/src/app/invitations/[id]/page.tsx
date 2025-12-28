@@ -1,7 +1,7 @@
 import React from "react";
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
-import InvitationCard from "../../../../components/InvitationCard";
+import InvitationCard from "@/components/InvitationCard";
 import { createApiClient } from "@scrubin/api-client";
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {

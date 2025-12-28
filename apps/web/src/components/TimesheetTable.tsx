@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { differenceInMinutes, format } from "date-fns";
 import React, { useState, useMemo } from "react";
-import { formatDurationHM } from "../helpers/time";
+import { formatDurationHM } from "../../helpers/time";
 import { Timesheet } from "@scrubin/schemas";
 import { Pencil, Save, X } from "lucide-react";
 import { toast } from "sonner";

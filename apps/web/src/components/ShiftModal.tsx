@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { Modal, Button, Select, DatePicker, TimePicker, Alert } from 'antd';
 import {Calendar, UserIcon, Clock9, MapPin, Trash, Edit, Send} from 'lucide-react';
-import {formatLongDate, formatTimeRange} from '../helpers/time';
+import {formatLongDate, formatTimeRange} from '../../helpers/time';
 import { useApiClient } from '@/hooks/useApiClient';
 import dayjs, {Dayjs} from 'dayjs';
 import type { Shift, User } from '@scrubin/schemas';
