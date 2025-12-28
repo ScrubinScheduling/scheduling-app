@@ -1,35 +1,7 @@
 // Shared application DTO types
 import * as z from "zod"; 
 
-export type Timesheet = {
-    id: number;
-    clockInTime: string | null;
-    clockOutTime: string | null;
-    startBreakTime: string | null;
-    endBreakTime: string | null;
-    shift: {
-        id: number;
-        startTime: string;
-        endTime: string;
-        breakDuration: number | null;
-        user?: {
-            id: string;
-            firstName?: string | null;
-            lastName?: string | null;
-        };
-    };
-};
 
-// Primary Shift DTO shape used by web UI (Timesheet is separate table, optionally included)
-export type Shift = {
-	id: number;
-	startTime: string;
-	endTime: string;
-	breakDuration: number | null;
-	userId?: string;
-	workspaceId?: number;
-	timesheet?: Timesheet | null;
-};
 
 // Legacy/mobile shape where clock/break fields live on the shift directly
 // Keep for compatibility while mobile migrates to Timesheet
@@ -74,19 +46,7 @@ export type User = {
 	lastName?: string | null;
 };
 
-export type Workspace = {
-	id: number;
-	name: string;
-	adminId: string;
-	location: string;
-};
 
-export type InvitationInfo = {
-	workspaceName: string;
-	workspaceOwnerName: string;
-	workspaceOwnerEmail: string;
-	invitationId: string;
-};
 
 export type UserShiftsResponseLegacy = {
 	shifts: ShiftLegacy[];
@@ -105,22 +65,28 @@ export type MemberApi = {
   isAdmin: boolean;
 
 };
-
-const Workspace = z.object({
+export type MeetingStatus = "PENDING" | "FINALIZED" | "CANCELLED" | "RESCHEDULED";
+const WorkspaceSchema = z.object({
 	id: z.number(),
 	name: z.string(),
 	adminId: z.string(),
 	location: z.string()
 });
+export type Workspace = z.infer<typeof WorkspaceSchema>;
+export const WorkspacesSchema = z.array(WorkspaceSchema);
+export type Workspaces = z.infer<typeof WorkspacesSchema>;
 
-const InvitationInfo = z.object({
+const InvitationInfoSchema = z.object({
 	workspaceName: z.string(),
 	workspaceOwnerName: z.string(),
 	workspaceOwnerEmail: z.email(),
 	invitationId: z.string(),
 });
+export type InvitationInfo = z.infer<typeof InvitationInfoSchema>;
+export const InvitationInfosSchema = z.array(InvitationInfoSchema);
+export type InvitationInfos = z.infer<typeof InvitationInfoSchema>;
 
-const Shift = z.object({
+const ShiftSchema = z.object({
 	id: z.number(),
 	startTime: z.string(),
 	endTime: z.string(),
@@ -128,22 +94,48 @@ const Shift = z.object({
 	userId: z.string(),
 	workspaceId: z.number()
 });
+export type Shift = z.infer<typeof ShiftSchema>;
+export const ShiftsSchema = z.array(ShiftSchema);
+export type Shifts = z.infer<typeof ShiftSchema>;
 
-const Timesheet = z.object({
+const TimesheetSchema = z.object({
 	id: z.number(),
     clockInTime: z.string().nullable(),
     clockOutTime: z.string().nullable(),
     startBreakTime: z.string().nullable(),
     endBreakTime: z.string().nullable(),
-    shift: {
+    shift: z.object({
         id: z.number(),
         startTime: z.string(),
         endTime: z.string(),
         breakDuration: z.number().default(0),
-        user: {
+        user: z.object({
             id: z.string(),
             firstName: z.string().nullable(),
             lastName: z.string().nullable()
-        }
-    }
+        })
+    })
 });
+export type Timesheet = z.infer<typeof TimesheetSchema>;
+export const TimesheetsSchema = z.array(TimesheetSchema);
+export type Timesheets = z.infer<typeof TimesheetSchema>;
+
+const MeetingSchema = z.object({
+	id: z.number(),
+	location: z.string(),
+	description: z.string(),
+	date: z.string(),
+	time: z.string(),
+	status: z.enum(["PENDING", "FINALIZED", "CANCELLED", "RESCHEDULED"]),
+	inviteMembershipIds: z.array(z.number()),
+	createdById: z.string(),
+	attendees: z.object({
+		yes: z.array(z.string()),
+		no: z.array(z.string()),
+		pending: z.array(z.string())
+	})
+});
+
+export type Meeting = z.infer<typeof MeetingSchema>;
+export const MeetingsSchema = z.array(MeetingSchema);
+export type Meetings = z.infer<typeof MeetingSchema>;
