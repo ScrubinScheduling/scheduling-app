@@ -5,7 +5,7 @@ import ViewShiftPage from '@/pages/ViewShiftPage';
 import TradeShiftPage from '@/pages/TradeShiftPage';
 import DaysOffPage from '@/pages/DaysOffPage';
 import SettingsPage from '@/pages/SettingsPage';
-import TabBar from '@/components/MainTabs';
+import TabBar from '@/src/components/MainTabs';
 
 const Tab = createBottomTabNavigator();
 
