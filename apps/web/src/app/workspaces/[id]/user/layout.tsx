@@ -18,7 +18,7 @@ export default function AppLayout({
 
 	const navlinks: NavLink[] = [
 		{ href: `/workspaces/${id}/user/dashboard`, name: "Dashboard" },
-		{ href: `/workspaces/${id}/user/requests`, name: "Requests" },
+		// { href: `/workspaces/${id}/user/requests`, name: "Requests" },
 		{ href: `/workspaces/${id}/user/calendar`, name: "Calendar" },
 	];
 	

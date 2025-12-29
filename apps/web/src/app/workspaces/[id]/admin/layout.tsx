@@ -19,10 +19,10 @@ export default function AppLayout({
 			href: `/workspaces/${id}/admin/team`,
 			name: "Team"
 		},
-		{
-			href: `/workspaces/${id}/admin/requests`,
-			name: "Requests"
-		},
+		// {
+		// 	href: `/workspaces/${id}/admin/requests`,
+		// 	name: "Requests"
+		// },
     	{
 			href: `/workspaces/${id}/admin/timesheets`,
 			name: "Timesheets"
