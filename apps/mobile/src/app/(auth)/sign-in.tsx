@@ -2,10 +2,14 @@ import React, { useCallback, useEffect, useState } from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
 import { useSSO } from '@clerk/clerk-expo';
-import { View, Button, Platform, TextInput, Text } from 'react-native';
-import { router, Link, useRouter } from 'expo-router';
+import { View, Button, Platform, TextInput, Text, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { router, Link, useRouter, Redirect } from 'expo-router';
 import { useSignIn } from '@clerk/clerk-expo';
 import type { EmailCodeFactor } from '@clerk/types';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import logo from '../../../assets/logo.png';
+import { MaterialIcons, AntDesign, Ionicons } from '@expo/vector-icons';
+
 
 // Preloads the browser for Android devices to reduce authentication load time
 // See: https://docs.expo.dev/guides/authentication/#improving-user-experience
@@ -30,6 +34,7 @@ export default function Page() {
 	const [password, setPassword] = useState('');
 	const [code, setCode] = useState('');
 	const [showEmailCode, setShowEmailCode] = useState(false);
+	const [isLoading, setIsLoading] = useState(false); 
 
 	const onSignInPress = useCallback(async () => {
 		if (!isLoaded) return;
@@ -160,50 +165,142 @@ export default function Page() {
 
 	if (showEmailCode) {
 		return (
-			<View>
-				<Text>Verify your email</Text>
-				<Text>A verification code has been sent to your email.</Text>
-				<TextInput
-					value={code}
-					placeholder="Enter verification code"
-					placeholderTextColor="#666666"
-					onChangeText={(code) => setCode(code)}
-				/>
-				<Button title="Verify" onPress={onVerifyPress} />
-			</View>
+			<SafeAreaView>
+				<View>
+					<Text>Verify your email</Text>
+					<Text>A verification code has been sent to your email.</Text>
+					<TextInput
+						value={code}
+						placeholder="Enter verification code"
+						placeholderTextColor="#666666"
+						onChangeText={(code) => setCode(code)}
+					/>
+					<Button title="Verify" onPress={onVerifyPress} />
+				</View>
+			</SafeAreaView>
 		);
 	}
 
 	return (
-		<View>
-			<View>
-				<Text>Sign in</Text>
-				<TextInput
-					autoCapitalize="none"
-					value={emailAddress}
-					placeholder="Enter email"
-					placeholderTextColor="#666666"
-					onChangeText={(emailAddress) => setEmailAddress(emailAddress)}
-				/>
-				<TextInput
-					value={password}
-					placeholder="Enter password"
-					placeholderTextColor="#666666"
-					secureTextEntry={true}
-					onChangeText={(password) => setPassword(password)}
-				/>
-				<Button title="Sign in" onPress={onSignInPress} />
-				<View style={{ flexDirection: 'row', gap: 4 }}>
-					<Text>Don't have an account?</Text>
-					<Link href="/sign-up">
-						<Text>Sign up</Text>
-					</Link>
+		<SafeAreaView style={{ flex: 1 }} className="bg-slate-50">
+			<View className="mt-8 w-full flex-1 items-center px-6">
+				{/* Header */}
+				<View className="mb-8 flex flex-col items-center gap-4">
+					<View className="rounded-2xl bg-emerald-600 p-4 shadow-lg">
+						<Image source={logo} className="size-12" tintColor="white" />
+					</View>
+					<Text className="text-5xl font-bold text-slate-900">ScrubIn</Text>
+					<Text className="text-base text-slate-600">Staff Portal Access</Text>
+				</View>
+
+				{/* Login Card */}
+				<View className="w-full max-w-md gap-5 rounded-2xl border border-slate-200 bg-white px-8 py-8 shadow-lg">
+					<View className="gap-2">
+						<Text className="text-3xl font-bold text-slate-900">Welcome Back</Text>
+						<Text className="text-base text-slate-600">Sign in to access your schedule</Text>
+					</View>
+
+					{/* Email Input */}
+					<View className="gap-2">
+						<Text className="text-sm font-medium text-slate-700">Email Address</Text>
+						<View className="h-14 flex-row items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3">
+							<MaterialIcons name="email" size={20} color="#94a3b8" />
+							<TextInput
+								className="flex-1 text-base text-slate-900"
+								placeholder="your.email@vetclinic.com"
+								placeholderTextColor="#94a3b8"
+								//value={email}
+								//onChangeText={setEmail}
+								keyboardType="email-address"
+								autoCapitalize="none"
+							/>
+						</View>
+					</View>
+
+					{/* Password Input */}
+					<View className="gap-2">
+						<Text className="text-sm font-medium text-slate-700">Password</Text>
+						<View className="h-14 flex-row items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3">
+							<MaterialIcons name="lock" size={20} color="#94a3b8" />
+							<TextInput
+								className="flex-1 text-base text-slate-900"
+								placeholder="Enter your password"
+								placeholderTextColor="#94a3b8"
+								value={password}
+								onChangeText={setPassword}
+								//secureTextEntry={!showPassword}
+							/>
+							<TouchableOpacity /* onPress={() => setShowPassword(!showPassword)}*/>
+								<MaterialIcons
+									name={/*showPassword ?*/ 'visibility-off' /*: 'visibility'*/}
+									size={20}
+									color="#94a3b8"
+								/>
+							</TouchableOpacity>
+						</View>
+					</View>
+
+					{/* Remember Me & Forgot Password */}
+					<View className="flex-row items-center justify-between">
+						<View className="flex-row items-center gap-2">
+					
+						</View>
+						<TouchableOpacity onPress={() => {router.push('/sign-up')}}>
+							<Text className="text-sm font-medium text-emerald-600">Dont have an account?</Text>
+						</TouchableOpacity>
+					</View>
+
+					{/* Login Button */}
+					<TouchableOpacity
+						onPress={() => {}}
+						//disabled={() => {}}
+						className="h-14 flex-row items-center justify-center gap-2 rounded-lg bg-emerald-600 shadow-lg active:bg-emerald-700 disabled:opacity-50"
+					>
+						{isLoading ? (
+							<>
+								<ActivityIndicator size="small" color="white" />
+								<Text className="text-base font-semibold text-white">Signing in...</Text>
+							</>
+						) : (
+							<>
+								<Text className="text-base font-semibold text-white">Sign In</Text>
+								<MaterialIcons name="arrow-forward" size={20} color="white" />
+							</>
+						)}
+					</TouchableOpacity>
+
+					{/* Divider */}
+					<View className="flex-row items-center gap-4">
+						<View className="h-[1px] flex-1 bg-slate-200" />
+						<Text className="text-sm text-slate-500">Or continue with</Text>
+						<View className="h-[1px] flex-1 bg-slate-200" />
+					</View>
+
+					{/* OAuth Buttons */}
+					<View className="flex-row gap-3">
+						<TouchableOpacity className="h-12 flex-1 flex-row items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white active:bg-slate-50">
+							<AntDesign name="google" size={22} color="#059669" />
+							
+						</TouchableOpacity>
+
+						<TouchableOpacity className="h-12 flex-1 flex-row items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white active:bg-slate-50">
+							<MaterialIcons name="apple" size={22} color="#059669" />
+							
+						</TouchableOpacity>
+
+						<TouchableOpacity className="h-12 flex-1 flex-row items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white active:bg-slate-50">
+							<Ionicons name="logo-microsoft" size={22} color="#059669" />
+							
+						</TouchableOpacity>
+					</View>
+				</View>
+
+				{/* Security Badge */}
+				<View className="mt-6 flex-row items-center gap-2">
+					<MaterialIcons name="shield" size={16} color="#94a3b8" />
+					<Text className="text-xs text-slate-500">Secured with end-to-end encryption</Text>
 				</View>
 			</View>
-
-			<View>
-				<Button title="Sign in with Google" onPress={onPress} />
-			</View>
-		</View>
+		</SafeAreaView>
 	);
 }
