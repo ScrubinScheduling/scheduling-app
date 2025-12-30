@@ -2,14 +2,22 @@ import React, { useCallback, useEffect, useState } from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
 import { useSSO } from '@clerk/clerk-expo';
-import { View, Button, Platform, TextInput, Text, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import {
+	View,
+	Button,
+	Platform,
+	TextInput,
+	Text,
+	Image,
+	TouchableOpacity,
+	ActivityIndicator
+} from 'react-native';
 import { router, Link, useRouter, Redirect } from 'expo-router';
 import { useSignIn } from '@clerk/clerk-expo';
 import type { EmailCodeFactor } from '@clerk/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import logo from '../../../assets/logo.png';
 import { MaterialIcons, AntDesign, Ionicons } from '@expo/vector-icons';
-
 
 // Preloads the browser for Android devices to reduce authentication load time
 // See: https://docs.expo.dev/guides/authentication/#improving-user-experience
@@ -34,7 +42,8 @@ export default function Page() {
 	const [password, setPassword] = useState('');
 	const [code, setCode] = useState('');
 	const [showEmailCode, setShowEmailCode] = useState(false);
-	const [isLoading, setIsLoading] = useState(false); 
+	const [isLoading, setIsLoading] = useState(false);
+	const [showPassword, setShowPassword] = useState(false);
 
 	const onSignInPress = useCallback(async () => {
 		if (!isLoaded) return;
@@ -124,44 +133,26 @@ export default function Page() {
 	// Use the `useSSO()` hook to access the `startSSOFlow()` method
 	const { startSSOFlow } = useSSO();
 
-	const onPress = useCallback(async () => {
-		try {
-			// Start the authentication process by calling `startSSOFlow()`
-			const { createdSessionId, setActive, signIn, signUp } = await startSSOFlow({
-				strategy: 'oauth_google',
-				// For web, defaults to current path
-				// For native, you must pass a scheme, like AuthSession.makeRedirectUri({ scheme, path })
-				// For more info, see https://docs.expo.dev/versions/latest/sdk/auth-session/#authsessionmakeredirecturioptions
-				redirectUrl: AuthSession.makeRedirectUri()
-			});
-
-			// If sign in was successful, set the active session
-			if (createdSessionId) {
-				setActive!({
-					session: createdSessionId,
-					// Check for session tasks and navigate to custom UI to help users resolve them
-					// See https://clerk.com/docs/guides/development/custom-flows/overview#session-tasks
-					navigate: async ({ session }) => {
-						if (session?.currentTask) {
-							console.log(session?.currentTask);
-							router.push('/sign-in/tasks');
-							return;
-						}
-
-						router.push('/');
-					}
+	const startOAuth = useCallback(
+		async (strategy: 'oauth_google' | 'oauth_apple' | 'oauth_microsoft') => {
+			try {
+				const { createdSessionId, setActive } = await startSSOFlow({
+					strategy,
+					redirectUrl: AuthSession.makeRedirectUri()
 				});
-			} else {
-				// If there is no `createdSessionId`,
-				// there are missing requirements, such as MFA
-				// See https://clerk.com/docs/guides/development/custom-flows/authentication/oauth-connections#handle-missing-requirements
+
+				if (createdSessionId) {
+					setActive!({
+						session: createdSessionId,
+						navigate: async () => router.push('/')
+					});
+				}
+			} catch (err) {
+				console.error(JSON.stringify(err, null, 2));
 			}
-		} catch (err) {
-			// See https://clerk.com/docs/guides/development/custom-flows/error-handling
-			// for more info on error handling
-			console.error(JSON.stringify(err, null, 2));
-		}
-	}, []);
+		},
+		[startSSOFlow, router]
+	);
 
 	if (showEmailCode) {
 		return (
@@ -179,6 +170,10 @@ export default function Page() {
 				</View>
 			</SafeAreaView>
 		);
+	}
+
+	if (isLoaded) {
+		console.log(signIn?.supportedFirstFactors?.map((f) => f.strategy));
 	}
 
 	return (
@@ -209,8 +204,8 @@ export default function Page() {
 								className="flex-1 text-base text-slate-900"
 								placeholder="your.email@vetclinic.com"
 								placeholderTextColor="#94a3b8"
-								//value={email}
-								//onChangeText={setEmail}
+								value={emailAddress}
+								onChangeText={setEmailAddress}
 								keyboardType="email-address"
 								autoCapitalize="none"
 							/>
@@ -228,11 +223,12 @@ export default function Page() {
 								placeholderTextColor="#94a3b8"
 								value={password}
 								onChangeText={setPassword}
-								//secureTextEntry={!showPassword}
+								secureTextEntry={!showPassword}
+								autoCapitalize="none"
 							/>
-							<TouchableOpacity /* onPress={() => setShowPassword(!showPassword)}*/>
+							<TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
 								<MaterialIcons
-									name={/*showPassword ?*/ 'visibility-off' /*: 'visibility'*/}
+									name={showPassword ? 'visibility-off' : 'visibility'}
 									size={20}
 									color="#94a3b8"
 								/>
@@ -242,18 +238,20 @@ export default function Page() {
 
 					{/* Remember Me & Forgot Password */}
 					<View className="flex-row items-center justify-between">
-						<View className="flex-row items-center gap-2">
-					
-						</View>
-						<TouchableOpacity onPress={() => {router.push('/sign-up')}}>
+						<View className="flex-row items-center gap-2"></View>
+						<TouchableOpacity
+							onPress={() => {
+								router.push('/sign-up');
+							}}
+						>
 							<Text className="text-sm font-medium text-emerald-600">Dont have an account?</Text>
 						</TouchableOpacity>
 					</View>
 
 					{/* Login Button */}
 					<TouchableOpacity
-						onPress={() => {}}
-						//disabled={() => {}}
+						onPress={onSignInPress}
+						disabled={isLoading}
 						className="h-14 flex-row items-center justify-center gap-2 rounded-lg bg-emerald-600 shadow-lg active:bg-emerald-700 disabled:opacity-50"
 					>
 						{isLoading ? (
@@ -278,19 +276,25 @@ export default function Page() {
 
 					{/* OAuth Buttons */}
 					<View className="flex-row gap-3">
-						<TouchableOpacity className="h-12 flex-1 flex-row items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white active:bg-slate-50">
+						<TouchableOpacity
+							className="h-12 flex-1 flex-row items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white active:bg-slate-50"
+							onPress={() => startOAuth('oauth_google')}
+						>
 							<AntDesign name="google" size={22} color="#059669" />
-							
 						</TouchableOpacity>
 
-						<TouchableOpacity className="h-12 flex-1 flex-row items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white active:bg-slate-50">
+						<TouchableOpacity
+							className="h-12 flex-1 flex-row items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white active:bg-slate-50"
+							onPress={() => startOAuth('oauth_apple')}
+						>
 							<MaterialIcons name="apple" size={22} color="#059669" />
-							
 						</TouchableOpacity>
 
-						<TouchableOpacity className="h-12 flex-1 flex-row items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white active:bg-slate-50">
+						<TouchableOpacity
+							className="h-12 flex-1 flex-row items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white active:bg-slate-50"
+							onPress={() => startOAuth('oauth_microsoft')}
+						>
 							<Ionicons name="logo-microsoft" size={22} color="#059669" />
-							
 						</TouchableOpacity>
 					</View>
 				</View>
