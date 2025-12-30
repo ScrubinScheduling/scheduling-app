@@ -9,23 +9,25 @@ type StaffMember = {
 	name: string;
 	role: string;
 	shift: string;
-	color: string;
+	color: StaffAccent;
 };
 
+type StaffAccent = 'chart-1' | 'chart-2' | 'chart-3' | 'chart-4' | 'chart-5';
+
 const staff: StaffMember[] = [
-	{ name: 'Dr. Inoka Gamage', role: 'Veterinarian', shift: '8:00AM - 6:00PM', color: 'emerald' },
-	{ name: 'Sabrina Rogers', role: 'Vet Tech', shift: '10:00AM - 4:00PM', color: 'blue' },
-	{ name: 'Denae Myers', role: 'Vet Tech', shift: '8:00AM - 6:00PM', color: 'purple' },
-	{ name: 'Megan Camper', role: 'General', shift: '9:00AM - 6:00PM', color: 'orange' },
-	{ name: 'Alaina Malaina', role: 'Receptionist', shift: '8:00AM - 5:00PM', color: 'red' }
+	{ name: 'Dr. Inoka Gamage', role: 'Veterinarian', shift: '8:00AM - 6:00PM', color: 'chart-1' },
+	{ name: 'Sabrina Rogers', role: 'Vet Tech', shift: '10:00AM - 4:00PM', color: 'chart-2' },
+	{ name: 'Denae Myers', role: 'Vet Tech', shift: '8:00AM - 6:00PM', color: 'chart-3' },
+	{ name: 'Megan Camper', role: 'General', shift: '9:00AM - 6:00PM', color: 'chart-4' },
+	{ name: 'Alaina Malaina', role: 'Receptionist', shift: '8:00AM - 5:00PM', color: 'chart-5' }
 ] as const;
 
-const colorMap: Record<string, { bg: string; text: string }> = {
-  emerald: { bg: 'bg-emerald-100', text: 'text-emerald-600' },
-  blue: { bg: 'bg-blue-100', text: 'text-blue-600' },
-  purple: { bg: 'bg-purple-100', text: 'text-purple-600' },
-  orange: { bg: 'bg-orange-100', text: 'text-orange-600' },
-  red: { bg: 'bg-red-100', text: 'text-red-600' },
+const colorMap: Record<StaffAccent, { bg: string; text: string }> = {
+	'chart-1': { bg: 'bg-chart-1/15', text: 'text-chart-1' },
+	'chart-2': { bg: 'bg-chart-2/15', text: 'text-chart-2' },
+	'chart-3': { bg: 'bg-chart-3/15', text: 'text-chart-3' },
+	'chart-4': { bg: 'bg-chart-4/15', text: 'text-chart-4' },
+	'chart-5': { bg: 'bg-chart-5/15', text: 'text-chart-5' }
 };
 
 export default function Hero() {
@@ -99,7 +101,7 @@ export default function Hero() {
 					{/* Right Content */}
 					<div className="relative">
 						<div className="border-border bg-card relative overflow-hidden rounded-2xl border shadow-2xl">
-							<div className="bg-emerald-600 px-6 py-4 text-white">
+							<div className="bg-primary px-6 py-4 text-primary-foreground">
 								<div className="flex items-center justify-between">
 									<div>
 										<div className="text-sm opacity-90">Week of January 27</div>
@@ -131,7 +133,9 @@ export default function Hero() {
 											<div className="text-muted-foreground text-xs">{staff.role}</div>
 										</div>
 										<div className="shrink-0 text-right">
-											<div className="text-xs font-medium text-emerald-600">{staff.shift}</div>
+											<div className={`text-xs font-medium ${colorMap[staff.color].text}`}>
+												{staff.shift}
+											</div>
 										</div>
 									</div>
 								))}

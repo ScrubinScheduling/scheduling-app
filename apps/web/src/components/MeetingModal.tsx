@@ -368,7 +368,7 @@ export default function MeetingModal({
           </div>
 
           {error && (
-            <div className="text-sm text-red-600">
+            <div className="text-sm text-destructive">
               {error}
             </div>
           )}
@@ -382,10 +382,10 @@ export default function MeetingModal({
             >
               Cancel
             </button>
-            <div className="text-white">
+            <div>
               <button
                 type="submit"
-                className="rounded-md bg-[#3F37C9] px-4 py-2 text-sm font-medium text-white hover:bg-[#2E299A] disabled:opacity-60"
+                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
                 disabled={loading}
               >
                 {loading

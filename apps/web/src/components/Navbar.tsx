@@ -23,7 +23,7 @@ export default function Navbar({ navlinks }: { navlinks: NavLink[] }) {
 
             <div className="flex items-center gap-8">
                 <div className="flex items-center gap-2">
-                    <CalendarDays className="w-5 h-5 text-[#3F37C9]" />
+                    <CalendarDays className="w-5 h-5 text-primary" />
                     <span className="text-sm font-medium tracking-wide">Scrubin</span>
                 </div>
 

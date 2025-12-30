@@ -50,10 +50,10 @@ type Meeting = {
 
 function statusChip(status: MeetingStatus) {
   const map: Record<MeetingStatus, string> = {
-    PENDING: "bg-yellow-100 text-yellow-800",
-    FINALIZED: "bg-green-200 text-green-800",
-    CANCELLED: "bg-red-200 text-red-800",
-    RESCHEDULED: "bg-purple-200 text-purple-800",
+    PENDING: "border border-border bg-muted text-muted-foreground",
+    FINALIZED: "border border-primary/20 bg-primary/10 text-primary",
+    CANCELLED: "border border-destructive/20 bg-destructive/10 text-destructive",
+    RESCHEDULED: "border border-border bg-secondary text-secondary-foreground",
   };
   return (
     <span
@@ -240,7 +240,7 @@ export default function MeetingRequestsPage() {
         <h1 className="text-xl font-semibold text-foreground">
           Meeting Requests
         </h1>
-        <div className="text-white">
+        <div>
           <button
             type="button"
             onClick={() => {
@@ -248,7 +248,7 @@ export default function MeetingRequestsPage() {
                 setEditorMeeting(null);
                 setEditorOpen(true);
             }}
-            className="inline-flex items-center gap-2 rounded-lg px-4 py-2 bg-[#3F37C9] hover:bg-[#2E299A]"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
             >
             <Plus size={18} /> Create Meeting
             </button>
@@ -264,7 +264,7 @@ export default function MeetingRequestsPage() {
             <div className="mb-3 text-sm text-muted-foreground">Loading Meetings…</div>
           )}
           {error && (
-            <div className="mb-3 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
+            <div className="mb-3 rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               Error: {error}
             </div>
           )}
@@ -388,7 +388,7 @@ export default function MeetingRequestsPage() {
                 {/* Attendance groups */}
                 <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
                   <div>
-                    <div className="text-xs font-semibold text-green-700">
+                    <div className="text-xs font-semibold text-primary">
                       Can make it
                     </div>
                     <ul className="mt-1 space-y-0.5 text-xs text-foreground">
@@ -403,7 +403,7 @@ export default function MeetingRequestsPage() {
                   </div>
 
                   <div>
-                    <div className="text-xs font-semibold text-red-700">
+                    <div className="text-xs font-semibold text-destructive">
                       Cannot make it
                     </div>
                     <ul className="mt-1 space-y-0.5 text-xs text-foreground">
@@ -418,7 +418,7 @@ export default function MeetingRequestsPage() {
                   </div>
 
                   <div>
-                    <div className="text-xs font-semibold text-yellow-700">
+                    <div className="text-xs font-semibold text-muted-foreground">
                       Pending response
                     </div>
                     <ul className="mt-1 space-y-0.5 text-xs text-foreground">
@@ -436,12 +436,12 @@ export default function MeetingRequestsPage() {
 
               {/* Actions: only when pending */}
               {selected.status === "PENDING" && (
-                <div className="mt-6 flex flex-wrap items-center justify-end gap-2 text-white">
+                <div className="mt-6 flex flex-wrap items-center justify-end gap-2">
                   {/* Cancel */}
                   <button
                     type="button"
                     onClick={() => openStatusConfirm("CANCELLED")}
-                    className="inline-flex items-center gap-2 rounded-lg bg-red-700 px-4 py-2 text-sm font-medium hover:bg-red-800"
+                    className="inline-flex items-center gap-2 rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90"
                   >
                     Cancel Meeting
                   </button>
@@ -463,7 +463,7 @@ export default function MeetingRequestsPage() {
                         });
                         setEditorOpen(true);
                     }}
-                    className="inline-flex items-center gap-2 rounded-lg bg-purple-700 px-4 py-2 text-sm font-medium text-white hover:bg-purple-800"
+                    className="inline-flex items-center gap-2 rounded-lg bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-secondary/80"
                     >
                     Reschedule
                     </button>
@@ -472,7 +472,7 @@ export default function MeetingRequestsPage() {
                   <button
                     type="button"
                     onClick={() => openStatusConfirm("FINALIZED")}
-                    className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+                    className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                   >
                     Finalize Meeting
                   </button>
@@ -512,9 +512,9 @@ export default function MeetingRequestsPage() {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="bg-red-700 hover:bg-red-800"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              <span className="text-white">Confirm Delete</span>
+              Confirm Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -551,15 +551,13 @@ export default function MeetingRequestsPage() {
               onClick={applyStatusChange}
               className={
                 statusConfirm.action === "FINALIZED"
-                  ? "bg-green-600 hover:bg-green-700"
-                  : "bg-red-700 hover:bg-red-800"
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                  : "bg-destructive text-destructive-foreground hover:bg-destructive/90"
               }
             >
-              <span className="text-white">
-                {statusConfirm.action === "FINALIZED"
-                  ? "Confirm Finalize"
-                  : "Confirm Cancel"}
-              </span>
+              {statusConfirm.action === "FINALIZED"
+                ? "Confirm Finalize"
+                : "Confirm Cancel"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -169,7 +169,7 @@ const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen, users, wor
             </Button>
             <Button
               type="primary"
-              className="bg-[#F72585]"
+              className="!bg-primary !border-primary !text-primary-foreground hover:!bg-primary/90"
               onClick={handleSubmit}
               loading={isSubmitting ? { icon: <LoadingOutlined /> } : false}
             >

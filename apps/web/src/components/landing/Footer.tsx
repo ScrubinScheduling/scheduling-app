@@ -6,8 +6,8 @@ export default function Footer() {
 			<div className="container mx-auto px-4 lg:px-8">
 				<div className="flex flex-col items-center justify-between gap-6 md:flex-row">
 					<div className="flex items-center gap-2">
-						<div className="flex size-9 items-center justify-center rounded-lg bg-emerald-600">
-							<Calendar className="size-5 text-white" />
+						<div className="flex size-9 items-center justify-center rounded-lg bg-primary">
+							<Calendar className="size-5 text-primary-foreground" />
 						</div>
 						<span className="text-xl font-semibold"> Scrub In</span>
 					</div>

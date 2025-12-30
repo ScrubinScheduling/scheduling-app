@@ -49,8 +49,8 @@ export default function InvitationCard({ workspaceName, workspaceOwnerName, work
             <Card className="rounded-2xl shadow-lg p-4 space-y-2">
                 <CardHeader className="mt-2">
                     <div className="flex justify-center">
-                        <div className="flex items-center justify-center bg-indigo-100 rounded-full h-16 w-16 ">
-                            <CheckCircle2 className="text-indigo-600 w-8 h-8" />
+                        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                            <CheckCircle2 className="h-8 w-8 text-primary" />
 
                         </div>
                     </div>
@@ -64,8 +64,8 @@ export default function InvitationCard({ workspaceName, workspaceOwnerName, work
                 <CardContent className="space-y-4">
                     <div className="flex bg-muted rounded-lg p-4 gap-3 items-center">
 
-                        <div className="flex items-center justify-center rounded-lg h-12 w-12 bg-indigo-600 flex-shrink-0">
-                            <Building2 className="w-6 h-6 text-white" />
+                        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-primary">
+                            <Building2 className="h-6 w-6 text-primary-foreground" />
                         </div>
 
                         <div className="min-w-0 space-y-1">
@@ -92,9 +92,9 @@ export default function InvitationCard({ workspaceName, workspaceOwnerName, work
                     </div>
 
                     <div className="h-px bg-border" />
-                    <Button onClick={clickHandler} disabled={isLoading} className="hover:cursor-pointer w-full bg-indigo-600 rounded-lg px-4 py-3 transition-colors duration-200">
-                        {isLoading && <Spinner className="text-white" />}
-                        <span className="text-white">Accept</span>
+                    <Button onClick={clickHandler} disabled={isLoading} className="w-full rounded-lg bg-primary px-4 py-3 text-primary-foreground transition-colors duration-200 hover:cursor-pointer hover:bg-primary/90">
+                        {isLoading && <Spinner className="text-primary-foreground" />}
+                        Accept
                     </Button>
                 </CardContent>
                 <CardFooter>

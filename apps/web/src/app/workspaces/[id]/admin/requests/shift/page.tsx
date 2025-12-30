@@ -208,9 +208,9 @@ export default function ShiftRequestsPage() {
 
   function statusChip(status: RequestStatus) {
     const map: Record<RequestStatus, string> = {
-      pending: "bg-yellow-100 text-yellow-800",
-      approved: "bg-green-100 text-green-800",
-      denied: "bg-red-100 text-red-800",
+      pending: "border border-border bg-muted text-muted-foreground",
+      approved: "border border-primary/20 bg-primary/10 text-primary",
+      denied: "border border-destructive/20 bg-destructive/10 text-destructive",
     };
     return (
       <span
@@ -242,7 +242,7 @@ export default function ShiftRequestsPage() {
           <div className="mb-3 text-sm text-muted-foreground">Loading requests…</div>
         )}
         {error && (
-          <div className="mb-3 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
+          <div className="mb-3 rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
             Error: {error}
           </div>
         )}
@@ -392,12 +392,12 @@ export default function ShiftRequestsPage() {
             )}
 
             {/* Actions */}
-            <div className="mt-6 flex items-center justify-end gap-2 text-white">
+            <div className="mt-6 flex items-center justify-end gap-2">
               {/* Deny */}
               <button
                 type="button"
                 onClick={() => openConfirm("reject")}
-                className="inline-flex items-center gap-2 rounded-lg border bg-red-700 px-4 py-2 text-sm font-medium hover:bg-red-800"
+                className="inline-flex items-center gap-2 rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90"
               >
                 <X size={16} /> Deny
               </button>
@@ -406,7 +406,7 @@ export default function ShiftRequestsPage() {
               <button
                 type="button"
                 onClick={() => openConfirm("approve")}
-                className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
               >
                 <Check size={16} /> Approve
               </button>
@@ -444,15 +444,13 @@ export default function ShiftRequestsPage() {
               onClick={applyDecision}
               className={
                 confirm.action === "approve"
-                  ? "bg-green-600 hover:bg-green-700"
-                  : "bg-red-700 hover:bg-red-800"
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                  : "bg-destructive text-destructive-foreground hover:bg-destructive/90"
               }
             >
-              <span className="text-white">
-                {confirm.action === "approve"
-                  ? "Confirm Approve"
-                  : "Confirm Deny"}
-              </span>
+              {confirm.action === "approve"
+                ? "Confirm Approve"
+                : "Confirm Deny"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

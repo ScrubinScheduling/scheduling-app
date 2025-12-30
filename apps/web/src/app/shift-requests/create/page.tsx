@@ -49,14 +49,14 @@ export default function CreateShiftRequestPage() {
     }
 
     return (
-        <div className="max-w-md mx-auto mt-10 p-4 border rounded">
-            <h1 className="text-xl font-semibold mb-4">Create Shift Request</h1>
+        <div className="mx-auto mt-10 max-w-md rounded-lg border border-border bg-card p-4 text-foreground">
+            <h1 className="mb-4 text-xl font-semibold">Create Shift Request</h1>
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label className="block text-sm font-medium">Workspace ID</label>
                     <input
-                        className="w-full px-2 py-1 border rounded"
+                        className="w-full rounded-md border border-input bg-background px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                         type="number"
                         value={workspaceId}
                         onChange={(e) => setWorkspaceId(e.target.value)}
@@ -67,7 +67,7 @@ export default function CreateShiftRequestPage() {
                 <div>
                     <label className="block text-sm font-medium">Lended Shift ID</label>
                     <input
-                        className="w-full px-2 py-1 border rounded"
+                        className="w-full rounded-md border border-input bg-background px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                         type="number"
                         value={lendedShiftId}
                         onChange={(e) => setLendedShiftId(e.target.value)}
@@ -80,7 +80,7 @@ export default function CreateShiftRequestPage() {
                         Requested Shift ID (optional)
                     </label>
                     <input
-                        className="w-full px-2 py-1 border rounded"
+                        className="w-full rounded-md border border-input bg-background px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                         type="number"
                         value={requestedShiftId}
                         onChange={(e) => setRequestedShiftId(e.target.value)}
@@ -89,7 +89,7 @@ export default function CreateShiftRequestPage() {
 
                 <button
                     type="submit"
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                    className="rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
                 >
                     Submit
                 </button>
