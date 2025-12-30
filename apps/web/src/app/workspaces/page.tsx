@@ -49,13 +49,13 @@ export default function Page() {
     
     return (
         <div>
-            <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white">
+            <nav className="sticky top-0 z-50 border-b border-border bg-background">
                 <div className="flex h-14 items-center justify-between px-4">
                     <div className="font-semibold">Scrubin</div>
                     <UserButton />
                 </div>
             </nav>
-            <main className="min-h-screen flex flex-col bg-white">
+            <main className="min-h-screen flex flex-col bg-background">
 
                 <div className="flex flex-1 items-center justify-center px-4">
                     <div className="w-full max-w-md">

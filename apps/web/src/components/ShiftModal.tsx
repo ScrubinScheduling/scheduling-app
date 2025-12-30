@@ -155,11 +155,11 @@ function ShiftModal({user, shift, onDelete, workspaceId, isVisiable, setIsVisiab
           {/* Employee Name */}
           <div className='flex flex-col gap-5'>
             <div className='flex flex-row gap-3 items-center'>
-                <div className='p-2 bg-gray-100 rounded-lg'>
+                <div className='p-2 bg-muted rounded-lg'>
                     <UserIcon />
                 </div>
                 <div className='flex flex-col'>
-                  <span className='text-md  text-gray-600'>
+                  <span className='text-md text-muted-foreground'>
                     Employee
                   </span>
                   {isEditing ? ( 
@@ -186,11 +186,11 @@ function ShiftModal({user, shift, onDelete, workspaceId, isVisiable, setIsVisiab
 
             {/* Date */}
             <div className='flex flex-row gap-3 items-center'>
-                <div className='p-2 bg-gray-100 rounded-lg'>
+                <div className='p-2 bg-muted rounded-lg'>
                     <Calendar />
                 </div>
                 <div className='flex flex-col'>
-                  <span className='text-md text-gray-600'>
+                  <span className='text-md text-muted-foreground'>
                     Date
                   </span>
                   {isEditing ? (
@@ -209,11 +209,11 @@ function ShiftModal({user, shift, onDelete, workspaceId, isVisiable, setIsVisiab
 
             {/* Time */}
                <div className='flex flex-row gap-3 items-center'>
-                <div className='p-2 bg-gray-100 rounded-lg'>
+                <div className='p-2 bg-muted rounded-lg'>
                     <Clock9 />
                 </div>
                 <div className='flex flex-col'>
-                  <span className='text-md text-gray-600'>
+                  <span className='text-md text-muted-foreground'>
                     Time
                   </span>
                   {isEditing ? (
@@ -235,11 +235,11 @@ function ShiftModal({user, shift, onDelete, workspaceId, isVisiable, setIsVisiab
             {/* Location */}                
              {/* Time */}
             <div className='flex flex-row gap-3 items-center'>
-                <div className='p-2 bg-gray-100 rounded-lg'>
+                <div className='p-2 bg-muted rounded-lg'>
                     <MapPin />
                 </div>
                 <div className='flex flex-col'>
-                  <span className='text-md text-gray-600'>
+                  <span className='text-md text-muted-foreground'>
                     Location
                   </span>
                   <span className='text-lg font-semibold'>

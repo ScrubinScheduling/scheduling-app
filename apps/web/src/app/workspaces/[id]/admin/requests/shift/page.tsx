@@ -237,9 +237,9 @@ export default function ShiftRequestsPage() {
     <div className="flex min-h-[640px]">
       {/* Left pane: request list */}
       <aside className="w-1/2 p-4">
-        <h2 className="mb-3 text-lg font-semibold text-gray-800">Requests</h2>
+        <h2 className="mb-3 text-lg font-semibold text-foreground">Requests</h2>
         {loading && (
-          <div className="mb-3 text-sm text-gray-500">Loading requests…</div>
+          <div className="mb-3 text-sm text-muted-foreground">Loading requests…</div>
         )}
         {error && (
           <div className="mb-3 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
@@ -249,7 +249,7 @@ export default function ShiftRequestsPage() {
 
         <div className="space-y-3">
           {requests.length === 0 ? (
-            <div className="mt-10 text-center text-gray-500 italic">
+            <div className="mt-10 text-center text-muted-foreground italic">
               There are currently no requests!
             </div>
           ) : (
@@ -258,29 +258,29 @@ export default function ShiftRequestsPage() {
               const baseCard =
                 "cursor-pointer rounded-xl border p-3 transition-shadow hover:shadow-sm";
               const selectedRing = isSelected
-                ? "border-gray-900 shadow-sm"
-                : "border-gray-200";
+                ? "border-ring shadow-sm"
+                : "border-border";
 
               return (
                 <div
                   key={req.id}
-                  className={`${baseCard} ${selectedRing} bg-white`}
+                  className={`${baseCard} ${selectedRing} bg-card`}
                   onClick={() => setSelectedId(req.id)}
                 >
                   <div className="flex items-start justify-between gap-3">
                     {/* Left: icon + title */}
                     <div className="flex items-center gap-2">
-                      <div className="rounded-full bg-gray-100 p-2">
+                      <div className="rounded-full bg-muted p-2">
                         {kindIcon(req.kind)}
                       </div>
 
                       <div className="flex flex-col">
                         {req.kind === "timeoff" && (
                           <>
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-foreground">
                               {req.requesterNames.join(", ")}
                             </div>
-                            <div className="text-xs text-gray-600">
+                            <div className="text-xs text-muted-foreground">
                               Time off · {fmtRange(req.dateRange)}
                             </div>
                           </>
@@ -288,10 +288,10 @@ export default function ShiftRequestsPage() {
 
                         {req.kind === "trade" && (
                           <>
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-foreground">
                               Trade: {req.from.name} ↔ {req.to.name}
                             </div>
-                            <div className="text-xs text-gray-600">
+                            <div className="text-xs text-muted-foreground">
                               {req.from.date} ↔ {req.to.date}
                             </div>
                           </>
@@ -299,10 +299,10 @@ export default function ShiftRequestsPage() {
 
                         {req.kind === "cover" && (
                           <>
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-foreground">
                               Cover: {req.from.name} → {req.coverer.name}
                             </div>
-                            <div className="text-xs text-gray-600">
+                            <div className="text-xs text-muted-foreground">
                               {req.from.date} ({req.from.start}-{req.from.end})
                             </div>
                           </>
@@ -322,20 +322,20 @@ export default function ShiftRequestsPage() {
 
       {/* Right pane: details */}
       <section className="w-1/2 p-4">
-        <h2 className="mb-3 text-lg font-semibold text-gray-800">Details</h2>
+        <h2 className="mb-3 text-lg font-semibold text-foreground">Details</h2>
 
         {!selected ? (
-          <div className="rounded-xl border border-dashed border-gray-300 p-8 text-center text-gray-500">
+          <div className="rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">
             Select a request to see details
           </div>
         ) : (
-          <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
             <div className="mb-2 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="rounded-full bg-gray-100 p-2">
+                <div className="rounded-full bg-muted p-2">
                   {kindIcon(selected.kind)}
                 </div>
-                <div className="text-sm font-semibold text-gray-800">
+                <div className="text-sm font-semibold text-foreground">
                   {kindLabel(selected.kind)}
                 </div>
               </div>
@@ -345,14 +345,14 @@ export default function ShiftRequestsPage() {
             {/* Body */}
             {selected.kind === "timeoff" && (
               <div className="space-y-2">
-                <div className="text-base font-semibold text-gray-900">
+                <div className="text-base font-semibold text-foreground">
                   {selected.requesterNames.join(", ")}
                 </div>
-                <div className="text-sm text-gray-700">
+                <div className="text-sm text-muted-foreground">
                   Date range: {fmtRange(selected.dateRange)}
                 </div>
                 {selected.reason ? (
-                  <div className="text-sm text-gray-700">
+                  <div className="text-sm text-muted-foreground">
                     Reason: {selected.reason}
                   </div>
                 ) : null}
@@ -361,12 +361,12 @@ export default function ShiftRequestsPage() {
 
             {selected.kind === "trade" && (
               <div className="space-y-3">
-                <div className="text-sm text-gray-700">
+                <div className="text-sm text-muted-foreground">
                   <span className="font-semibold">{selected.from.name}</span> →{" "}
                   {selected.from.date} ({selected.from.start}-
                   {selected.from.end})
                 </div>
-                <div className="text-sm text-gray-700">
+                <div className="text-sm text-muted-foreground">
                   <span className="font-semibold">{selected.to.name}</span> →{" "}
                   {selected.to.date} ({selected.to.start}-{selected.to.end})
                 </div>
@@ -375,15 +375,15 @@ export default function ShiftRequestsPage() {
 
             {selected.kind === "cover" && (
               <div className="space-y-3">
-                <div className="text-sm text-gray-700">
+                <div className="text-sm text-muted-foreground">
                   <span className="font-semibold">Original owner:</span>{" "}
                   {selected.from.name}
                 </div>
-                <div className="text-sm text-gray-700">
+                <div className="text-sm text-muted-foreground">
                   <span className="font-semibold">Covering:</span>{" "}
                   {selected.coverer.name}
                 </div>
-                <div className="text-sm text-gray-700">
+                <div className="text-sm text-muted-foreground">
                   <span className="font-semibold">Shift:</span>{" "}
                   {selected.from.date} ({selected.from.start}-
                   {selected.from.end})
@@ -427,7 +427,7 @@ export default function ShiftRequestsPage() {
                 ? "Approve request?"
                 : "Deny request?"}
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-700">
+            <AlertDialogDescription className="text-muted-foreground">
               {confirm.action === "approve"
                 ? "This will mark the request as approved. You cannot change it later."
                 : "This will mark the request as denied. You cannot change it later."}
@@ -436,7 +436,7 @@ export default function ShiftRequestsPage() {
           <AlertDialogFooter>
             <AlertDialogCancel
               onClick={closeConfirm}
-              className="hover:bg-gray-300"
+              className="hover:bg-muted"
             >
               Cancel
             </AlertDialogCancel>

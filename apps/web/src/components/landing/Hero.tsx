@@ -107,9 +107,9 @@ export default function Hero() {
 									</div>
 									<Badge
 										variant={'secondary'}
-										className="gap-1.5 border-0 bg-white/50 text-white hover:bg-white/30"
+										className="gap-1.5 border-0 bg-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/30"
 									>
-										<div className="size-2 animate-pulse rounded-full bg-white" />
+										<div className="size-2 animate-pulse rounded-full bg-primary-foreground" />
 										Live
 									</Badge>
 								</div>

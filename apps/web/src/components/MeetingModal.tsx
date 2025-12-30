@@ -259,27 +259,27 @@ export default function MeetingModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Location */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1">
               Location
             </label>
             <input
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className="w-full rounded-md border border-input bg-input/20 px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-[2px] focus-visible:ring-ring/30"
               required
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1">
               Description
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm min-h-[80px]"
+              className="w-full rounded-md border border-input bg-input/20 px-3 py-2 text-sm min-h-[80px] outline-none focus-visible:border-ring focus-visible:ring-[2px] focus-visible:ring-ring/30"
             />
           </div>
 
@@ -287,7 +287,7 @@ export default function MeetingModal({
           <div className="grid grid-cols-2 gap-3">
             {/* Date */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1">
                 Date
               </label>
               <Popover>
@@ -321,7 +321,7 @@ export default function MeetingModal({
 
             {/* Time (24h, Antd) */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1">
                 Time
               </label>
               <TimePicker
@@ -336,12 +336,12 @@ export default function MeetingModal({
 
           {/* Invitees */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1">
               Invite members
             </label>
-            <div className="max-h-40 overflow-y-auto rounded-md border border-gray-300 px-3 py-2 text-sm space-y-1">
+            <div className="max-h-40 overflow-y-auto rounded-md border border-input bg-input/20 px-3 py-2 text-sm space-y-1">
               {members.length === 0 ? (
-                <div className="text-gray-400 text-xs">
+                <div className="text-muted-foreground text-xs">
                   No members found for this workspace.
                 </div>
               ) : (
@@ -359,7 +359,7 @@ export default function MeetingModal({
                         onChange={() => toggleMember(m.id)}
                       />
                       <span>{displayName}</span>
-                      <span className="text-xs text-gray-500">· {m.role}</span>
+                      <span className="text-xs text-muted-foreground">· {m.role}</span>
                     </label>
                   );
                 })
@@ -377,7 +377,7 @@ export default function MeetingModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              className="rounded-md border border-border px-4 py-2 text-sm text-foreground hover:bg-muted disabled:opacity-60"
               disabled={loading}
             >
               Cancel

@@ -256,9 +256,9 @@ export default function TeamPage() {
     return (
         <main className="p-6 max-w-6xl mx-auto">
             <header className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2 text-gray-700">
+                <div className="flex items-center gap-2 text-foreground">
                     <UsersRound />
-                    <h1 className="text-2xl font-semibold text-gray-700">
+                    <h1 className="text-2xl font-semibold text-foreground">
                         Team
                     </h1>
                 </div>
@@ -273,30 +273,30 @@ export default function TeamPage() {
             </header>
 
             {loading && (
-                <div className="p-4 text-gray-500">Loading team…</div>
+                <div className="p-4 text-muted-foreground">Loading team…</div>
             )}
             {error && !loading && (
                 <div className="p-4 text-red-600">Error: {error}</div>
             )}
 
-            <div className="overflow-x-auto rounded-2xl border border-gray-400 text-gray-500">
+            <div className="overflow-x-auto rounded-2xl border border-border text-muted-foreground">
                 <table className="min-w-full text-left">
                     <colgroup>
                         <col className="w-1/2" />
                         <col className="w-5/12" />
                         <col className="w-1/12" />
                     </colgroup>
-                    <thead className="bg-gray-300">
-                        <tr className="border-b border-gray-400">
-                            <th className="p-3 text-gray-800">Name</th>
-                            <th className="p-3 text-gray-800">Role</th>
+                    <thead className="bg-muted">
+                        <tr className="border-b border-border">
+                            <th className="p-3 text-foreground">Name</th>
+                            <th className="p-3 text-foreground">Role</th>
                             <th className="p-3"></th>
                         </tr>
                         {members.length === 0 ? (
                             <tr>
                                 <td
                                     colSpan={3}
-                                    className="p-6 text-center text-gray-500 bg-white"
+                                    className="p-6 text-center text-muted-foreground bg-card"
                                 >
                                     No team members yet. Click{" "}
                                     <span className="font-semibold">
@@ -308,14 +308,14 @@ export default function TeamPage() {
                         ) : null}
                     </thead>
 
-                    <tbody className="bg-white">
+                    <tbody className="bg-card">
                         {members.map((m) => {
                             const isOpen = expanded[m.id];
                             const detailsRowId = `row-${m.id}-details`;
 
                             return (
                                 <React.Fragment key={m.id}>
-                                    <tr className="border-t border-gray-400">
+                                    <tr className="border-t border-border">
                                         {/* CHANGED: use firstName/lastName from TeamMember (now set in mapping) */}
                                         <td className="p-3">
                                             {m.firstName} {m.lastName}
@@ -342,18 +342,18 @@ export default function TeamPage() {
                                                             ? "Collapse details"
                                                             : "Expand details"
                                                     }
-                                                    className="inline-flex items-center rounded-md px-2 py-1 hover:bg-gray-200"
+                                                    className="inline-flex items-center rounded-md px-2 py-1 hover:bg-muted"
                                                 >
                                                     {isOpen ? (
                                                         <ChevronUp
                                                             size={18}
-                                                            className="text-gray-700"
+                                                            className="text-muted-foreground"
                                                             aria-hidden="true"
                                                         />
                                                     ) : (
                                                         <ChevronDown
                                                             size={18}
-                                                            className="text-gray-700"
+                                                            className="text-muted-foreground"
                                                             aria-hidden="true"
                                                         />
                                                     )}
@@ -365,11 +365,11 @@ export default function TeamPage() {
                                     {isOpen && (
                                         <tr
                                             id={detailsRowId}
-                                            className="border-t border-gray-300 "
+                                            className="border-t border-border "
                                         >
                                             {/* Email */}
                                             <td className="p-3">
-                                                <div className="text-sm font-medium text-gray-500">
+                                                <div className="text-sm font-medium text-muted-foreground">
                                                     Email:{" "}
                                                     <span className="font-normal">
                                                         {m.email}
@@ -379,7 +379,7 @@ export default function TeamPage() {
 
                                             {/* Phone */}
                                             <td className="p-3">
-                                                <div className="text-sm font-medium text-gray-500">
+                                                <div className="text-sm font-medium text-muted-foreground">
                                                     Phone:{" "}
                                                     <span className="font-normal">
                                                         {m.phone}
@@ -424,7 +424,7 @@ export default function TeamPage() {
                                                                         confirmState.member?.lastName
                                                                     }
                                                                 </AlertDialogTitle>
-                                                                <AlertDialogDescription className="text-gray-700">
+                                                                <AlertDialogDescription className="text-muted-foreground">
                                                                     This will
                                                                     remove this
                                                                     user from
@@ -499,7 +499,7 @@ export default function TeamPage() {
                     <div className="space-y-2">
                         <label
                             htmlFor="role-input"
-                            className="block text-sm font-medium text-gray-700"
+                            className="block text-sm font-medium text-foreground"
                         >
                             Role
                         </label>

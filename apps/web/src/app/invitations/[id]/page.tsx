@@ -20,7 +20,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
         const { workspaceOwnerName, workspaceOwnerEmail, workspaceName, invitationId } = data;
 
         return (
-            <main className="min-h-screen flex flex-col bg-white">
+            <main className="min-h-screen flex flex-col bg-background">
                 <div className="flex flex-1 items-center justify-center px-4">
                     <div className="w-full max-w-md">
                         <InvitationCard

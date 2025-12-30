@@ -102,13 +102,13 @@ function MeetingRequests({ workspaceId }: { workspaceId: string }) {
         return (
             <div className="w-1/2 space-y-4">
                 {Array.from({ length: 3 }).map((_, i) => (
-                    <Card key={i} className="bg-zinc-900 border border-zinc-800 p-4 space-y-3">
-                        <Skeleton className="h-5 w-1/3 bg-zinc-800" />
-                        <Skeleton className="h-3 w-2/3 bg-zinc-800" />
-                        <Skeleton className="h-3 w-1/2 bg-zinc-800" />
+                    <Card key={i} className="bg-card border border-border p-4 space-y-3">
+                        <Skeleton className="h-5 w-1/3 bg-muted" />
+                        <Skeleton className="h-3 w-2/3 bg-muted" />
+                        <Skeleton className="h-3 w-1/2 bg-muted" />
                         <div className="flex gap-2 mt-3">
-                            <Skeleton className="h-8 w-20 bg-zinc-800" />
-                            <Skeleton className="h-8 w-20 bg-zinc-800" />
+                            <Skeleton className="h-8 w-20 bg-muted" />
+                            <Skeleton className="h-8 w-20 bg-muted" />
                         </div>
                     </Card>
                 ))}
@@ -124,26 +124,26 @@ function MeetingRequests({ workspaceId }: { workspaceId: string }) {
         );
 
     if (meetings.length === 0)
-        return <p className="text-gray-500 text-sm">No meeting requests yet.</p>;
+        return <p className="text-muted-foreground text-sm">No meeting requests yet.</p>;
 
     return (
         <div className="w-1/2 space-y-4">
             {meetings.map((m) => (
                 <Card
                     key={m.id}
-                    className="bg-zinc-900 border border-zinc-800 p-4 hover:border-zinc-700 transition-colors"
+                    className="bg-card border border-border p-4 hover:border-ring transition-colors"
                 >
                     <CardHeader className="flex justify-between items-start">
-                        <CardTitle className="text-white font-medium">{m.description}</CardTitle>
+                        <CardTitle className="text-foreground font-medium">{m.description}</CardTitle>
                         {/* Show user's response instead of meeting status */}
                         {getResponseBadge(m.userResponse ?? "PENDING")}
                     </CardHeader>
-                    <CardContent className="space-y-2 text-sm text-gray-400">
+                    <CardContent className="space-y-2 text-sm text-muted-foreground">
                         <p>
-                            <span className="font-medium text-gray-200">Location:</span> {m.location}
+                            <span className="font-medium text-foreground">Location:</span> {m.location}
                         </p>
                         <p>
-                            <span className="font-medium text-gray-200">Scheduled:</span> {m.date} – {m.time}
+                            <span className="font-medium text-foreground">Scheduled:</span> {m.date} – {m.time}
                         </p>
                         <div className="flex gap-2 pt-3">
                             <Button
@@ -201,10 +201,10 @@ function TimeOffRequests({ workspaceId }: { workspaceId: string }) {
         return (
             <div className="w-1/2 space-y-4">
                 {Array.from({ length: 3 }).map((_, i) => (
-                    <Card key={i} className="bg-zinc-900 border border-zinc-800 p-4 space-y-3">
-                        <Skeleton className="h-5 w-1/3 bg-zinc-800" />
-                        <Skeleton className="h-3 w-2/3 bg-zinc-800" />
-                        <Skeleton className="h-3 w-1/2 bg-zinc-800" />
+                    <Card key={i} className="bg-card border border-border p-4 space-y-3">
+                        <Skeleton className="h-5 w-1/3 bg-muted" />
+                        <Skeleton className="h-3 w-2/3 bg-muted" />
+                        <Skeleton className="h-3 w-1/2 bg-muted" />
                     </Card>
                 ))}
             </div>
@@ -219,7 +219,7 @@ function TimeOffRequests({ workspaceId }: { workspaceId: string }) {
         );
 
     if (timeOffRequests.length === 0)
-        return <p className="text-gray-500 text-sm">No time off requests yet.</p>;
+        return <p className="text-muted-foreground text-sm">No time off requests yet.</p>;
 
     const badge = (status: string) => {
         if (status === "approved") return <Badge className="bg-green-600">Approved</Badge>;
@@ -232,18 +232,18 @@ function TimeOffRequests({ workspaceId }: { workspaceId: string }) {
             {timeOffRequests.map((req) => (
                 <Card
                     key={req.id}
-                    className="bg-zinc-900 border border-zinc-800 p-4 hover:border-zinc-700 transition-colors"
+                    className="bg-card border border-border p-4 hover:border-ring transition-colors"
                 >
                     <CardHeader className="flex justify-between items-start">
-                        <CardTitle className="text-white font-medium">
+                        <CardTitle className="text-foreground font-medium">
                             Time Off Request: {req.requesterNames.join(", ")}
                         </CardTitle>
                         {badge(req.status)}
                     </CardHeader>
-                    <CardContent className="space-y-2 text-sm text-gray-400">
-                        <div className="rounded-md border border-zinc-700 bg-zinc-800/50 p-3">
-                            <div className="text-sm font-medium text-gray-200">Date Range</div>
-                            <div className="text-sm text-gray-400">
+                    <CardContent className="space-y-2 text-sm text-muted-foreground">
+                        <div className="rounded-md border border-border bg-muted/50 p-3">
+                            <div className="text-sm font-medium text-foreground">Date Range</div>
+                            <div className="text-sm text-muted-foreground">
                                 {req.dateRange.start} – {req.dateRange.end}
                             </div>
                         </div>
@@ -411,29 +411,28 @@ export default function Page() {
             <div className="w-full flex justify-end px-4">
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button className="flex items-center gap-2 text-white" onClick={() => setDialogOpen(true)}>
+                        <Button className="flex items-center gap-2" onClick={() => setDialogOpen(true)}>
                             <Plus />
                             New Request
                         </Button>
                     </DialogTrigger>
 
-                    <DialogContent className="bg-zinc-900 border-zinc-800 h-[450px] flex flex-col">
+                    <DialogContent className="bg-background border-border h-[450px] flex flex-col">
     {isTimeOffTab ? (
         <>
             <DialogHeader>
-                <DialogTitle className="text-white">Request Time Off</DialogTitle>
-                <DialogDescription className="text-gray-400">
+                <DialogTitle className="text-foreground">Request Time Off</DialogTitle>
+                <DialogDescription className="text-muted-foreground">
                     Submit a time off request for manager approval.
                 </DialogDescription>
             </DialogHeader>
 
             <form className="space-y-4 flex-1 flex flex-col" onSubmit={handleTimeOffSubmit}>
                 <div className="grid gap-2">
-                    <Label htmlFor="start-date" className="text-gray-200">Start Date</Label>
+                    <Label htmlFor="start-date" className="text-foreground">Start Date</Label>
                     <Input
                         id="start-date"
                         type="date"
-                        className="bg-zinc-800 border-zinc-700 text-white"
                         value={timeOffStartDate}
                         onChange={(e) => setTimeOffStartDate(e.target.value)}
                         required
@@ -441,11 +440,10 @@ export default function Page() {
                 </div>
 
                 <div className="grid gap-2">
-                    <Label htmlFor="end-date" className="text-gray-200">End Date</Label>
+                    <Label htmlFor="end-date" className="text-foreground">End Date</Label>
                     <Input
                         id="end-date"
                         type="date"
-                        className="bg-zinc-800 border-zinc-700 text-white"
                         value={timeOffEndDate}
                         onChange={(e) => setTimeOffEndDate(e.target.value)}
                         required
@@ -456,7 +454,7 @@ export default function Page() {
                     <Button
                         type="button"
                         variant="outline"
-                        className="border-zinc-700"
+                        className="border-border"
                         onClick={() => {
                             setDialogOpen(false);
                             setTimeOffStartDate('');
@@ -472,8 +470,8 @@ export default function Page() {
     ) : (
         <>
             <DialogHeader>
-                <DialogTitle className="text-white">Create a shift request</DialogTitle>
-                <DialogDescription className="text-gray-400">
+                <DialogTitle className="text-foreground">Create a shift request</DialogTitle>
+                <DialogDescription className="text-muted-foreground">
                     Request a shift trade or coverage from a teammate.
                 </DialogDescription>
             </DialogHeader>
@@ -505,9 +503,9 @@ export default function Page() {
                 }}
             >
                 <div className="grid gap-2">
-                    <Label className="text-gray-200">Request Type</Label>
+                    <Label className="text-foreground">Request Type</Label>
                     <select
-                        className="border bg-zinc-800 border-zinc-700 text-white p-2 rounded-md"
+                        className="border border-input bg-input/20 text-foreground p-2 rounded-md"
                         value={requestType}
                         onChange={(e) => setRequestType(e.target.value as 'trade' | 'cover')}
                     >
@@ -517,9 +515,9 @@ export default function Page() {
                 </div>
 
                 <div className="grid gap-2">
-                    <Label className="text-gray-200">Your Shift</Label>
+                    <Label className="text-foreground">Your Shift</Label>
                     <select
-                        className="border bg-zinc-800 border-zinc-700 text-white p-2 rounded-md"
+                        className="border border-input bg-input/20 text-foreground p-2 rounded-md"
                         value={selectedShiftId}
                         onChange={(e) => setSelectedShiftId(e.target.value)}
                         required
@@ -535,9 +533,9 @@ export default function Page() {
 
                 {requestType === 'cover' && (
                     <div className="grid gap-2">
-                        <Label className="text-gray-200">Who should cover?</Label>
+                        <Label className="text-foreground">Who should cover?</Label>
                         <select
-                            className="border bg-zinc-800 border-zinc-700 text-white p-2 rounded-md"
+                            className="border border-input bg-input/20 text-foreground p-2 rounded-md"
                             value={requestedUserId}
                             onChange={(e) => setRequestedUserId(e.target.value)}
                             required
@@ -554,9 +552,9 @@ export default function Page() {
 
                 {requestType === 'trade' && (
                     <div className="grid gap-2">
-                        <Label className="text-gray-200">Shift to trade with</Label>
+                        <Label className="text-foreground">Shift to trade with</Label>
                         <select
-                            className="border bg-zinc-800 border-zinc-700 text-white p-2 rounded-md w-full max-w-full"
+                            className="border border-input bg-input/20 text-foreground p-2 rounded-md w-full max-w-full"
                             value={requestedShiftId}
                             onChange={(e) => setRequestedShiftId(e.target.value)}
                             required
@@ -586,7 +584,7 @@ export default function Page() {
                     <Button
                         type="button"
                         variant="outline"
-                        className="border-zinc-700"
+                        className="border-border"
                         onClick={() => {
                             setDialogOpen(false);
                             setRequestType('cover');
@@ -611,25 +609,25 @@ export default function Page() {
                 value={activeTab}
                 onValueChange={setActiveTab}
             >
-                <TabsList className="bg-zinc-900 border-zinc-800">
-                    <TabsTrigger className="p-4 data-[state=active]:bg-zinc-800" value="incoming-requests">Incoming Requests</TabsTrigger>
-                    <TabsTrigger className="p-4 data-[state=active]:bg-zinc-800" value="outgoing-requests">Outgoing Requests</TabsTrigger>
-                    <TabsTrigger className="p-4 data-[state=active]:bg-zinc-800" value="meeting-requests">Meeting Requests</TabsTrigger>
-                    <TabsTrigger className="p-4 data-[state=active]:bg-zinc-800" value="time-off-requests">Time Off Requests</TabsTrigger>
+                <TabsList className="border border-border">
+                    <TabsTrigger className="p-4" value="incoming-requests">Incoming Requests</TabsTrigger>
+                    <TabsTrigger className="p-4" value="outgoing-requests">Outgoing Requests</TabsTrigger>
+                    <TabsTrigger className="p-4" value="meeting-requests">Meeting Requests</TabsTrigger>
+                    <TabsTrigger className="p-4" value="time-off-requests">Time Off Requests</TabsTrigger>
                 </TabsList>
 
                 <TabsContent className="w-full flex justify-center" value="incoming-requests">
                     <div className="w-1/2 space-y-4">
-                        {loading && <div className="text-sm text-gray-500">Loading…</div>}
+                        {loading && <div className="text-sm text-muted-foreground">Loading…</div>}
                         {error && (
                             <div className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
                                 Error: {error}
                             </div>
                         )}
                         {incoming.map((req) => (
-                            <Card key={req.id} className="bg-zinc-900 border-zinc-800 hover:border-zinc-700 hover:cursor-pointer">
+                            <Card key={req.id} className="bg-card border border-border hover:border-ring hover:cursor-pointer">
                                 <CardHeader className="flex items-center justify-between">
-                                    <CardTitle className="font-semibold text-white">
+                                    <CardTitle className="font-semibold text-foreground">
                                         {req.kind === "trade"
                                             ? `Shift Trade: ${req.from.name} ↔ ${req.to.name}`
                                             : `Cover Request: ${req.requesterNames.join(", ")}`}
@@ -650,22 +648,22 @@ export default function Page() {
                                 <CardContent className="space-y-3">
                                     {req.kind === "trade" ? (
                                         <div className="grid grid-cols-2 gap-4">
-                                            <div className="rounded-md border border-zinc-700 p-3">
-                                                <div className="text-sm font-medium text-gray-200">Giving</div>
+                                            <div className="rounded-md border border-border p-3">
+                                                <div className="text-sm font-medium text-foreground">Giving</div>
                                                 <div className="text-sm text-muted-foreground">
                                                     {req.from.date} • {req.from.start}-{req.from.end}
                                                 </div>
                                             </div>
-                                            <div className="rounded-md border border-zinc-700 p-3">
-                                                <div className="text-sm font-medium text-gray-200">Taking</div>
+                                            <div className="rounded-md border border-border p-3">
+                                                <div className="text-sm font-medium text-foreground">Taking</div>
                                                 <div className="text-sm text-muted-foreground">
                                                     {req.to.date} • {req.to.start}-{req.to.end}
                                                 </div>
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="rounded-md border border-zinc-700 p-3">
-                                            <div className="text-sm font-medium text-gray-200">Shift</div>
+                                        <div className="rounded-md border border-border p-3">
+                                            <div className="text-sm font-medium text-foreground">Shift</div>
                                             <div className="text-sm text-muted-foreground">
                                                 {new Date(req.dateRange.start).toLocaleDateString()} • {new Date(req.dateRange.end).toLocaleDateString()}
                                             </div>
@@ -697,9 +695,9 @@ export default function Page() {
                 <TabsContent className="w-full flex justify-center" value="outgoing-requests">
                     <div className="w-1/2 space-y-4">
                         {outgoing.map((req) => (
-                            <Card key={req.id} className="bg-zinc-900 border-zinc-800 hover:border-zinc-700 hover:cursor-pointer">
+                            <Card key={req.id} className="bg-card border border-border hover:border-ring hover:cursor-pointer">
                                 <CardHeader className="flex items-center justify-between">
-                                    <CardTitle className="font-semibold text-white">
+                                    <CardTitle className="font-semibold text-foreground">
                                         {req.kind === "trade"
                                             ? `Shift Trade: ${req.from.name} ↔ ${req.to.name}`
                                             : `Cover Request: ${req.requesterNames.join(", ")}`}
@@ -718,22 +716,22 @@ export default function Page() {
                                 <CardContent className="space-y-3">
                                     {req.kind === "trade" ? (
                                         <div className="grid grid-cols-2 gap-4">
-                                            <div className="rounded-md border border-zinc-700 p-3">
-                                                <div className="text-sm font-medium text-gray-200">Giving</div>
+                                            <div className="rounded-md border border-border p-3">
+                                                <div className="text-sm font-medium text-foreground">Giving</div>
                                                 <div className="text-sm text-muted-foreground">
                                                     {req.from.date} • {req.from.start}-{req.from.end}
                                                 </div>
                                             </div>
-                                            <div className="rounded-md border border-zinc-700 p-3">
-                                                <div className="text-sm font-medium text-gray-200">Taking</div>
+                                            <div className="rounded-md border border-border p-3">
+                                                <div className="text-sm font-medium text-foreground">Taking</div>
                                                 <div className="text-sm text-muted-foreground">
                                                     {req.to.date} • {req.to.start}-{req.to.end}
                                                 </div>
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="rounded-md border border-zinc-700 p-3">
-                                            <div className="text-sm font-medium text-gray-200">Shift</div>
+                                        <div className="rounded-md border border-border p-3">
+                                            <div className="text-sm font-medium text-foreground">Shift</div>
                                             <div className="text-sm text-muted-foreground">
                                                 {new Date(req.dateRange.start).toLocaleDateString()} • {new Date(req.dateRange.end).toLocaleDateString()}
                                             </div>

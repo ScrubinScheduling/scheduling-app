@@ -165,7 +165,7 @@ const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen, users, wor
           </div>
           <div className="mt-4 flex w-full justify-center gap-2">
             <Button onClick={handleCancel}>
-              <span className="text-black font-semibold">Cancel</span>
+              <span className="text-foreground font-semibold">Cancel</span>
             </Button>
             <Button
               type="primary"

@@ -51,11 +51,14 @@ export default function CreateWorkspaceCard() {
 
     return (
         <>
-            <Card onClick={() => setIsOpen(true)} className="hover:bg-gray-50 hover:cursor-pointer border border-dashed">
+            <Card
+                onClick={() => setIsOpen(true)}
+                className="hover:bg-muted/50 hover:cursor-pointer border border-dashed border-border"
+            >
                 <CardHeader className="flex items-center">
-                    <Plus className="h-4 w-4 text-gray-600" />
+                    <Plus className="h-4 w-4 text-muted-foreground" />
 
-                    <span className="text-md font-medium text-gray-600 text-left">Create Workspace</span>
+                    <span className="text-md font-medium text-muted-foreground text-left">Create Workspace</span>
                 </CardHeader>
 
             </Card>

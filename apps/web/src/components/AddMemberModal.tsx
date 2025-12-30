@@ -38,13 +38,13 @@ export default function AddMemberModal({ open, setOpen, inviteLink }: AddMemberM
 				</DialogHeader>
 
 				<div className="space-y-2">
-					<label htmlFor="invite-link-input" className="text-sm text-gray-600">
+					<label htmlFor="invite-link-input" className="text-sm text-muted-foreground">
 						Invite link
 					</label>
 
 					<div className="flex items-center gap-2">
-						<div className="flex items-center gap-2 w-full rounded-md border bg-gray-50 px-3 py-2">
-							<LinkIcon size={16} className="shrink-0" />
+						<div className="flex items-center gap-2 w-full rounded-md border border-input bg-input/20 px-3 py-2">
+							<LinkIcon size={16} className="shrink-0 text-muted-foreground" />
 							<input
 								id="invite-link-input"
 								readOnly
@@ -54,15 +54,13 @@ export default function AddMemberModal({ open, setOpen, inviteLink }: AddMemberM
 							/>
 						</div>
 
-						<div className="text-white">
-							<button
-								onClick={copyLink}
-								className="inline-flex items-center gap-2 rounded-md px-3 py-2 bg-gray-900 text-white hover:bg-gray-800"
-							>
-								<Copy size={16} />
-								{copied ? "Copied!" : "Copy"}
-							</button>
-						</div>
+						<button
+							onClick={copyLink}
+							className="inline-flex items-center gap-2 rounded-md px-3 py-2 bg-foreground text-background hover:bg-foreground/90"
+						>
+							<Copy size={16} />
+							{copied ? "Copied!" : "Copy"}
+						</button>
 					</div>
 				</div>
 			</DialogContent>

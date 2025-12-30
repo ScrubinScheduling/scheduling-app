@@ -19,12 +19,12 @@ export default function RequestsTabBar() {
   return (
     <div
       className={[
-        "w-full bg-white ",
+        "w-full bg-background ",
       ].join(" ")}
     >
       <div className="mx-auto max-w-6xl px-4 py-3 flex justify-center">
         <div role="tablist" aria-label="Requests tabs"
-             className="relative inline-flex rounded-full bg-gray-100 p-1">
+             className="relative inline-flex rounded-full bg-muted p-1">
           {tabs.map((t) => {
             const isActive = active === t.key;
             return (
@@ -33,12 +33,12 @@ export default function RequestsTabBar() {
                 href={t.href}
                 role="tab"
                 aria-selected={isActive}
-                className="relative rounded-full px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-black"
+                className="relative rounded-full px-4 py-2 text-sm font-medium text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {isActive && (
                   <motion.span
                     layoutId="requests-bubble"
-                    className="absolute inset-0 rounded-full bg-gray-300"
+                    className="absolute inset-0 rounded-full bg-accent"
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   />
                 )}

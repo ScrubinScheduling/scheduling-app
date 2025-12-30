@@ -237,7 +237,7 @@ export default function MeetingRequestsPage() {
     <main className="p-4 max-w-6xl mx-auto">
       {/* Header with Create Meeting button */}
       <header className="mb-4 flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-gray-800">
+        <h1 className="text-xl font-semibold text-foreground">
           Meeting Requests
         </h1>
         <div className="text-white">
@@ -258,10 +258,10 @@ export default function MeetingRequestsPage() {
       <div className="flex min-height-[640px] min-h-[640px]">
         {/* Left pane: meeting list */}
         <aside className="w-1/2 p-2 pr-3">
-          <h2 className="mb-3 text-lg font-semibold text-gray-800">Meetings</h2>
+          <h2 className="mb-3 text-lg font-semibold text-foreground">Meetings</h2>
 
           {loading && (
-            <div className="mb-3 text-sm text-gray-500">Loading Meetings…</div>
+            <div className="mb-3 text-sm text-muted-foreground">Loading Meetings…</div>
           )}
           {error && (
             <div className="mb-3 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
@@ -271,7 +271,7 @@ export default function MeetingRequestsPage() {
 
           <div className="space-y-3">
             {meetings.length === 0 && !loading ? (
-              <div className="mt-10 text-center text-gray-500 italic">
+              <div className="mt-10 text-center text-muted-foreground italic">
                 There are currently no meetings!
               </div>
             ) : (
@@ -280,36 +280,36 @@ export default function MeetingRequestsPage() {
                 const baseCard =
                   "relative cursor-pointer rounded-xl border p-3 transition-shadow hover:shadow-sm";
                 const selectedRing = isSelected
-                  ? "border-gray-900 shadow-sm"
-                  : "border-gray-200";
+                  ? "border-ring shadow-sm"
+                  : "border-border";
 
                 return (
                   <div
                     key={m.id}
-                    className={`${baseCard} ${selectedRing} bg-white`}
+                    className={`${baseCard} ${selectedRing} bg-card`}
                     onClick={() => setSelectedId(m.id)}
                   >
                     {/* Delete X in top-right */}
                     <button
                       type="button"
-                      className="absolute right-2 top-2 rounded-full p-1 hover:bg-gray-100"
+                      className="absolute right-2 top-2 rounded-full p-1 hover:bg-muted"
                       onClick={(e) => openDeleteConfirm(m, e)}
                       title="Delete meeting"
                     >
-                      <XIcon size={14} className="text-gray-500" />
+                      <XIcon size={14} className="text-muted-foreground" />
                     </button>
 
                     <div className="flex flex-col gap-1 pr-5">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center rounded-full bg-gray-100 p-2">
-                            <CalendarDays size={16} className="text-gray-700" />
+                          <span className="inline-flex items-center rounded-full bg-muted p-2">
+                            <CalendarDays size={16} className="text-muted-foreground" />
                           </span>
                           <div className="flex flex-col">
-                            <span className="text-sm font-semibold text-gray-900">
+                            <span className="text-sm font-semibold text-foreground">
                               {m.location}
                             </span>
-                            <span className="text-xs text-gray-600">
+                            <span className="text-xs text-muted-foreground">
                               {m.date}
                               {m.time ? ` @ ${m.time}` : ""}
                             </span>
@@ -327,25 +327,25 @@ export default function MeetingRequestsPage() {
 
         {/* Right pane: details */}
         <section className="w-1/2 p-2 pl-3">
-          <h2 className="mb-3 text-lg font-semibold text-gray-800">Details</h2>
+          <h2 className="mb-3 text-lg font-semibold text-foreground">Details</h2>
 
           {!selected ? (
-            <div className="rounded-xl border border-dashed border-gray-300 p-8 text-center text-gray-500">
+            <div className="rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">
               Select a meeting to see details
             </div>
           ) : (
-            <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
               {/* Header */}
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center rounded-full bg-gray-100 p-2">
-                    <CalendarDays size={18} className="text-gray-700" />
+                  <span className="inline-flex items-center rounded-full bg-muted p-2">
+                    <CalendarDays size={18} className="text-muted-foreground" />
                   </span>
                   <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-900">
+                    <span className="text-sm font-semibold text-foreground">
                       {selected.location}
                     </span>
-                    <span className="text-xs text-gray-600">
+                    <span className="text-xs text-muted-foreground">
                       {selected.date}
                       {selected.time ? ` @ ${selected.time}` : ""}
                     </span>
@@ -355,9 +355,9 @@ export default function MeetingRequestsPage() {
               </div>
 
               {/* Details body */}
-              <div className="space-y-3 text-sm text-gray-800">
+              <div className="space-y-3 text-sm text-foreground">
                 <div className="flex items-center gap-2">
-                  <Clock size={16} className="text-gray-500" />
+                  <Clock size={16} className="text-muted-foreground" />
                   <span>
                     <span className="font-semibold">Date/Time:</span>{" "}
                     {selected.date}
@@ -366,7 +366,7 @@ export default function MeetingRequestsPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <MapPin size={16} className="text-gray-500" />
+                  <MapPin size={16} className="text-muted-foreground" />
                   <span>
                     <span className="font-semibold">Location:</span>{" "}
                     {selected.location}
@@ -376,10 +376,10 @@ export default function MeetingRequestsPage() {
                 {selected.description && (
                   <div>
                     <div className="mb-1 flex items-center gap-2">
-                      <Users size={16} className="text-gray-500" />
+                      <Users size={16} className="text-muted-foreground" />
                       <span className="font-semibold">Description</span>
                     </div>
-                    <p className="ml-6 text-gray-700">
+                    <p className="ml-6 text-muted-foreground">
                       {selected.description}
                     </p>
                   </div>
@@ -391,9 +391,9 @@ export default function MeetingRequestsPage() {
                     <div className="text-xs font-semibold text-green-700">
                       Can make it
                     </div>
-                    <ul className="mt-1 space-y-0.5 text-xs text-gray-800">
+                    <ul className="mt-1 space-y-0.5 text-xs text-foreground">
                       {selected.attendees.yes.length === 0 ? (
-                        <li className="text-gray-400 italic">None</li>
+                        <li className="text-muted-foreground italic">None</li>
                       ) : (
                         selected.attendees.yes.map((name, idx) => (
                           <li key={idx}>{name}</li>
@@ -406,9 +406,9 @@ export default function MeetingRequestsPage() {
                     <div className="text-xs font-semibold text-red-700">
                       Cannot make it
                     </div>
-                    <ul className="mt-1 space-y-0.5 text-xs text-gray-800">
+                    <ul className="mt-1 space-y-0.5 text-xs text-foreground">
                       {selected.attendees.no.length === 0 ? (
-                        <li className="text-gray-400 italic">None</li>
+                        <li className="text-muted-foreground italic">None</li>
                       ) : (
                         selected.attendees.no.map((name, idx) => (
                           <li key={idx}>{name}</li>
@@ -421,9 +421,9 @@ export default function MeetingRequestsPage() {
                     <div className="text-xs font-semibold text-yellow-700">
                       Pending response
                     </div>
-                    <ul className="mt-1 space-y-0.5 text-xs text-gray-800">
+                    <ul className="mt-1 space-y-0.5 text-xs text-foreground">
                       {selected.attendees.pending.length === 0 ? (
-                        <li className="text-gray-400 italic">None</li>
+                        <li className="text-muted-foreground italic">None</li>
                       ) : (
                         selected.attendees.pending.map((name, idx) => (
                           <li key={idx}>{name}</li>
@@ -495,7 +495,7 @@ export default function MeetingRequestsPage() {
             <AlertDialogTitle className="font-bold">
               Delete this meeting?
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-700">
+            <AlertDialogDescription className="text-muted-foreground">
               This will permanently delete the meeting{" "}
               <span className="font-semibold">
                 {deleteConfirm.meeting?.location}
@@ -506,7 +506,7 @@ export default function MeetingRequestsPage() {
           <AlertDialogFooter>
             <AlertDialogCancel
               onClick={closeDeleteConfirm}
-              className="hover:bg-gray-300"
+              className="hover:bg-muted"
             >
               Cancel
             </AlertDialogCancel>
@@ -534,7 +534,7 @@ export default function MeetingRequestsPage() {
                 ? "Finalize this meeting?"
                 : "Cancel this meeting?"}
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-700">
+            <AlertDialogDescription className="text-muted-foreground">
               {statusConfirm.action === "FINALIZED"
                 ? "Finalizing this meeting confirms that it will go ahead as scheduled based on the current responses."
                 : "Cancelling this meeting will mark it as cancelled and notify attendees accordingly."}
@@ -543,7 +543,7 @@ export default function MeetingRequestsPage() {
           <AlertDialogFooter>
             <AlertDialogCancel
               onClick={closeStatusConfirm}
-              className="hover:bg-gray-300"
+              className="hover:bg-muted"
             >
               Cancel
             </AlertDialogCancel>
