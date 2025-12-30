@@ -262,10 +262,10 @@ export default function TeamPage() {
                         Team
                     </h1>
                 </div>
-                <div className="text-white">
+                <div>
                     <button
                         onClick={handleOpen}
-                        className="inline-flex items-center gap-2 rounded-lg px-4 py-2 bg-[#3F37C9] hover:bg-[#2E299A]"
+                        className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
                     >
                         <Plus size={18} /> Add member
                     </button>
@@ -276,7 +276,9 @@ export default function TeamPage() {
                 <div className="p-4 text-muted-foreground">Loading team…</div>
             )}
             {error && !loading && (
-                <div className="p-4 text-red-600">Error: {error}</div>
+                <div className="rounded-md border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                    Error: {error}
+                </div>
             )}
 
             <div className="overflow-x-auto rounded-2xl border border-border text-muted-foreground">
@@ -405,11 +407,9 @@ export default function TeamPage() {
 																onClick={() => openConfirm(m)}
 																disabled={m.isAdmin}   // <- NEW
 																title={m.isAdmin ? "Cannot remove workspace admin" : undefined}
-																className="inline-flex items-center rounded-lg px-3 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed"
+																className="inline-flex items-center rounded-lg bg-destructive px-3 py-2 text-destructive-foreground hover:bg-destructive/90 disabled:cursor-not-allowed disabled:opacity-60"
 															>
-																<div className="text-white">
-																	Remove
-																</div>
+																Remove
 															</button>
 														</AlertDialogTrigger>
 
@@ -440,7 +440,7 @@ export default function TeamPage() {
                                                                     onClick={
                                                                         closeConfirm
                                                                     }
-                                                                    className="hover:border-blue-500"
+                                                                    className="hover:border-ring"
                                                                 >
                                                                     Cancel
                                                                 </AlertDialogCancel>
@@ -448,12 +448,9 @@ export default function TeamPage() {
                                                                     onClick={
                                                                         confirmRemove
                                                                     }
-                                                                    className="bg-red-600 hover:bg-red-700"
+                                                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                                                 >
-                                                                    <div className="text-white">
-                                                                        Confirm
-                                                                        remove
-                                                                    </div>
+                                                                    Confirm remove
                                                                 </AlertDialogAction>
                                                             </AlertDialogFooter>
                                                         </AlertDialogContent>
@@ -510,7 +507,7 @@ export default function TeamPage() {
                             placeholder="e.g. Receptionist, Vet Assistant, Manager"
                         />
                         {roleError && (
-                            <p className="text-sm text-red-600">
+                            <p className="text-sm text-destructive">
                                 {roleError}
                             </p>
                         )}
@@ -521,12 +518,12 @@ export default function TeamPage() {
                             variant="outline"
                             onClick={closeRoleDialog}
                             disabled={roleSaving}
-							className="hover:border-blue-500"
+							className="hover:border-ring"
                         >
                             Cancel
                         </Button>
-						<div className="text-white">
-                        <Button onClick={saveRole} disabled={roleSaving} className="bg-[#3F37C9] hover:bg-[#2E299A]">
+						<div>
+                        <Button onClick={saveRole} disabled={roleSaving} className="bg-primary text-primary-foreground hover:bg-primary/90">
                             {roleSaving ? "Saving…" : "Save"}
                         </Button>
 						</div>

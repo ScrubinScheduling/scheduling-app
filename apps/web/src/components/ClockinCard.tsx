@@ -436,10 +436,13 @@ export default function ClockinCard() {
                     <div className="flex items-center gap-2">
                         <CardTitle className="text-xl font-medium">Current Shift</CardTitle>
                         {status === "active" && (
-                            <Badge variant="outline" className="bg-red-500/15 text-red-500 border-red-500/20 animate-pulse">
+                            <Badge
+                                variant="outline"
+                                className="animate-pulse border-primary/20 bg-primary/10 text-primary"
+                            >
                                 <span className="relative flex h-2 w-2 mr-1">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/60 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                                 </span>
                                 Live
                             </Badge>
@@ -465,9 +468,7 @@ export default function ClockinCard() {
                 </div>
                 <Badge
                     variant={status === "active" ? "default" : status === "break" ? "secondary" : "outline"}
-                    className={`px-3 py-1 text-xs font-medium ${
-                        status === "active" ? "bg-green-500/15 text-green-500 hover:bg-green-500/25 border-green-500/20" : ""
-                    } ${status === "break" ? "bg-yellow-500/15 text-yellow-500 hover:bg-yellow-500/25 border-yellow-500/20" : ""}`}
+                    className="px-3 py-1 text-xs font-medium"
                 >
                     {status === "scheduled" && "Upcoming"}
                     {status === "active" && "Active"}

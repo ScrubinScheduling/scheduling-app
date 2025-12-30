@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useEffect, use, useCallback } from "react";
 import AddShiftModal from "@/components/AddShiftModal";
 import dayjs, { Dayjs } from "dayjs";
-import { Spin, Button, DatePicker, Alert } from "antd";
+import { Spin, Button, DatePicker } from "antd";
 import { LoadingOutlined } from '@ant-design/icons';
 import { useApiClient } from "@/hooks/useApiClient";
 import { useSSEStream } from "@/hooks/useSSE";
@@ -134,7 +134,11 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
             <div className="flex items-center justify-between border-b border-muted py-2">
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
-                        <Button onClick={prevWeek} size="large">
+                        <Button
+                            onClick={prevWeek}
+                            size="large"
+                            className="!border-border !bg-background !text-foreground hover:!bg-muted"
+                        >
                             <ChevronLeft className="h-4 w-4" />
                         </Button>
                         <DatePicker
@@ -143,18 +147,32 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
                             onChange={(value) => onPickWeek(value, setAnchor)}
                             format={() => format(week.start, "yyyy MMMM d")}
                             size="large"
+                            className="!border-border !bg-background !text-foreground"
 
                         />
-                        <Button onClick={nextWeek} size="large">
+                        <Button
+                            onClick={nextWeek}
+                            size="large"
+                            className="!border-border !bg-background !text-foreground hover:!bg-muted"
+                        >
                             <ChevronRight className="h-4 w-4" />
                         </Button>
                     </div>
-                    <Button size="large" onClick={() => setAnchor(getToday())}>
+                    <Button
+                        size="large"
+                        onClick={() => setAnchor(getToday())}
+                        className="!border-border !bg-background !text-foreground hover:!bg-muted"
+                    >
                         Today
                     </Button>
                 </div>
                 {/* Add connection to AddModalShift */}
-                <Button size="large" type="primary" onClick={() => setIsModal(true)}>
+                <Button
+                    size="large"
+                    type="primary"
+                    onClick={() => setIsModal(true)}
+                    className="!border-primary !bg-primary !text-primary-foreground hover:!bg-primary/90"
+                >
                     Add Shifts
                 </Button>
             </div>
@@ -162,7 +180,9 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
             {/* Day headers */}
             {error && (
                 <div className="mb-3">
-                    <Alert type="error" message={error} showIcon />
+                    <div className="rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                        Error: {error}
+                    </div>
                 </div>
             )}
             <Spin spinning={isLoading} indicator={<LoadingOutlined />} size="large">
@@ -191,12 +211,14 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
                                         return (
                                             <div key={dayKey} className="p-2 min-h-[100px] flex flex-col gap-1">
                                                 {items.length === 0 ? (
-                                                    <Button type="default" className="flex-1"
-                                                    onClick={() => {
-                                                        setSelectedUser(user);
-                                                        setSelectedDay(dayjs(dayKey));
-                                                        setOpenAddShift(true); 
-                                                    }}
+                                                    <Button
+                                                        type="default"
+                                                        className="flex-1 !border-border !bg-background !text-muted-foreground hover:!bg-muted"
+                                                        onClick={() => {
+                                                            setSelectedUser(user);
+                                                            setSelectedDay(dayjs(dayKey));
+                                                            setOpenAddShift(true); 
+                                                        }}
                                                     >
                                                         <Plus />
                                                     </Button>
@@ -205,7 +227,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
                                                         <Button
                                                             key={shift.id}
                                                             type="primary"
-                                                            className="flex-1 w-full justify-start"
+                                                            className="flex-1 w-full justify-start !border-primary !bg-primary !text-primary-foreground hover:!bg-primary/90"
                                                             onClick={() => {
                                                                 setSelectedShift(shift);
                                                                 setSelectedUser(user);

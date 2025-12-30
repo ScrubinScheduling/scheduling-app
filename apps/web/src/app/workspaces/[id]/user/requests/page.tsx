@@ -89,7 +89,11 @@ function MeetingRequests({ workspaceId }: { workspaceId: string }) {
     const getResponseBadge = (response: string) => {
         switch(response) {
             case 'YES':
-                return <Badge className="bg-green-600">Accepted</Badge>;
+                return (
+                    <Badge variant="outline" className="border-primary/20 bg-primary/10 text-primary">
+                        Accepted
+                    </Badge>
+                );
             case 'NO':
                 return <Badge variant="destructive">Declined</Badge>;
             case 'PENDING':
@@ -118,7 +122,7 @@ function MeetingRequests({ workspaceId }: { workspaceId: string }) {
 
     if (error)
         return (
-            <div className="text-red-400 bg-red-950 border border-red-800 rounded-md p-4 text-sm">
+            <div className="rounded-md border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
                 Error: {error}
             </div>
         );
@@ -148,7 +152,7 @@ function MeetingRequests({ workspaceId }: { workspaceId: string }) {
                         <div className="flex gap-2 pt-3">
                             <Button
                                 size="sm"
-                                className="bg-green-600 hover:bg-green-700"
+                                className="bg-primary text-primary-foreground hover:bg-primary/90"
                                 onClick={() => handleVote(m.id, "YES")}
                                 disabled={m.userResponse === 'YES'}
                             >
@@ -213,7 +217,7 @@ function TimeOffRequests({ workspaceId }: { workspaceId: string }) {
 
     if (error)
         return (
-            <div className="text-red-400 bg-red-950 border border-red-800 rounded-md p-4 text-sm">
+            <div className="rounded-md border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
                 Error: {error}
             </div>
         );
@@ -222,7 +226,12 @@ function TimeOffRequests({ workspaceId }: { workspaceId: string }) {
         return <p className="text-muted-foreground text-sm">No time off requests yet.</p>;
 
     const badge = (status: string) => {
-        if (status === "approved") return <Badge className="bg-green-600">Approved</Badge>;
+        if (status === "approved")
+            return (
+                <Badge variant="outline" className="border-primary/20 bg-primary/10 text-primary">
+                    Approved
+                </Badge>
+            );
         if (status === "denied") return <Badge variant="destructive">Denied</Badge>;
         return <Badge variant="outline">Pending</Badge>;
     };
@@ -620,7 +629,7 @@ export default function Page() {
                     <div className="w-1/2 space-y-4">
                         {loading && <div className="text-sm text-muted-foreground">Loading…</div>}
                         {error && (
-                            <div className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
+                            <div className="rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
                                 Error: {error}
                             </div>
                         )}
