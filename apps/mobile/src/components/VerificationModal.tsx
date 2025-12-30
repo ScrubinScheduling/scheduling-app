@@ -7,19 +7,28 @@ import {
 	ActivityIndicator,
 	TextInput
 } from 'react-native';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSignUp } from '@clerk/clerk-expo';
 import { router } from 'expo-router';
 
 type ModalProps = {
 	email: string;
+	visible: boolean;
+	onClose: () => void;
 };
 
-export default function VerificationModal({ email }: ModalProps) {
+export default function VerificationModal({ email, visible, onClose }: ModalProps) {
 	const [isLoading, setIsLoading] = useState(false);
 	const { isLoaded, signUp, setActive } = useSignUp();
 	const [code, setCode] = useState('');
+	const [isResending, setIsResending] = useState(false);
+	const [resendCooldown, setResendCooldown] = useState(0);
+
+	const handleClose = () => {
+		setCode('');
+		onClose();
+	};
 
 	// Handle submission of verification form
 	const onVerifyPress = async () => {
@@ -27,6 +36,7 @@ export default function VerificationModal({ email }: ModalProps) {
 
 		try {
 			// Use the code the user provided to attempt verification
+			setIsLoading(true);
 			const signUpAttempt = await signUp.attemptEmailAddressVerification({
 				code
 			});
@@ -45,27 +55,47 @@ export default function VerificationModal({ email }: ModalProps) {
 			// See https://clerk.com/docs/guides/development/custom-flows/error-handling
 			// for more info on error handling
 			console.error(JSON.stringify(err, null, 2));
+		} finally {
+			setIsLoading(false);
 		}
 	};
+
+	const onResendPress = async () => {
+		if (!isLoaded || resendCooldown > 0 || isResending) return;
+
+		try {
+			setIsResending(true);
+			await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+
+			// Set cooldown to 60 seconds
+			setResendCooldown(60);
+		} catch (err) {
+			console.error(JSON.stringify(err, null, 2));
+		} finally {
+			setIsResending(false);
+		}
+	};
+
+	// Countdown timer for resend cooldown
+	useEffect(() => {
+		if (resendCooldown > 0) {
+			const timer = setTimeout(() => {
+				setResendCooldown(resendCooldown - 1);
+			}, 1000);
+			return () => clearTimeout(timer);
+		}
+	}, [resendCooldown]);
 	return (
-		<Modal
-			//visible={visible}
-			transparent={true}
-			animationType="fade"
-			//onRequestClose={onClose}
-		>
+		<Modal visible={visible} transparent={true} animationType="fade" onRequestClose={handleClose}>
 			{/* Backdrop */}
-			<Pressable
-				className="flex-1 bg-black/50"
-				//onPress={onClose}
-			>
+			<Pressable className="flex-1 bg-black/50" onPress={handleClose}>
 				{/* Modal Content */}
 				<View className="flex-1 items-center justify-center px-6">
 					<Pressable className="w-full max-w-md" onPress={(e) => e.stopPropagation()}>
 						{/* Close Button */}
 						<View className="mb-4 items-end">
 							<TouchableOpacity
-								//onPress={onclose}
+								onPress={handleClose}
 								className="size-10 items-center justify-center rounded-full bg-white shadow-lg"
 							>
 								<MaterialIcons name="close" size={24} color="#475569" />
@@ -135,8 +165,19 @@ export default function VerificationModal({ email }: ModalProps) {
 							{/* Resend Section */}
 							<View className="flex-row items-center justify-center gap-1">
 								<Text className="text-sm text-slate-600">Didn't receive the code?</Text>
-								<TouchableOpacity /*onPress={handleResend}*/>
-									<Text className="text-sm font-medium text-emerald-600">Resend</Text>
+								<TouchableOpacity
+									onPress={onResendPress}
+									disabled={resendCooldown > 0 || isResending}
+								>
+									{isResending ? (
+										<ActivityIndicator size="small" color="#059669" />
+									) : resendCooldown > 0 ? (
+										<Text className="text-sm font-medium text-slate-400">
+											Resend ({resendCooldown}s)
+										</Text>
+									) : (
+										<Text className="text-sm font-medium text-emerald-600">Resend</Text>
+									)}
 								</TouchableOpacity>
 							</View>
 

@@ -23,21 +23,25 @@ export default function SignUpScreen() {
 
 	const [emailAddress, setEmailAddress] = React.useState('');
 	const [password, setPassword] = React.useState('');
-	const [pendingVerification, setPendingVerification] = React.useState(false);
-	const [code, setCode] = React.useState('');
-
+	const [showVerificationModal, setShowVerificationModal] = useState(false);
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 	const [confirmPassword, setConfirmPassword] = useState('');
 	const [isLoading, setIsLoading] = useState(false);
+	const passwordsMatch = password.length > 0 && password === confirmPassword;
+
 	// Handle submission of sign-up form
 	const onSignUpPress = async () => {
 		if (!isLoaded) return;
 
-		console.log(emailAddress, password);
+		if (!passwordsMatch) {
+			console.log('Password Error');
+			return;
+		}
 
 		// Start sign-up process using email and password provided
 		try {
+			setIsLoading(true);
 			await signUp.create({
 				emailAddress,
 				password
@@ -46,23 +50,16 @@ export default function SignUpScreen() {
 			// Send user an email with verification code
 			await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
 
-			// Set 'pendingVerification' to true to display second form
 			// and capture code
-			setPendingVerification(true);
+			setShowVerificationModal(true);
 		} catch (err) {
 			// See https://clerk.com/docs/guides/development/custom-flows/error-handling
 			// for more info on error handling
 			console.error(JSON.stringify(err, null, 2));
+		} finally {
+			setIsLoading(false);
 		}
 	};
-
-	
-
-	if (pendingVerification) {
-		return (
-			<VerificationModal email={emailAddress}/>
-		);
-	}
 
 	return (
 		<SafeAreaView style={{ flex: 1 }} className="bg-slate-50">
@@ -197,6 +194,13 @@ export default function SignUpScreen() {
 					</View>
 				</View>
 			</ScrollView>
+			<VerificationModal
+				email={emailAddress}
+				visible={showVerificationModal}
+				onClose={() => {
+					setShowVerificationModal(false);
+				}}
+			/>
 		</SafeAreaView>
 	);
 }

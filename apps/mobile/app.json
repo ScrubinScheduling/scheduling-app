@@ -4,6 +4,7 @@
 		"slug": "mobile",
 		"version": "1.0.0",
 		"orientation": "portrait",
+		"scheme": "scrubez",
 		"icon": "./assets/icon.png",
 		"userInterfaceStyle": "automatic",
 		"newArchEnabled": true,

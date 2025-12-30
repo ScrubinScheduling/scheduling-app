@@ -155,10 +155,6 @@ export default function Page() {
 		);
 	}
 
-	if (isLoaded) {
-		console.log(signIn?.supportedFirstFactors?.map((f) => f.strategy));
-	}
-
 	return (
 		<SafeAreaView style={{ flex: 1 }} className="bg-slate-50">
 			<View className="mt-8 w-full flex-1 items-center px-6">
