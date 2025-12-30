@@ -10,10 +10,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSignUp } from '@clerk/clerk-expo';
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import logo from '../../../assets/logo.png';
 import { useState } from 'react';
-import { AntDesign, Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import OAuthButtons from '@/src/components/OAuthButtons';
 import VerificationModal from '@/src/components/VerificationModal';
 
