@@ -1,765 +1,826 @@
-"use client";
+'use client';
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
-import { Plus } from "lucide-react";
-import React, { useEffect, useState, useRef, useCallback } from "react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useAuth } from "@clerk/nextjs";
-import { useParams } from "next/navigation";
-import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
-import { useApiClient } from "@/hooks/useApiClient";
-import { useSSEStream } from "@/hooks/useSSE";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from '@/components/ui/dialog';
+import { Plus } from 'lucide-react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useAuth } from '@clerk/nextjs';
+import { useParams } from 'next/navigation';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
+import { useApiClient } from '@/hooks/useApiClient';
+import { useSSEStream } from '@/hooks/useSSE';
 type MeetingRequest = {
-    id: number;
-    location: string;
-    description: string;
-    date: string;
-    time: string;
-    status: string;
-    inviteMembershipIds: number[];
-    createdById: string;
-    attendees: { yes: string[]; no: string[]; pending: string[] };
-    userResponse?: string;
+  id: number;
+  location: string;
+  description: string;
+  date: string;
+  time: string;
+  status: string;
+  inviteMembershipIds: number[];
+  createdById: string;
+  attendees: { yes: string[]; no: string[]; pending: string[] };
+  userResponse?: string;
 };
 
 function MeetingRequests({ workspaceId }: { workspaceId: string }) {
-    const isMounted = useRef(true);
-    useEffect(() => {
-        isMounted.current = true;
-        return () => {
-            isMounted.current = false;
-        }
-    }, []);
-    const apiClient = useApiClient();
-
-    const [meetings, setMeetings] = useState<MeetingRequest[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-
-    const refreshMeetings = useCallback(async() => {
-        try {
-            if (!workspaceId) return;
-            setLoading(true);
-            const result = await apiClient.getMeetingsByWorkspace(workspaceId);
-            if (!isMounted.current) return;
-            setMeetings(result.meetings ?? []); 
-            setLoading(false);
-        } catch (err) {
-            console.log('Failed to fetch meetings', err);
-            setError('Failed to fetch meetings');
-        } finally {
-            setLoading(false); 
-        }
-    }, [workspaceId, apiClient]); 
-
-    useEffect(() => {
-        refreshMeetings(); 
-    }, [refreshMeetings]); 
-
-    useSSEStream(Number(workspaceId), {'meeting-updated' : () => {
-        refreshMeetings(); 
-    }})
-
-    const handleVote = async (meetingId: number, response: "YES" | "NO") => {
-        try {
-            await apiClient.respondToMeeting(workspaceId, meetingId, { response });
-            toast.success("Vote recorded");
-            refreshMeetings(); // Refresh to show updated response
-        } catch (err) {
-            console.error(err);
-            toast.error("Failed to record vote");
-        }
+  const isMounted = useRef(true);
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
     };
+  }, []);
+  const apiClient = useApiClient();
 
-    // Helper function to format badge based on user response
-    const getResponseBadge = (response: string) => {
-        switch(response) {
-            case 'YES':
-                return (
-                    <Badge variant="outline" className="border-primary/20 bg-primary/10 text-primary">
-                        Accepted
-                    </Badge>
-                );
-            case 'NO':
-                return <Badge variant="destructive">Declined</Badge>;
-            case 'PENDING':
-            default:
-                return <Badge variant="outline">Pending</Badge>;
-        }
-    };
+  const [meetings, setMeetings] = useState<MeetingRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    if (loading) {
-        return (
-            <div className="w-1/2 space-y-4">
-                {Array.from({ length: 3 }).map((_, i) => (
-                    <Card key={i} className="bg-card border border-border p-4 space-y-3">
-                        <Skeleton className="h-5 w-1/3 bg-muted" />
-                        <Skeleton className="h-3 w-2/3 bg-muted" />
-                        <Skeleton className="h-3 w-1/2 bg-muted" />
-                        <div className="flex gap-2 mt-3">
-                            <Skeleton className="h-8 w-20 bg-muted" />
-                            <Skeleton className="h-8 w-20 bg-muted" />
-                        </div>
-                    </Card>
-                ))}
-            </div>
-        );
+  const refreshMeetings = useCallback(async () => {
+    try {
+      if (!workspaceId) return;
+      setLoading(true);
+      const result = await apiClient.getMeetingsByWorkspace(workspaceId);
+      if (!isMounted.current) return;
+      setMeetings(result.meetings ?? []);
+      setLoading(false);
+    } catch (err) {
+      console.log('Failed to fetch meetings', err);
+      setError('Failed to fetch meetings');
+    } finally {
+      setLoading(false);
     }
+  }, [workspaceId, apiClient]);
 
-    if (error)
+  useEffect(() => {
+    refreshMeetings();
+  }, [refreshMeetings]);
+
+  useSSEStream(Number(workspaceId), {
+    'meeting-updated': () => {
+      refreshMeetings();
+    }
+  });
+
+  const handleVote = async (meetingId: number, response: 'YES' | 'NO') => {
+    try {
+      await apiClient.respondToMeeting(workspaceId, meetingId, { response });
+      toast.success('Vote recorded');
+      refreshMeetings(); // Refresh to show updated response
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to record vote');
+    }
+  };
+
+  // Helper function to format badge based on user response
+  const getResponseBadge = (response: string) => {
+    switch (response) {
+      case 'YES':
         return (
-            <div className="rounded-md border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
-                Error: {error}
-            </div>
+          <Badge variant="outline" className="border-primary/20 bg-primary/10 text-primary">
+            Accepted
+          </Badge>
         );
+      case 'NO':
+        return <Badge variant="destructive">Declined</Badge>;
+      case 'PENDING':
+      default:
+        return <Badge variant="outline">Pending</Badge>;
+    }
+  };
 
-    if (meetings.length === 0)
-        return <p className="text-muted-foreground text-sm">No meeting requests yet.</p>;
-
+  if (loading) {
     return (
-        <div className="w-1/2 space-y-4">
-            {meetings.map((m) => (
-                <Card
-                    key={m.id}
-                    className="bg-card border border-border p-4 hover:border-ring transition-colors"
-                >
-                    <CardHeader className="flex justify-between items-start">
-                        <CardTitle className="text-foreground font-medium">{m.description}</CardTitle>
-                        {/* Show user's response instead of meeting status */}
-                        {getResponseBadge(m.userResponse ?? "PENDING")}
-                    </CardHeader>
-                    <CardContent className="space-y-2 text-sm text-muted-foreground">
-                        <p>
-                            <span className="font-medium text-foreground">Location:</span> {m.location}
-                        </p>
-                        <p>
-                            <span className="font-medium text-foreground">Scheduled:</span> {m.date} – {m.time}
-                        </p>
-                        <div className="flex gap-2 pt-3">
-                            <Button
-                                size="sm"
-                                className="bg-primary text-primary-foreground hover:bg-primary/90"
-                                onClick={() => handleVote(m.id, "YES")}
-                                disabled={m.userResponse === 'YES'}
-                            >
-                                ✓ Yes
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => handleVote(m.id, "NO")}
-                                disabled={m.userResponse === 'NO'}
-                            >
-                                ✕ No
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
-            ))}
-        </div>
+      <div className="w-1/2 space-y-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Card key={i} className="bg-card border-border space-y-3 border p-4">
+            <Skeleton className="bg-muted h-5 w-1/3" />
+            <Skeleton className="bg-muted h-3 w-2/3" />
+            <Skeleton className="bg-muted h-3 w-1/2" />
+            <div className="mt-3 flex gap-2">
+              <Skeleton className="bg-muted h-8 w-20" />
+              <Skeleton className="bg-muted h-8 w-20" />
+            </div>
+          </Card>
+        ))}
+      </div>
     );
+  }
+
+  if (error)
+    return (
+      <div className="border-destructive/20 bg-destructive/10 text-destructive rounded-md border p-4 text-sm">
+        Error: {error}
+      </div>
+    );
+
+  if (meetings.length === 0)
+    return <p className="text-muted-foreground text-sm">No meeting requests yet.</p>;
+
+  return (
+    <div className="w-1/2 space-y-4">
+      {meetings.map((m) => (
+        <Card
+          key={m.id}
+          className="bg-card border-border hover:border-ring border p-4 transition-colors"
+        >
+          <CardHeader className="flex items-start justify-between">
+            <CardTitle className="text-foreground font-medium">{m.description}</CardTitle>
+            {/* Show user's response instead of meeting status */}
+            {getResponseBadge(m.userResponse ?? 'PENDING')}
+          </CardHeader>
+          <CardContent className="text-muted-foreground space-y-2 text-sm">
+            <p>
+              <span className="text-foreground font-medium">Location:</span> {m.location}
+            </p>
+            <p>
+              <span className="text-foreground font-medium">Scheduled:</span> {m.date} – {m.time}
+            </p>
+            <div className="flex gap-2 pt-3">
+              <Button
+                size="sm"
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={() => handleVote(m.id, 'YES')}
+                disabled={m.userResponse === 'YES'}
+              >
+                ✓ Yes
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => handleVote(m.id, 'NO')}
+                disabled={m.userResponse === 'NO'}
+              >
+                ✕ No
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
 }
 
 // 🆕 Time Off Requests Component
 function TimeOffRequests({ workspaceId }: { workspaceId: string }) {
-    const apiClient = useApiClient();
+  const apiClient = useApiClient();
 
-    const [timeOffRequests, setTimeOffRequests] = useState<{ id: string; status: string; kind: string; requesterNames: string[]; dateRange: { start: string; end: string } }[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+  const [timeOffRequests, setTimeOffRequests] = useState<
+    {
+      id: string;
+      status: string;
+      kind: string;
+      requesterNames: string[];
+      dateRange: { start: string; end: string };
+    }[]
+  >([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    const loadTimeOffRequests = useCallback(async () => {
-        try {
-            setLoading(true);
-            setError(null);
-            const result = await apiClient.getTimeOffRequests(workspaceId);
-            setTimeOffRequests(result.requests ?? []);
-        } catch (err) {
-            console.error(err);
-            setError(err instanceof Error ? err.message : "Failed to load time off requests");
-        } finally {
-            setLoading(false);
-        }
-    }, [workspaceId, apiClient]);
-
-    useEffect(() => {
-        if (!workspaceId) return;
-        loadTimeOffRequests();
-    }, [workspaceId, loadTimeOffRequests]);
-
-    if (loading) {
-        return (
-            <div className="w-1/2 space-y-4">
-                {Array.from({ length: 3 }).map((_, i) => (
-                    <Card key={i} className="bg-card border border-border p-4 space-y-3">
-                        <Skeleton className="h-5 w-1/3 bg-muted" />
-                        <Skeleton className="h-3 w-2/3 bg-muted" />
-                        <Skeleton className="h-3 w-1/2 bg-muted" />
-                    </Card>
-                ))}
-            </div>
-        );
+  const loadTimeOffRequests = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await apiClient.getTimeOffRequests(workspaceId);
+      setTimeOffRequests(result.requests ?? []);
+    } catch (err) {
+      console.error(err);
+      setError(err instanceof Error ? err.message : 'Failed to load time off requests');
+    } finally {
+      setLoading(false);
     }
+  }, [workspaceId, apiClient]);
 
-    if (error)
-        return (
-            <div className="rounded-md border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
-                Error: {error}
-            </div>
-        );
+  useEffect(() => {
+    if (!workspaceId) return;
+    loadTimeOffRequests();
+  }, [workspaceId, loadTimeOffRequests]);
 
-    if (timeOffRequests.length === 0)
-        return <p className="text-muted-foreground text-sm">No time off requests yet.</p>;
-
-    const badge = (status: string) => {
-        if (status === "approved")
-            return (
-                <Badge variant="outline" className="border-primary/20 bg-primary/10 text-primary">
-                    Approved
-                </Badge>
-            );
-        if (status === "denied") return <Badge variant="destructive">Denied</Badge>;
-        return <Badge variant="outline">Pending</Badge>;
-    };
-
+  if (loading) {
     return (
-        <div className="w-1/2 space-y-4">
-            {timeOffRequests.map((req) => (
-                <Card
-                    key={req.id}
-                    className="bg-card border border-border p-4 hover:border-ring transition-colors"
-                >
-                    <CardHeader className="flex justify-between items-start">
-                        <CardTitle className="text-foreground font-medium">
-                            Time Off Request: {req.requesterNames.join(", ")}
-                        </CardTitle>
-                        {badge(req.status)}
-                    </CardHeader>
-                    <CardContent className="space-y-2 text-sm text-muted-foreground">
-                        <div className="rounded-md border border-border bg-muted/50 p-3">
-                            <div className="text-sm font-medium text-foreground">Date Range</div>
-                            <div className="text-sm text-muted-foreground">
-                                {req.dateRange.start} – {req.dateRange.end}
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            ))}
-        </div>
+      <div className="w-1/2 space-y-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Card key={i} className="bg-card border-border space-y-3 border p-4">
+            <Skeleton className="bg-muted h-5 w-1/3" />
+            <Skeleton className="bg-muted h-3 w-2/3" />
+            <Skeleton className="bg-muted h-3 w-1/2" />
+          </Card>
+        ))}
+      </div>
     );
+  }
+
+  if (error)
+    return (
+      <div className="border-destructive/20 bg-destructive/10 text-destructive rounded-md border p-4 text-sm">
+        Error: {error}
+      </div>
+    );
+
+  if (timeOffRequests.length === 0)
+    return <p className="text-muted-foreground text-sm">No time off requests yet.</p>;
+
+  const badge = (status: string) => {
+    if (status === 'approved')
+      return (
+        <Badge variant="outline" className="border-primary/20 bg-primary/10 text-primary">
+          Approved
+        </Badge>
+      );
+    if (status === 'denied') return <Badge variant="destructive">Denied</Badge>;
+    return <Badge variant="outline">Pending</Badge>;
+  };
+
+  return (
+    <div className="w-1/2 space-y-4">
+      {timeOffRequests.map((req) => (
+        <Card
+          key={req.id}
+          className="bg-card border-border hover:border-ring border p-4 transition-colors"
+        >
+          <CardHeader className="flex items-start justify-between">
+            <CardTitle className="text-foreground font-medium">
+              Time Off Request: {req.requesterNames.join(', ')}
+            </CardTitle>
+            {badge(req.status)}
+          </CardHeader>
+          <CardContent className="text-muted-foreground space-y-2 text-sm">
+            <div className="border-border bg-muted/50 rounded-md border p-3">
+              <div className="text-foreground text-sm font-medium">Date Range</div>
+              <div className="text-muted-foreground text-sm">
+                {req.dateRange.start} – {req.dateRange.end}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
 }
 
 export default function Page() {
-    type DecisionStatus = "pending" | "approved" | "denied";
-    type BaseReq = {
-        id: string;
-        requestorId: number;
-        requestedUserId: number;
-        requestedApproval: DecisionStatus;
-        managerApproval: DecisionStatus | null;
-    };
-    type TradeReq = BaseReq & {
-        kind: "trade";
-        from: { name: string; date: string; start: string; end: string };
-        to: { name: string; date: string; start: string; end: string };
-    };
-    type TimeOffReq = BaseReq & {
-        kind: "timeoff";
-        requesterNames: string[];
-        dateRange: { start: string; end: string };
-    };
-    type AnyRequest = TradeReq | TimeOffReq;
+  type DecisionStatus = 'pending' | 'approved' | 'denied';
+  type BaseReq = {
+    id: string;
+    requestorId: number;
+    requestedUserId: number;
+    requestedApproval: DecisionStatus;
+    managerApproval: DecisionStatus | null;
+  };
+  type TradeReq = BaseReq & {
+    kind: 'trade';
+    from: { name: string; date: string; start: string; end: string };
+    to: { name: string; date: string; start: string; end: string };
+  };
+  type TimeOffReq = BaseReq & {
+    kind: 'timeoff';
+    requesterNames: string[];
+    dateRange: { start: string; end: string };
+  };
+  type AnyRequest = TradeReq | TimeOffReq;
 
-    const { userId } = useAuth();
-    const { id } = useParams<{ id: string }>();
-    const apiClient = useApiClient();
-    const isMounted = useRef(true);
+  const { userId } = useAuth();
+  const { id } = useParams<{ id: string }>();
+  const apiClient = useApiClient();
+  const isMounted = useRef(true);
 
-    const [incoming, setIncoming] = useState<AnyRequest[]>([]);
-    const [outgoing, setOutgoing] = useState<AnyRequest[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState("incoming-requests");
-    
-    // Shift request states
-    const [requestType, setRequestType] = useState<'trade' | 'cover'>('cover');
-    const [selectedShiftId, setSelectedShiftId] = useState('');
-    const [requestedShiftId, setRequestedShiftId] = useState('');
-    const [requestedUserId, setRequestedUserId] = useState('');
-    const [userShifts, setUserShifts] = useState<{ id: number; startTime: string; endTime: string }[]>([]);
-    const [workspaceUsers, setWorkspaceUsers] = useState<{ id: string; firstName: string; lastName: string }[]>([]);
-    const [allWorkspaceShifts, setAllWorkspaceShifts] = useState<{ id: number; startTime: string; endTime: string; userId: string; user?: { firstName?: string | null; lastName?: string | null } }[]>([]);
-    
-    // Time off request states
-    const [timeOffStartDate, setTimeOffStartDate] = useState('');
-    const [timeOffEndDate, setTimeOffEndDate] = useState('');
+  const [incoming, setIncoming] = useState<AnyRequest[]>([]);
+  const [outgoing, setOutgoing] = useState<AnyRequest[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('incoming-requests');
 
-    function badge(status: DecisionStatus) {
-        if (status === "approved") return <Badge variant="secondary">Approved</Badge>;
-        if (status === "denied") return <Badge variant="destructive">Denied</Badge>;
-        return <Badge variant="outline">Pending</Badge>;
-    }
+  // Shift request states
+  const [requestType, setRequestType] = useState<'trade' | 'cover'>('cover');
+  const [selectedShiftId, setSelectedShiftId] = useState('');
+  const [requestedShiftId, setRequestedShiftId] = useState('');
+  const [requestedUserId, setRequestedUserId] = useState('');
+  const [userShifts, setUserShifts] = useState<
+    { id: number; startTime: string; endTime: string }[]
+  >([]);
+  const [workspaceUsers, setWorkspaceUsers] = useState<
+    { id: string; firstName: string; lastName: string }[]
+  >([]);
+  const [allWorkspaceShifts, setAllWorkspaceShifts] = useState<
+    {
+      id: number;
+      startTime: string;
+      endTime: string;
+      userId: string;
+      user?: { firstName?: string | null; lastName?: string | null };
+    }[]
+  >([]);
 
-    useEffect(() => () => {isMounted.current = false},[]);
-    
-    useEffect(() => {
-        if (!userId) return;
-        let alive = true;
-        (async () => {
-            try {
-                setLoading(true);
-                setError(null);
-                const now = new Date();
-                const futureDate = new Date();
-                futureDate.setDate(futureDate.getDate() + 30);
-                const [incomingRes, outgoingRes, userShiftRes, membersRes, workspaceShiftsRes] = await Promise.all([
-                    apiClient.getIncomingShiftRequestsByUser(id, userId),
-                    apiClient.getOutgoingShiftRequestsByUser(id, userId),
-                    apiClient.getUserShifts(Number(id), userId, { start: now.toISOString(), end: futureDate.toISOString()}),
-                    apiClient.getWorkspaceMembers(Number(id)),
-                    apiClient.getWorkspaceShifts(Number(id), {start: now.toISOString(), end: futureDate.toISOString()})
-                ]);
-                if (!alive) return;
+  // Time off request states
+  const [timeOffStartDate, setTimeOffStartDate] = useState('');
+  const [timeOffEndDate, setTimeOffEndDate] = useState('');
 
-                const allShiftsRaw = Object.values(workspaceShiftsRes.buckets ?? {}).flatMap(userBuckets =>
-                    Array.isArray(userBuckets)
-                        ? userBuckets
-                        : Object.values(userBuckets ?? {}).flat()
-                );
+  function badge(status: DecisionStatus) {
+    if (status === 'approved') return <Badge variant="secondary">Approved</Badge>;
+    if (status === 'denied') return <Badge variant="destructive">Denied</Badge>;
+    return <Badge variant="outline">Pending</Badge>;
+  }
 
-                // Deduplicate shifts by ID using a Map
-                const uniqueShiftsMap = new Map();
+  useEffect(
+    () => () => {
+      isMounted.current = false;
+    },
+    []
+  );
 
-                allShiftsRaw.forEach(shift => {
-                    uniqueShiftsMap.set(shift.id, shift);
-                });
-                const allShifts = Array.from(uniqueShiftsMap.values());
+  useEffect(() => {
+    if (!userId) return;
+    let alive = true;
+    (async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const now = new Date();
+        const futureDate = new Date();
+        futureDate.setDate(futureDate.getDate() + 30);
+        const [incomingRes, outgoingRes, userShiftRes, membersRes, workspaceShiftsRes] =
+          await Promise.all([
+            apiClient.getIncomingShiftRequestsByUser(id, userId),
+            apiClient.getOutgoingShiftRequestsByUser(id, userId),
+            apiClient.getUserShifts(Number(id), userId, {
+              start: now.toISOString(),
+              end: futureDate.toISOString()
+            }),
+            apiClient.getWorkspaceMembers(Number(id)),
+            apiClient.getWorkspaceShifts(Number(id), {
+              start: now.toISOString(),
+              end: futureDate.toISOString()
+            })
+          ]);
+        if (!alive) return;
 
-                setIncoming((incomingRes?.requests ?? []) as AnyRequest[]);
-                setOutgoing((outgoingRes?.requests ?? []) as AnyRequest[]);
-                setUserShifts(userShiftRes.shifts);
-                setWorkspaceUsers(membersRes.members);
-                setAllWorkspaceShifts(allShifts);
-            } catch (err) {
-                if (!alive) return;
-                setError(err instanceof Error ? err.message : "Failed to load requests");
-            } finally {
-                if (!alive) return;
-                setLoading(false);
-            }
-        })();
-        return () => {
-            alive = false;
-        };
-    }, [id, apiClient, userId]);
-
-    async function approve(idStr: string) {
-        await apiClient.approveShiftRequest(id, idStr);
-        setIncoming((prev) =>
-            prev.map((r) =>
-                r.id === idStr ? { ...r, requestedApproval: "approved", managerApproval: r.managerApproval ?? "pending" } : r
-            )
+        const allShiftsRaw = Object.values(workspaceShiftsRes.buckets ?? {}).flatMap(
+          (userBuckets) =>
+            Array.isArray(userBuckets) ? userBuckets : Object.values(userBuckets ?? {}).flat()
         );
-    }
-    
-    async function reject(idStr: string) {
-        await apiClient.rejectShiftRequest(id, idStr);
-        setIncoming((prev) =>
-            prev.map((r) => (r.id === idStr ? { ...r, requestedApproval: "denied" } : r))
-        );
-    }
 
-    // Handle time off request submission
-    const handleTimeOffSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!userId) {
-            toast.error("User not authenticated");
-            return;
-        }
-        try {
-            if (!timeOffStartDate || !timeOffEndDate) {
-                toast.error('Please fill in all fields.');
-                return;
-            }
-            
-            await apiClient.createTimeOffRequest(id, {
-                userId,
-                startDate: timeOffStartDate,
-                endDate: timeOffEndDate,
-            });
+        // Deduplicate shifts by ID using a Map
+        const uniqueShiftsMap = new Map();
 
-            toast.success('Time off request created successfully.');
-            setDialogOpen(false);
-            setTimeOffStartDate('');
-            setTimeOffEndDate('');
-        } catch (err) {
-            console.error(err);
-            toast.error('Failed to create time off request.');
-        }
+        allShiftsRaw.forEach((shift) => {
+          uniqueShiftsMap.set(shift.id, shift);
+        });
+        const allShifts = Array.from(uniqueShiftsMap.values());
+
+        setIncoming((incomingRes?.requests ?? []) as AnyRequest[]);
+        setOutgoing((outgoingRes?.requests ?? []) as AnyRequest[]);
+        setUserShifts(userShiftRes.shifts);
+        setWorkspaceUsers(membersRes.members);
+        setAllWorkspaceShifts(allShifts);
+      } catch (err) {
+        if (!alive) return;
+        setError(err instanceof Error ? err.message : 'Failed to load requests');
+      } finally {
+        if (!alive) return;
+        setLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
     };
+  }, [id, apiClient, userId]);
 
-    const isTimeOffTab = activeTab === "time-off-requests";
+  async function approve(idStr: string) {
+    await apiClient.approveShiftRequest(id, idStr);
+    setIncoming((prev) =>
+      prev.map((r) =>
+        r.id === idStr
+          ? { ...r, requestedApproval: 'approved', managerApproval: r.managerApproval ?? 'pending' }
+          : r
+      )
+    );
+  }
 
-    return (
-        <main className="mt-4">
-            <div className="w-full flex justify-end px-4">
-                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="flex items-center gap-2" onClick={() => setDialogOpen(true)}>
-                            <Plus />
-                            New Request
-                        </Button>
-                    </DialogTrigger>
+  async function reject(idStr: string) {
+    await apiClient.rejectShiftRequest(id, idStr);
+    setIncoming((prev) =>
+      prev.map((r) => (r.id === idStr ? { ...r, requestedApproval: 'denied' } : r))
+    );
+  }
 
-                    <DialogContent className="bg-background border-border h-[450px] flex flex-col">
-    {isTimeOffTab ? (
-        <>
-            <DialogHeader>
-                <DialogTitle className="text-foreground">Request Time Off</DialogTitle>
-                <DialogDescription className="text-muted-foreground">
+  // Handle time off request submission
+  const handleTimeOffSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userId) {
+      toast.error('User not authenticated');
+      return;
+    }
+    try {
+      if (!timeOffStartDate || !timeOffEndDate) {
+        toast.error('Please fill in all fields.');
+        return;
+      }
+
+      await apiClient.createTimeOffRequest(id, {
+        userId,
+        startDate: timeOffStartDate,
+        endDate: timeOffEndDate
+      });
+
+      toast.success('Time off request created successfully.');
+      setDialogOpen(false);
+      setTimeOffStartDate('');
+      setTimeOffEndDate('');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to create time off request.');
+    }
+  };
+
+  const isTimeOffTab = activeTab === 'time-off-requests';
+
+  return (
+    <main className="mt-4">
+      <div className="flex w-full justify-end px-4">
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="flex items-center gap-2" onClick={() => setDialogOpen(true)}>
+              <Plus />
+              New Request
+            </Button>
+          </DialogTrigger>
+
+          <DialogContent className="bg-background border-border flex h-[450px] flex-col">
+            {isTimeOffTab ? (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="text-foreground">Request Time Off</DialogTitle>
+                  <DialogDescription className="text-muted-foreground">
                     Submit a time off request for manager approval.
-                </DialogDescription>
-            </DialogHeader>
+                  </DialogDescription>
+                </DialogHeader>
 
-            <form className="space-y-4 flex-1 flex flex-col" onSubmit={handleTimeOffSubmit}>
-                <div className="grid gap-2">
-                    <Label htmlFor="start-date" className="text-foreground">Start Date</Label>
+                <form className="flex flex-1 flex-col space-y-4" onSubmit={handleTimeOffSubmit}>
+                  <div className="grid gap-2">
+                    <Label htmlFor="start-date" className="text-foreground">
+                      Start Date
+                    </Label>
                     <Input
-                        id="start-date"
-                        type="date"
-                        value={timeOffStartDate}
-                        onChange={(e) => setTimeOffStartDate(e.target.value)}
-                        required
+                      id="start-date"
+                      type="date"
+                      value={timeOffStartDate}
+                      onChange={(e) => setTimeOffStartDate(e.target.value)}
+                      required
                     />
-                </div>
+                  </div>
 
-                <div className="grid gap-2">
-                    <Label htmlFor="end-date" className="text-foreground">End Date</Label>
+                  <div className="grid gap-2">
+                    <Label htmlFor="end-date" className="text-foreground">
+                      End Date
+                    </Label>
                     <Input
-                        id="end-date"
-                        type="date"
-                        value={timeOffEndDate}
-                        onChange={(e) => setTimeOffEndDate(e.target.value)}
-                        required
+                      id="end-date"
+                      type="date"
+                      value={timeOffEndDate}
+                      onChange={(e) => setTimeOffEndDate(e.target.value)}
+                      required
                     />
-                </div>
+                  </div>
 
-                <DialogFooter className="mt-auto">
+                  <DialogFooter className="mt-auto">
                     <Button
-                        type="button"
-                        variant="outline"
-                        className="border-border"
-                        onClick={() => {
-                            setDialogOpen(false);
-                            setTimeOffStartDate('');
-                            setTimeOffEndDate('');
-                        }}
+                      type="button"
+                      variant="outline"
+                      className="border-border"
+                      onClick={() => {
+                        setDialogOpen(false);
+                        setTimeOffStartDate('');
+                        setTimeOffEndDate('');
+                      }}
                     >
-                        Cancel
+                      Cancel
                     </Button>
                     <Button type="submit">Submit Request</Button>
-                </DialogFooter>
-            </form>
-        </>
-    ) : (
-        <>
-            <DialogHeader>
-                <DialogTitle className="text-foreground">Create a shift request</DialogTitle>
-                <DialogDescription className="text-muted-foreground">
+                  </DialogFooter>
+                </form>
+              </>
+            ) : (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="text-foreground">Create a shift request</DialogTitle>
+                  <DialogDescription className="text-muted-foreground">
                     Request a shift trade or coverage from a teammate.
-                </DialogDescription>
-            </DialogHeader>
+                  </DialogDescription>
+                </DialogHeader>
 
-            <form
-                className="space-y-4 flex-1 flex flex-col"
-                onSubmit={async (e) => {
+                <form
+                  className="flex flex-1 flex-col space-y-4"
+                  onSubmit={async (e) => {
                     e.preventDefault();
                     try {
-                        if (!selectedShiftId || (!requestedUserId && !requestedShiftId)) {
-                            throw new Error('Please fill in all fields.');
-                        }
-                        await apiClient.createShiftRequest(id, {
-                            lendedShiftId: Number(selectedShiftId),
-                            requestedShiftId: requestType === 'trade' ? Number(requestedShiftId) : null,
-                            requestedUserId: requestType === 'cover' ? requestedUserId : null,
-                        });
+                      if (!selectedShiftId || (!requestedUserId && !requestedShiftId)) {
+                        throw new Error('Please fill in all fields.');
+                      }
+                      await apiClient.createShiftRequest(id, {
+                        lendedShiftId: Number(selectedShiftId),
+                        requestedShiftId: requestType === 'trade' ? Number(requestedShiftId) : null,
+                        requestedUserId: requestType === 'cover' ? requestedUserId : null
+                      });
 
+                      setDialogOpen(false);
+                      setSelectedShiftId('');
+                      setRequestedShiftId('');
+                      setRequestedUserId('');
+                      setRequestType('cover');
+                      toast.success('Shift request created successfully.');
+                    } catch (err) {
+                      console.error(err);
+                      toast.error('Failed to create shift request.');
+                    }
+                  }}
+                >
+                  <div className="grid gap-2">
+                    <Label className="text-foreground">Request Type</Label>
+                    <select
+                      className="border-input bg-input/20 text-foreground rounded-md border p-2"
+                      value={requestType}
+                      onChange={(e) => setRequestType(e.target.value as 'trade' | 'cover')}
+                    >
+                      <option value="cover">Cover Request</option>
+                      <option value="trade">Trade Request</option>
+                    </select>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label className="text-foreground">Your Shift</Label>
+                    <select
+                      className="border-input bg-input/20 text-foreground rounded-md border p-2"
+                      value={selectedShiftId}
+                      onChange={(e) => setSelectedShiftId(e.target.value)}
+                      required
+                    >
+                      <option value="">Select your shift</option>
+                      {userShifts.map((shift) => (
+                        <option key={shift.id} value={shift.id}>
+                          {new Date(shift.startTime).toLocaleString()} –{' '}
+                          {new Date(shift.endTime).toLocaleString()}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {requestType === 'cover' && (
+                    <div className="grid gap-2">
+                      <Label className="text-foreground">Who should cover?</Label>
+                      <select
+                        className="border-input bg-input/20 text-foreground rounded-md border p-2"
+                        value={requestedUserId}
+                        onChange={(e) => setRequestedUserId(e.target.value)}
+                        required
+                      >
+                        <option value="">Select user</option>
+                        {workspaceUsers.map((user) => (
+                          <option key={user.id} value={user.id}>
+                            {user.firstName} {user.lastName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {requestType === 'trade' && (
+                    <div className="grid gap-2">
+                      <Label className="text-foreground">Shift to trade with</Label>
+                      <select
+                        className="border-input bg-input/20 text-foreground w-full max-w-full rounded-md border p-2"
+                        value={requestedShiftId}
+                        onChange={(e) => setRequestedShiftId(e.target.value)}
+                        required
+                      >
+                        <option value="">Select another shift</option>
+                        {allWorkspaceShifts
+                          .filter((s) => s.userId !== userId)
+                          .map((shift) => {
+                            const userName = shift.user
+                              ? `${shift.user.firstName || ''} ${shift.user.lastName || ''}`.trim() ||
+                                'Unknown User'
+                              : 'Unknown User';
+
+                            const startTime = new Date(shift.startTime).toLocaleString();
+                            const endTime = new Date(shift.endTime).toLocaleString();
+
+                            return (
+                              <option key={shift.id} value={shift.id}>
+                                {userName} — {startTime} to {endTime}
+                              </option>
+                            );
+                          })}
+                      </select>
+                    </div>
+                  )}
+
+                  <DialogFooter className="mt-auto">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="border-border"
+                      onClick={() => {
                         setDialogOpen(false);
+                        setRequestType('cover');
                         setSelectedShiftId('');
                         setRequestedShiftId('');
                         setRequestedUserId('');
-                        setRequestType('cover');
-                        toast.success('Shift request created successfully.');
-                    } catch (err) {
-                        console.error(err);
-                        toast.error('Failed to create shift request.');
-                    }
-                }}
-            >
-                <div className="grid gap-2">
-                    <Label className="text-foreground">Request Type</Label>
-                    <select
-                        className="border border-input bg-input/20 text-foreground p-2 rounded-md"
-                        value={requestType}
-                        onChange={(e) => setRequestType(e.target.value as 'trade' | 'cover')}
+                      }}
                     >
-                        <option value="cover">Cover Request</option>
-                        <option value="trade">Trade Request</option>
-                    </select>
-                </div>
-
-                <div className="grid gap-2">
-                    <Label className="text-foreground">Your Shift</Label>
-                    <select
-                        className="border border-input bg-input/20 text-foreground p-2 rounded-md"
-                        value={selectedShiftId}
-                        onChange={(e) => setSelectedShiftId(e.target.value)}
-                        required
-                    >
-                        <option value="">Select your shift</option>
-                        {userShifts.map((shift) => (
-                            <option key={shift.id} value={shift.id}>
-                                {new Date(shift.startTime).toLocaleString()} – {new Date(shift.endTime).toLocaleString()}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                {requestType === 'cover' && (
-                    <div className="grid gap-2">
-                        <Label className="text-foreground">Who should cover?</Label>
-                        <select
-                            className="border border-input bg-input/20 text-foreground p-2 rounded-md"
-                            value={requestedUserId}
-                            onChange={(e) => setRequestedUserId(e.target.value)}
-                            required
-                        >
-                            <option value="">Select user</option>
-                            {workspaceUsers.map((user) => (
-                                <option key={user.id} value={user.id}>
-                                    {user.firstName} {user.lastName}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                )}
-
-                {requestType === 'trade' && (
-                    <div className="grid gap-2">
-                        <Label className="text-foreground">Shift to trade with</Label>
-                        <select
-                            className="border border-input bg-input/20 text-foreground p-2 rounded-md w-full max-w-full"
-                            value={requestedShiftId}
-                            onChange={(e) => setRequestedShiftId(e.target.value)}
-                            required
-                        >
-                            <option value="">Select another shift</option>
-                            {allWorkspaceShifts
-                                .filter((s) => s.userId !== userId)
-                                .map((shift) => {
-                                    const userName = shift.user 
-                                        ? `${shift.user.firstName || ''} ${shift.user.lastName || ''}`.trim() || 'Unknown User'
-                                        : 'Unknown User';
-                                    
-                                    const startTime = new Date(shift.startTime).toLocaleString();
-                                    const endTime = new Date(shift.endTime).toLocaleString();
-                                    
-                                    return (
-                                        <option key={shift.id} value={shift.id}>
-                                            {userName} — {startTime} to {endTime}
-                                        </option>
-                                    );
-                                })}
-                        </select>
-                    </div>
-                )}
-
-                <DialogFooter className="mt-auto">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        className="border-border"
-                        onClick={() => {
-                            setDialogOpen(false);
-                            setRequestType('cover');
-                            setSelectedShiftId('');
-                            setRequestedShiftId('');
-                            setRequestedUserId('');
-                        }}
-                    >
-                        Cancel
+                      Cancel
                     </Button>
                     <Button type="submit">Create</Button>
-                </DialogFooter>
-            </form>
-        </>
-    )}
-</DialogContent>
-                </Dialog>
-            </div>
-            <Tabs 
-                className="flex w-full justify-center items-center" 
-                defaultValue="incoming-requests"
-                value={activeTab}
-                onValueChange={setActiveTab}
-            >
-                <TabsList className="border border-border">
-                    <TabsTrigger className="p-4" value="incoming-requests">Incoming Requests</TabsTrigger>
-                    <TabsTrigger className="p-4" value="outgoing-requests">Outgoing Requests</TabsTrigger>
-                    <TabsTrigger className="p-4" value="meeting-requests">Meeting Requests</TabsTrigger>
-                    <TabsTrigger className="p-4" value="time-off-requests">Time Off Requests</TabsTrigger>
-                </TabsList>
+                  </DialogFooter>
+                </form>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
+      <Tabs
+        className="flex w-full items-center justify-center"
+        defaultValue="incoming-requests"
+        value={activeTab}
+        onValueChange={setActiveTab}
+      >
+        <TabsList className="border-border border">
+          <TabsTrigger className="p-4" value="incoming-requests">
+            Incoming Requests
+          </TabsTrigger>
+          <TabsTrigger className="p-4" value="outgoing-requests">
+            Outgoing Requests
+          </TabsTrigger>
+          <TabsTrigger className="p-4" value="meeting-requests">
+            Meeting Requests
+          </TabsTrigger>
+          <TabsTrigger className="p-4" value="time-off-requests">
+            Time Off Requests
+          </TabsTrigger>
+        </TabsList>
 
-                <TabsContent className="w-full flex justify-center" value="incoming-requests">
-                    <div className="w-1/2 space-y-4">
-                        {loading && <div className="text-sm text-muted-foreground">Loading…</div>}
-                        {error && (
-                            <div className="rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                                Error: {error}
-                            </div>
-                        )}
-                        {incoming.map((req) => (
-                            <Card key={req.id} className="bg-card border border-border hover:border-ring hover:cursor-pointer">
-                                <CardHeader className="flex items-center justify-between">
-                                    <CardTitle className="font-semibold text-foreground">
-                                        {req.kind === "trade"
-                                            ? `Shift Trade: ${req.from.name} ↔ ${req.to.name}`
-                                            : `Cover Request: ${req.requesterNames.join(", ")}`}
-                                    </CardTitle>
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                            <span>You:</span>
-                                            {badge(req.requestedApproval)}
-                                        </div>
-                                        {req.requestedApproval === "approved" && req.managerApproval && (
-                                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                                <span>Manager:</span>
-                                                {badge(req.managerApproval)}
-                                            </div>
-                                        )}
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="space-y-3">
-                                    {req.kind === "trade" ? (
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="rounded-md border border-border p-3">
-                                                <div className="text-sm font-medium text-foreground">Giving</div>
-                                                <div className="text-sm text-muted-foreground">
-                                                    {req.from.date} • {req.from.start}-{req.from.end}
-                                                </div>
-                                            </div>
-                                            <div className="rounded-md border border-border p-3">
-                                                <div className="text-sm font-medium text-foreground">Taking</div>
-                                                <div className="text-sm text-muted-foreground">
-                                                    {req.to.date} • {req.to.start}-{req.to.end}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="rounded-md border border-border p-3">
-                                            <div className="text-sm font-medium text-foreground">Shift</div>
-                                            <div className="text-sm text-muted-foreground">
-                                                {new Date(req.dateRange.start).toLocaleDateString()} • {new Date(req.dateRange.end).toLocaleDateString()}
-                                            </div>
-                                        </div>
-                                    )}
-                                    <div className="flex items-center gap-2">
-                                        <Button
-                                            size="sm"
-                                            onClick={() => approve(req.id)}
-                                            disabled={req.requestedApproval !== "pending"}
-                                        >
-                                            Approve
-                                        </Button>
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() => reject(req.id)}
-                                            disabled={req.requestedApproval !== "pending"}
-                                        >
-                                            Reject
-                                        </Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
+        <TabsContent className="flex w-full justify-center" value="incoming-requests">
+          <div className="w-1/2 space-y-4">
+            {loading && <div className="text-muted-foreground text-sm">Loading…</div>}
+            {error && (
+              <div className="border-destructive/20 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm">
+                Error: {error}
+              </div>
+            )}
+            {incoming.map((req) => (
+              <Card
+                key={req.id}
+                className="bg-card border-border hover:border-ring border hover:cursor-pointer"
+              >
+                <CardHeader className="flex items-center justify-between">
+                  <CardTitle className="text-foreground font-semibold">
+                    {req.kind === 'trade'
+                      ? `Shift Trade: ${req.from.name} ↔ ${req.to.name}`
+                      : `Cover Request: ${req.requesterNames.join(', ')}`}
+                  </CardTitle>
+                  <div className="flex items-center gap-3">
+                    <div className="text-muted-foreground flex items-center gap-1 text-xs">
+                      <span>You:</span>
+                      {badge(req.requestedApproval)}
                     </div>
-                </TabsContent>
-
-                <TabsContent className="w-full flex justify-center" value="outgoing-requests">
-                    <div className="w-1/2 space-y-4">
-                        {outgoing.map((req) => (
-                            <Card key={req.id} className="bg-card border border-border hover:border-ring hover:cursor-pointer">
-                                <CardHeader className="flex items-center justify-between">
-                                    <CardTitle className="font-semibold text-foreground">
-                                        {req.kind === "trade"
-                                            ? `Shift Trade: ${req.from.name} ↔ ${req.to.name}`
-                                            : `Cover Request: ${req.requesterNames.join(", ")}`}
-                                    </CardTitle>
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                            <span>You:</span>
-                                            {badge(req.requestedApproval)}
-                                        </div>
-                                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                            <span>Manager:</span>
-                                            {req.managerApproval ? badge(req.managerApproval) : <Badge variant="outline">Pending</Badge>}
-                                        </div>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="space-y-3">
-                                    {req.kind === "trade" ? (
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="rounded-md border border-border p-3">
-                                                <div className="text-sm font-medium text-foreground">Giving</div>
-                                                <div className="text-sm text-muted-foreground">
-                                                    {req.from.date} • {req.from.start}-{req.from.end}
-                                                </div>
-                                            </div>
-                                            <div className="rounded-md border border-border p-3">
-                                                <div className="text-sm font-medium text-foreground">Taking</div>
-                                                <div className="text-sm text-muted-foreground">
-                                                    {req.to.date} • {req.to.start}-{req.to.end}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="rounded-md border border-border p-3">
-                                            <div className="text-sm font-medium text-foreground">Shift</div>
-                                            <div className="text-sm text-muted-foreground">
-                                                {new Date(req.dateRange.start).toLocaleDateString()} • {new Date(req.dateRange.end).toLocaleDateString()}
-                                            </div>
-                                        </div>
-                                    )}
-                                </CardContent>
-                            </Card>
-                        ))}
+                    {req.requestedApproval === 'approved' && req.managerApproval && (
+                      <div className="text-muted-foreground flex items-center gap-1 text-xs">
+                        <span>Manager:</span>
+                        {badge(req.managerApproval)}
+                      </div>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {req.kind === 'trade' ? (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="border-border rounded-md border p-3">
+                        <div className="text-foreground text-sm font-medium">Giving</div>
+                        <div className="text-muted-foreground text-sm">
+                          {req.from.date} • {req.from.start}-{req.from.end}
+                        </div>
+                      </div>
+                      <div className="border-border rounded-md border p-3">
+                        <div className="text-foreground text-sm font-medium">Taking</div>
+                        <div className="text-muted-foreground text-sm">
+                          {req.to.date} • {req.to.start}-{req.to.end}
+                        </div>
+                      </div>
                     </div>
-                </TabsContent>
+                  ) : (
+                    <div className="border-border rounded-md border p-3">
+                      <div className="text-foreground text-sm font-medium">Shift</div>
+                      <div className="text-muted-foreground text-sm">
+                        {new Date(req.dateRange.start).toLocaleDateString()} •{' '}
+                        {new Date(req.dateRange.end).toLocaleDateString()}
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => approve(req.id)}
+                      disabled={req.requestedApproval !== 'pending'}
+                    >
+                      Approve
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => reject(req.id)}
+                      disabled={req.requestedApproval !== 'pending'}
+                    >
+                      Reject
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
 
-                <TabsContent className="w-full flex justify-center" value="meeting-requests">
-                    <MeetingRequests workspaceId={id} />
-                </TabsContent>
+        <TabsContent className="flex w-full justify-center" value="outgoing-requests">
+          <div className="w-1/2 space-y-4">
+            {outgoing.map((req) => (
+              <Card
+                key={req.id}
+                className="bg-card border-border hover:border-ring border hover:cursor-pointer"
+              >
+                <CardHeader className="flex items-center justify-between">
+                  <CardTitle className="text-foreground font-semibold">
+                    {req.kind === 'trade'
+                      ? `Shift Trade: ${req.from.name} ↔ ${req.to.name}`
+                      : `Cover Request: ${req.requesterNames.join(', ')}`}
+                  </CardTitle>
+                  <div className="flex items-center gap-3">
+                    <div className="text-muted-foreground flex items-center gap-1 text-xs">
+                      <span>You:</span>
+                      {badge(req.requestedApproval)}
+                    </div>
+                    <div className="text-muted-foreground flex items-center gap-1 text-xs">
+                      <span>Manager:</span>
+                      {req.managerApproval ? (
+                        badge(req.managerApproval)
+                      ) : (
+                        <Badge variant="outline">Pending</Badge>
+                      )}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {req.kind === 'trade' ? (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="border-border rounded-md border p-3">
+                        <div className="text-foreground text-sm font-medium">Giving</div>
+                        <div className="text-muted-foreground text-sm">
+                          {req.from.date} • {req.from.start}-{req.from.end}
+                        </div>
+                      </div>
+                      <div className="border-border rounded-md border p-3">
+                        <div className="text-foreground text-sm font-medium">Taking</div>
+                        <div className="text-muted-foreground text-sm">
+                          {req.to.date} • {req.to.start}-{req.to.end}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="border-border rounded-md border p-3">
+                      <div className="text-foreground text-sm font-medium">Shift</div>
+                      <div className="text-muted-foreground text-sm">
+                        {new Date(req.dateRange.start).toLocaleDateString()} •{' '}
+                        {new Date(req.dateRange.end).toLocaleDateString()}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
 
-                <TabsContent className="w-full flex justify-center" value="time-off-requests">
-                    {userId && <TimeOffRequests workspaceId={id} />}
-                </TabsContent>
-            </Tabs>
-        </main>
-    );
+        <TabsContent className="flex w-full justify-center" value="meeting-requests">
+          <MeetingRequests workspaceId={id} />
+        </TabsContent>
+
+        <TabsContent className="flex w-full justify-center" value="time-off-requests">
+          {userId && <TimeOffRequests workspaceId={id} />}
+        </TabsContent>
+      </Tabs>
+    </main>
+  );
 }

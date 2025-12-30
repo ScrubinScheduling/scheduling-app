@@ -5,14 +5,14 @@ import { useAuth } from '@clerk/clerk-expo';
 import { createApiClient } from '@scrubin/api-client';
 
 export function useApiClient() {
-	const { getToken } = useAuth();
+  const { getToken } = useAuth();
 
-	return useMemo(
-		() =>
-			createApiClient({
-				baseUrl: 'http://localhost:4000',
-				getToken
-			}),
-		[getToken]
-	);
+  return useMemo(
+    () =>
+      createApiClient({
+        baseUrl: 'http://localhost:4000',
+        getToken
+      }),
+    [getToken]
+  );
 }

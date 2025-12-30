@@ -1,45 +1,45 @@
-"use client";
+'use client';
 
-import "antd/dist/reset.css";
-import React from "react";
-import { useAuth } from "@clerk/nextjs";
-import { useParams } from "next/navigation";
+import 'antd/dist/reset.css';
+import React from 'react';
+import { useAuth } from '@clerk/nextjs';
+import { useParams } from 'next/navigation';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { Calendar as CalendarIcon } from "lucide-react";
+  DialogFooter
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { Calendar as CalendarIcon } from 'lucide-react';
 
-import dayjs, { Dayjs } from "dayjs";
-import { TimePicker } from "antd";
+import dayjs, { Dayjs } from 'dayjs';
+import { TimePicker } from 'antd';
 
-import { type MemberApi } from "@scrubin/schemas";
+import { type MemberApi } from '@scrubin/schemas';
 
 type MemberOption = {
-  id: string;            // UserWorkspaceMembership.id (stringified)
-  userId: string;        // User.id (Clerk)
+  id: string; // UserWorkspaceMembership.id (stringified)
+  userId: string; // User.id (Clerk)
   firstName: string;
   lastName: string;
   role: string;
 };
 
-type ModalMode = "create" | "edit";
+type ModalMode = 'create' | 'edit';
 
 export type MeetingForModal = {
   id: string;
   location: string;
   description: string;
   date: string;
-  time: string;                // "HH:MM"
+  time: string; // "HH:MM"
   inviteMembershipIds: number[];
-  createdById: string;         // User.id (Clerk)
+  createdById: string; // User.id (Clerk)
 };
 
 type Props = {
@@ -52,18 +52,12 @@ type Props = {
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL as string;
 
-export default function MeetingModal({
-  open,
-  mode,
-  meeting,
-  onClose,
-  onSaved,
-}: Props) {
+export default function MeetingModal({ open, mode, meeting, onClose, onSaved }: Props) {
   const { getToken, userId: currentUserId } = useAuth();
   const { id: workspaceId } = useParams<{ id: string }>();
 
-  const [location, setLocation] = React.useState("");
-  const [description, setDescription] = React.useState("");
+  const [location, setLocation] = React.useState('');
+  const [description, setDescription] = React.useState('');
   const [selectedDate, setSelectedDate] = React.useState<Date | null>(null);
   const [time, setTime] = React.useState<Dayjs | null>(null);
   const [selectedMemberIds, setSelectedMemberIds] = React.useState<string[]>([]);
@@ -80,34 +74,29 @@ export default function MeetingModal({
         setError(null);
         const token = await getToken();
         const res = await fetch(`${API}/workspaces/${workspaceId}/users`, {
-          headers: { Authorization: `Bearer ${token ?? ""}` },
+          headers: { Authorization: `Bearer ${token ?? ''}` }
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
 
         // Clerk user id of the creator
-        const creatorUserId =
-          mode === "edit" && meeting ? meeting.createdById : currentUserId;
-          
-        const mapped: MemberOption[] = (data.members  as MemberApi[]?? [])
+        const creatorUserId = mode === 'edit' && meeting ? meeting.createdById : currentUserId;
+
+        const mapped: MemberOption[] = ((data.members as MemberApi[]) ?? [])
           .map((m) => ({
             // membershipId (if backend sends it) or fallback to user id
             id: String(m.membershipId ?? m.id),
             userId: String(m.userId ?? m.id),
-            firstName: m.firstName ?? "",
-            lastName: m.lastName ?? "",
-            role: m.role ?? "Member",
+            firstName: m.firstName ?? '',
+            lastName: m.lastName ?? '',
+            role: m.role ?? 'Member'
           }))
           // filter out the creator by userId, not membershipId
-          .filter((m) =>
-            creatorUserId ? String(m.userId) !== String(creatorUserId) : true
-          );
+          .filter((m) => (creatorUserId ? String(m.userId) !== String(creatorUserId) : true));
 
         setMembers(mapped);
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to load members"
-        );
+        setError(err instanceof Error ? err.message : 'Failed to load members');
       }
     })();
   }, [open, workspaceId, getToken, mode, meeting, currentUserId]);
@@ -116,12 +105,10 @@ export default function MeetingModal({
   React.useEffect(() => {
     if (!open) return;
 
-    if (mode === "edit" && meeting) {
-      setLocation(meeting.location ?? "");
-      setDescription(meeting.description ?? "");
-      setSelectedMemberIds(
-        (meeting.inviteMembershipIds ?? []).map((id) => String(id))
-      );
+    if (mode === 'edit' && meeting) {
+      setLocation(meeting.location ?? '');
+      setDescription(meeting.description ?? '');
+      setSelectedMemberIds((meeting.inviteMembershipIds ?? []).map((id) => String(id)));
 
       // meeting.date is like "Nov 21, 2025"
       let parsedDate: Date | null = null;
@@ -135,13 +122,13 @@ export default function MeetingModal({
 
       // meeting.time is "HH:MM"
       if (meeting.time) {
-        setTime(dayjs(meeting.time, "HH:mm"));
+        setTime(dayjs(meeting.time, 'HH:mm'));
       } else {
         setTime(null);
       }
     } else {
-      setLocation("");
-      setDescription("");
+      setLocation('');
+      setDescription('');
       setSelectedDate(null);
       setTime(null);
       setSelectedMemberIds([]);
@@ -176,7 +163,7 @@ export default function MeetingModal({
 
     const scheduledAt = buildScheduledAt();
     if (!scheduledAt) {
-      setError("Please provide a valid date and time.");
+      setError('Please provide a valid date and time.');
       return;
     }
 
@@ -190,31 +177,31 @@ export default function MeetingModal({
         scheduledAt,
         inviteMembershipIds: selectedMemberIds
           .map((id) => Number(id))
-          .filter((n) => !Number.isNaN(n)),
+          .filter((n) => !Number.isNaN(n))
       });
 
       let url: string;
-      let method: "POST" | "PATCH";
+      let method: 'POST' | 'PATCH';
 
-      if (mode === "create") {
+      if (mode === 'create') {
         url = `${API}/workspaces/${workspaceId}/meetings`;
-        method = "POST";
+        method = 'POST';
       } else {
         if (!meeting?.id) {
-          setError("Missing meeting id.");
+          setError('Missing meeting id.');
           return;
         }
         url = `${API}/workspaces/${workspaceId}/meetings/${meeting.id}/reschedule`;
-        method = "POST"; // using POST for reschedule
+        method = 'POST'; // using POST for reschedule
       }
 
       const res = await fetch(url, {
         method,
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token ?? ""}`,
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token ?? ''}`
         },
-        body,
+        body
       });
 
       if (!res.ok) {
@@ -225,7 +212,7 @@ export default function MeetingModal({
       onSaved();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save meeting");
+      setError(err instanceof Error ? err.message : 'Failed to save meeting');
     } finally {
       setLoading(false);
     }
@@ -246,40 +233,34 @@ export default function MeetingModal({
         }}
       >
         <DialogHeader>
-          <DialogTitle>
-            {mode === "create" ? "Create meeting" : "Reschedule meeting"}
-          </DialogTitle>
+          <DialogTitle>{mode === 'create' ? 'Create meeting' : 'Reschedule meeting'}</DialogTitle>
           <DialogDescription>
-            {mode === "create"
-              ? "Set up a new meeting and choose who should receive an invite."
-              : "Update the meeting details. All invite responses will be reset to pending."}
+            {mode === 'create'
+              ? 'Set up a new meeting and choose who should receive an invite.'
+              : 'Update the meeting details. All invite responses will be reset to pending.'}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Location */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              Location
-            </label>
+            <label className="text-foreground mb-1 block text-sm font-medium">Location</label>
             <input
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="w-full rounded-md border border-input bg-input/20 px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-[2px] focus-visible:ring-ring/30"
+              className="border-input bg-input/20 focus-visible:border-ring focus-visible:ring-ring/30 w-full rounded-md border px-3 py-2 text-sm outline-none focus-visible:ring-[2px]"
               required
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              Description
-            </label>
+            <label className="text-foreground mb-1 block text-sm font-medium">Description</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-md border border-input bg-input/20 px-3 py-2 text-sm min-h-[80px] outline-none focus-visible:border-ring focus-visible:ring-[2px] focus-visible:ring-ring/30"
+              className="border-input bg-input/20 focus-visible:border-ring focus-visible:ring-ring/30 min-h-[80px] w-full rounded-md border px-3 py-2 text-sm outline-none focus-visible:ring-[2px]"
             />
           </div>
 
@@ -287,9 +268,7 @@ export default function MeetingModal({
           <div className="grid grid-cols-2 gap-3">
             {/* Date */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">
-                Date
-              </label>
+              <label className="text-foreground mb-1 block text-sm font-medium">Date</label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -299,10 +278,10 @@ export default function MeetingModal({
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {selectedDate ? (
-                      selectedDate.toLocaleDateString("en-CA", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
+                      selectedDate.toLocaleDateString('en-CA', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
                       })
                     ) : (
                       <span>Pick a date</span>
@@ -321,9 +300,7 @@ export default function MeetingModal({
 
             {/* Time (24h, Antd) */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">
-                Time
-              </label>
+              <label className="text-foreground mb-1 block text-sm font-medium">Time</label>
               <TimePicker
                 format="HH:mm"
                 value={time}
@@ -336,30 +313,24 @@ export default function MeetingModal({
 
           {/* Invitees */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              Invite members
-            </label>
-            <div className="max-h-40 overflow-y-auto rounded-md border border-input bg-input/20 px-3 py-2 text-sm space-y-1">
+            <label className="text-foreground mb-1 block text-sm font-medium">Invite members</label>
+            <div className="border-input bg-input/20 max-h-40 space-y-1 overflow-y-auto rounded-md border px-3 py-2 text-sm">
               {members.length === 0 ? (
                 <div className="text-muted-foreground text-xs">
                   No members found for this workspace.
                 </div>
               ) : (
                 members.map((m) => {
-                  const displayName =
-                    `${m.firstName} ${m.lastName}`.trim() || "Unnamed";
+                  const displayName = `${m.firstName} ${m.lastName}`.trim() || 'Unnamed';
                   return (
-                    <label
-                      key={m.id}
-                      className="flex items-center gap-2 text-sm"
-                    >
+                    <label key={m.id} className="flex items-center gap-2 text-sm">
                       <input
                         type="checkbox"
                         checked={selectedMemberIds.includes(m.id)}
                         onChange={() => toggleMember(m.id)}
                       />
                       <span>{displayName}</span>
-                      <span className="text-xs text-muted-foreground">· {m.role}</span>
+                      <span className="text-muted-foreground text-xs">· {m.role}</span>
                     </label>
                   );
                 })
@@ -367,17 +338,13 @@ export default function MeetingModal({
             </div>
           </div>
 
-          {error && (
-            <div className="text-sm text-destructive">
-              {error}
-            </div>
-          )}
+          {error && <div className="text-destructive text-sm">{error}</div>}
 
           <DialogFooter className="mt-4 flex justify-end gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md border border-border px-4 py-2 text-sm text-foreground hover:bg-muted disabled:opacity-60"
+              className="border-border text-foreground hover:bg-muted rounded-md border px-4 py-2 text-sm disabled:opacity-60"
               disabled={loading}
             >
               Cancel
@@ -385,16 +352,16 @@ export default function MeetingModal({
             <div>
               <button
                 type="submit"
-                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 text-sm font-medium disabled:opacity-60"
                 disabled={loading}
               >
                 {loading
-                  ? mode === "create"
-                    ? "Creating..."
-                    : "Saving..."
-                  : mode === "create"
-                  ? "Create meeting"
-                  : "Save changes"}
+                  ? mode === 'create'
+                    ? 'Creating...'
+                    : 'Saving...'
+                  : mode === 'create'
+                    ? 'Create meeting'
+                    : 'Save changes'}
               </button>
             </div>
           </DialogFooter>

@@ -4,7 +4,6 @@ import { prisma } from '../db.js'
 import { getWorkspaceMembership } from '../utils/authz.js'
 import { emitWorkspaceCreated } from './events.js'
 
-
 const router = express.Router()
 
 router.get('/', async (req, res) => {
@@ -12,7 +11,6 @@ router.get('/', async (req, res) => {
 
     if (!isAuthenticated) {
         return res.status(401).json({ error: 'User not authenticated' })
-
     }
     const user = await prisma.user.findFirst({
         where: {
@@ -39,7 +37,6 @@ router.get('/:id', async (req, res) => {
 
         if (!isAuthenticated) {
             return res.status(401).json({ error: 'User not authenticated' })
-    
         }
         const membership = await getWorkspaceMembership(userId, Number(req.params.id))
 
@@ -59,7 +56,6 @@ router.post('/', async (req, res) => {
 
     if (!isAuthenticated) {
         return res.status(401).json({ error: 'User not authenticated' })
-
     }
     const user = await prisma.user.upsert({
         where: {
@@ -82,7 +78,7 @@ router.post('/', async (req, res) => {
         },
     })
 
-    emitWorkspaceCreated(userId); 
+    emitWorkspaceCreated(userId)
     res.status(200).json(workspace)
 })
 

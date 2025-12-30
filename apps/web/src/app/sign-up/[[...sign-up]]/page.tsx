@@ -1,13 +1,10 @@
-"use client";
-import { SignUp } from "@clerk/nextjs";
+'use client';
+import { SignUp } from '@clerk/nextjs';
 
 export default function Page() {
   return (
     <div className="flex min-h-screen items-center justify-center p-6">
-      <SignUp afterSignInUrl="/workspaces"/>
+      <SignUp afterSignInUrl="/workspaces" />
     </div>
   );
 }
-
-
-

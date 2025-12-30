@@ -1,95 +1,95 @@
 // Shared application DTO types
-import * as z from "zod"; 
+import * as z from 'zod';
 
 export type Timesheet = {
+  id: number;
+  clockInTime: string | null;
+  clockOutTime: string | null;
+  startBreakTime: string | null;
+  endBreakTime: string | null;
+  shift: {
     id: number;
-    clockInTime: string | null;
-    clockOutTime: string | null;
-    startBreakTime: string | null;
-    endBreakTime: string | null;
-    shift: {
-        id: number;
-        startTime: string;
-        endTime: string;
-        breakDuration: number | null;
-        user?: {
-            id: string;
-            firstName?: string | null;
-            lastName?: string | null;
-        };
+    startTime: string;
+    endTime: string;
+    breakDuration: number | null;
+    user?: {
+      id: string;
+      firstName?: string | null;
+      lastName?: string | null;
     };
+  };
 };
 
 // Primary Shift DTO shape used by web UI (Timesheet is separate table, optionally included)
 export type Shift = {
-	id: number;
-	startTime: string;
-	endTime: string;
-	breakDuration: number | null;
-	userId?: string;
-	workspaceId?: number;
-	timesheet?: Timesheet | null;
+  id: number;
+  startTime: string;
+  endTime: string;
+  breakDuration: number | null;
+  userId?: string;
+  workspaceId?: number;
+  timesheet?: Timesheet | null;
 };
 
 // Legacy/mobile shape where clock/break fields live on the shift directly
 // Keep for compatibility while mobile migrates to Timesheet
 export type ShiftLegacy = {
-	id: number;
-	startTime: string;
-	endTime: string;
-	clockInTime: string | null;
-	clockOutTime: string | null;
-	startBreakTime: string | null;
-	endBreakTime: string | null;
-	breakDuration: number;
-	userId: number;
-	workspaceId: number;
-	user?: {
-		id: number;
-		firstName: string | null;
-		lastName: string | null;
-		clerkId: string;
-	};
-	workspace?: {
-		id: number;
-		name: string;
-		location: string;
-	};
+  id: number;
+  startTime: string;
+  endTime: string;
+  clockInTime: string | null;
+  clockOutTime: string | null;
+  startBreakTime: string | null;
+  endBreakTime: string | null;
+  breakDuration: number;
+  userId: number;
+  workspaceId: number;
+  user?: {
+    id: number;
+    firstName: string | null;
+    lastName: string | null;
+    clerkId: string;
+  };
+  workspace?: {
+    id: number;
+    name: string;
+    location: string;
+  };
 };
 
 export type Member = {
   userId: string;
-	id: string; 
-	membershipId: number; 
-	role: string;
-	firstName: string;
-	lastName: string;
-	email?: string;
-	phone?: string;
+  id: string;
+  membershipId: number;
+  role: string;
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone?: string;
 };
 
 export type User = {
-	id: string;
-	firstName: string;
-	lastName?: string | null;
+  id: string;
+  firstName: string;
+  lastName?: string | null;
 };
 
 export type Workspace = {
-	id: number;
-	name: string;
-	adminId: string;
-	location: string;
+  id: number;
+  name: string;
+  adminId: string;
+  location: string;
 };
 
 export type InvitationInfo = {
-	workspaceName: string;
-	workspaceOwnerName: string;
-	workspaceOwnerEmail: string;
-	invitationId: string;
+  workspaceName: string;
+  workspaceOwnerName: string;
+  workspaceOwnerEmail: string;
+  invitationId: string;
 };
 
 export type UserShiftsResponseLegacy = {
-	shifts: ShiftLegacy[];
+  shifts: ShiftLegacy[];
 };
 
 export type MemberApi = {
@@ -103,47 +103,46 @@ export type MemberApi = {
   phone: string;
   roleId: string;
   isAdmin: boolean;
-
 };
 
 const Workspace = z.object({
-	id: z.number(),
-	name: z.string(),
-	adminId: z.string(),
-	location: z.string()
+  id: z.number(),
+  name: z.string(),
+  adminId: z.string(),
+  location: z.string()
 });
 
 const InvitationInfo = z.object({
-	workspaceName: z.string(),
-	workspaceOwnerName: z.string(),
-	workspaceOwnerEmail: z.email(),
-	invitationId: z.string(),
+  workspaceName: z.string(),
+  workspaceOwnerName: z.string(),
+  workspaceOwnerEmail: z.email(),
+  invitationId: z.string()
 });
 
 const Shift = z.object({
-	id: z.number(),
-	startTime: z.string(),
-	endTime: z.string(),
-	breakDuration: z.number().default(0),
-	userId: z.string(),
-	workspaceId: z.number()
+  id: z.number(),
+  startTime: z.string(),
+  endTime: z.string(),
+  breakDuration: z.number().default(0),
+  userId: z.string(),
+  workspaceId: z.number()
 });
 
 const Timesheet = z.object({
-	id: z.number(),
-    clockInTime: z.string().nullable(),
-    clockOutTime: z.string().nullable(),
-    startBreakTime: z.string().nullable(),
-    endBreakTime: z.string().nullable(),
-    shift: {
-        id: z.number(),
-        startTime: z.string(),
-        endTime: z.string(),
-        breakDuration: z.number().default(0),
-        user: {
-            id: z.string(),
-            firstName: z.string().nullable(),
-            lastName: z.string().nullable()
-        }
+  id: z.number(),
+  clockInTime: z.string().nullable(),
+  clockOutTime: z.string().nullable(),
+  startBreakTime: z.string().nullable(),
+  endBreakTime: z.string().nullable(),
+  shift: {
+    id: z.number(),
+    startTime: z.string(),
+    endTime: z.string(),
+    breakDuration: z.number().default(0),
+    user: {
+      id: z.string(),
+      firstName: z.string().nullable(),
+      lastName: z.string().nullable()
     }
+  }
 });

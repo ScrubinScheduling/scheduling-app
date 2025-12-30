@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,28 +9,18 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { useApiClient } from "@/hooks/useApiClient";
-import { useSSEStream } from "@/hooks/useSSE";
-import { useAuth } from "@clerk/nextjs";
-import { useParams } from "next/navigation";
-import {
-  Plus,
-  X as XIcon,
-  CalendarDays,
-  Clock,
-  MapPin,
-  Users,
-} from "lucide-react";
-import MeetingModal, { MeetingForModal } from "@/components/MeetingModal";
-
-
-
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog';
+import { useApiClient } from '@/hooks/useApiClient';
+import { useSSEStream } from '@/hooks/useSSE';
+import { useAuth } from '@clerk/nextjs';
+import { useParams } from 'next/navigation';
+import { Plus, X as XIcon, CalendarDays, Clock, MapPin, Users } from 'lucide-react';
+import MeetingModal, { MeetingForModal } from '@/components/MeetingModal';
 
 /**** Types ****/
 
-type MeetingStatus = "PENDING" | "FINALIZED" | "CANCELLED" | "RESCHEDULED";
+type MeetingStatus = 'PENDING' | 'FINALIZED' | 'CANCELLED' | 'RESCHEDULED';
 
 type Meeting = {
   id: string;
@@ -50,15 +40,13 @@ type Meeting = {
 
 function statusChip(status: MeetingStatus) {
   const map: Record<MeetingStatus, string> = {
-    PENDING: "border border-border bg-muted text-muted-foreground",
-    FINALIZED: "border border-primary/20 bg-primary/10 text-primary",
-    CANCELLED: "border border-destructive/20 bg-destructive/10 text-destructive",
-    RESCHEDULED: "border border-border bg-secondary text-secondary-foreground",
+    PENDING: 'border border-border bg-muted text-muted-foreground',
+    FINALIZED: 'border border-primary/20 bg-primary/10 text-primary',
+    CANCELLED: 'border border-destructive/20 bg-destructive/10 text-destructive',
+    RESCHEDULED: 'border border-border bg-secondary text-secondary-foreground'
   };
   return (
-    <span
-      className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${map[status]}`}
-    >
+    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${map[status]}`}>
       {status}
     </span>
   );
@@ -69,16 +57,13 @@ function statusChip(status: MeetingStatus) {
 export default function MeetingRequestsPage() {
   const { getToken } = useAuth();
   const { id: workspaceId } = useParams<{ id: string }>();
-  const apiClient = useApiClient(); 
+  const apiClient = useApiClient();
 
   const [meetings, setMeetings] = React.useState<Meeting[]>([]);
-  const [selectedId, setSelectedId] = React.useState<string>("");
+  const [selectedId, setSelectedId] = React.useState<string>('');
 
   const [loading, setLoading] = React.useState<boolean>(false);
   const [error, setError] = React.useState<string | null>(null);
-
-
-
 
   // Delete confirmation dialog
   const [deleteConfirm, setDeleteConfirm] = React.useState<{
@@ -89,7 +74,7 @@ export default function MeetingRequestsPage() {
   // Status change confirmation dialog (finalize / cancel)
   const [statusConfirm, setStatusConfirm] = React.useState<{
     open: boolean;
-    action: "FINALIZED" | "CANCELLED" | null;
+    action: 'FINALIZED' | 'CANCELLED' | null;
   }>({ open: false, action: null });
 
   const selected = React.useMemo(
@@ -97,21 +82,26 @@ export default function MeetingRequestsPage() {
     [meetings, selectedId]
   );
 
-
   const [editorOpen, setEditorOpen] = React.useState(false);
-  const [editorMode, setEditorMode] = React.useState<"create" | "edit">("create");
+  const [editorMode, setEditorMode] = React.useState<'create' | 'edit'>('create');
   const [editorMeeting, setEditorMeeting] = React.useState<MeetingForModal | null>(null);
-  
+
   const [reloadToken, setReloadToken] = React.useState(0);
 
-  const refreshMeetings = useCallback( () => {
-    setReloadToken((t) => t + 1); 
+  const refreshMeetings = useCallback(() => {
+    setReloadToken((t) => t + 1);
   }, []);
 
-  useSSEStream(Number(workspaceId), useMemo( () => ({
-    'meeting-updated' :  () => refreshMeetings(),
-  }), [refreshMeetings]));
-  
+  useSSEStream(
+    Number(workspaceId),
+    useMemo(
+      () => ({
+        'meeting-updated': () => refreshMeetings()
+      }),
+      [refreshMeetings]
+    )
+  );
+
   React.useEffect(() => {
     let alive = true;
 
@@ -125,27 +115,27 @@ export default function MeetingRequestsPage() {
         // Backend now returns:
         // { meetings: [{ id, location, description, date, time, status, attendees: { yes, no, pending } }, ...] }
         const mapped: Meeting[] = (data.meetings ?? []).map((m: Meeting) => ({
-            id: String(m.id),
-            location: m.location ?? "No location",
-            description: m.description ?? "",
-            date: m.date ?? "",
-            time: m.time ?? "",
-            status: (m.status as MeetingStatus) ?? "PENDING",
-            inviteMembershipIds: m.inviteMembershipIds ?? [],
-            createdById: m.createdById ?? "",
-            attendees: {
-                yes: m.attendees?.yes ?? [],
-                no: m.attendees?.no ?? [],
-                pending: m.attendees?.pending ?? [],
-            },
+          id: String(m.id),
+          location: m.location ?? 'No location',
+          description: m.description ?? '',
+          date: m.date ?? '',
+          time: m.time ?? '',
+          status: (m.status as MeetingStatus) ?? 'PENDING',
+          inviteMembershipIds: m.inviteMembershipIds ?? [],
+          createdById: m.createdById ?? '',
+          attendees: {
+            yes: m.attendees?.yes ?? [],
+            no: m.attendees?.no ?? [],
+            pending: m.attendees?.pending ?? []
+          }
         }));
 
         if (!alive) return;
         setMeetings(mapped);
-        setSelectedId((prev) => prev || mapped[0]?.id || "");
+        setSelectedId((prev) => prev || mapped[0]?.id || '');
       } catch (err) {
         if (!alive) return;
-        setError(err instanceof Error ? err.message : "Failed to load meetings");
+        setError(err instanceof Error ? err.message : 'Failed to load meetings');
       } finally {
         if (!alive) return;
         setLoading(false);
@@ -174,23 +164,18 @@ export default function MeetingRequestsPage() {
     const meetingId = deleteConfirm.meeting.id;
 
     try {
-
-      await apiClient.deleteMeeting(workspaceId, meetingId); 
+      await apiClient.deleteMeeting(workspaceId, meetingId);
 
       setMeetings((prev) => {
         const idx = prev.findIndex((m) => m.id === meetingId);
         const next = prev.filter((m) => m.id !== meetingId);
         const nextSelected =
-          next[idx]?.id ?? next[idx - 1]?.id ?? (selectedId === meetingId ? "" : selectedId);
+          next[idx]?.id ?? next[idx - 1]?.id ?? (selectedId === meetingId ? '' : selectedId);
         setSelectedId(nextSelected);
         return next;
       });
     } catch (err) {
-      setError(
-        `Failed to delete meeting${
-          err instanceof Error ? `: ${err.message}` : ""
-        }`
-      );
+      setError(`Failed to delete meeting${err instanceof Error ? `: ${err.message}` : ''}`);
     } finally {
       closeDeleteConfirm();
     }
@@ -198,7 +183,7 @@ export default function MeetingRequestsPage() {
 
   /***** Status handlers (Finalize / Cancel) *****/
 
-  function openStatusConfirm(action: "FINALIZED" | "CANCELLED") {
+  function openStatusConfirm(action: 'FINALIZED' | 'CANCELLED') {
     setStatusConfirm({ open: true, action });
   }
 
@@ -211,21 +196,16 @@ export default function MeetingRequestsPage() {
 
     const meetingId = selected.id;
     const action = statusConfirm.action;
-    const path = action === "FINALIZED" ? "finalize" : "cancel";
+    const path = action === 'FINALIZED' ? 'finalize' : 'cancel';
 
     try {
+      await apiClient.updateMeetingStatus(workspaceId, meetingId, path);
 
-      await apiClient.updateMeetingStatus(workspaceId, meetingId, path); 
-
-      setMeetings((prev) =>
-        prev.map((m) =>
-          m.id === meetingId ? { ...m, status: action } : m
-        )
-      );
+      setMeetings((prev) => prev.map((m) => (m.id === meetingId ? { ...m, status: action } : m)));
     } catch (err) {
       setError(
-        `Failed to ${action === "FINALIZED" ? "Finalize" : "Cancel"} meeting${
-          err instanceof Error ? `: ${err.message}` : ""
+        `Failed to ${action === 'FINALIZED' ? 'Finalize' : 'Cancel'} meeting${
+          err instanceof Error ? `: ${err.message}` : ''
         }`
       );
     } finally {
@@ -234,54 +214,48 @@ export default function MeetingRequestsPage() {
   }
 
   return (
-    <main className="p-4 max-w-6xl mx-auto">
+    <main className="mx-auto max-w-6xl p-4">
       {/* Header with Create Meeting button */}
       <header className="mb-4 flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-foreground">
-          Meeting Requests
-        </h1>
+        <h1 className="text-foreground text-xl font-semibold">Meeting Requests</h1>
         <div>
           <button
             type="button"
             onClick={() => {
-                setEditorMode("create");
-                setEditorMeeting(null);
-                setEditorOpen(true);
+              setEditorMode('create');
+              setEditorMeeting(null);
+              setEditorOpen(true);
             }}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
-            >
+            className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-2 rounded-lg px-4 py-2"
+          >
             <Plus size={18} /> Create Meeting
-            </button>
+          </button>
         </div>
       </header>
 
-      <div className="flex min-height-[640px] min-h-[640px]">
+      <div className="min-height-[640px] flex min-h-[640px]">
         {/* Left pane: meeting list */}
         <aside className="w-1/2 p-2 pr-3">
-          <h2 className="mb-3 text-lg font-semibold text-foreground">Meetings</h2>
+          <h2 className="text-foreground mb-3 text-lg font-semibold">Meetings</h2>
 
-          {loading && (
-            <div className="mb-3 text-sm text-muted-foreground">Loading Meetings…</div>
-          )}
+          {loading && <div className="text-muted-foreground mb-3 text-sm">Loading Meetings…</div>}
           {error && (
-            <div className="mb-3 rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <div className="border-destructive/20 bg-destructive/10 text-destructive mb-3 rounded-md border px-3 py-2 text-sm">
               Error: {error}
             </div>
           )}
 
           <div className="space-y-3">
             {meetings.length === 0 && !loading ? (
-              <div className="mt-10 text-center text-muted-foreground italic">
+              <div className="text-muted-foreground mt-10 text-center italic">
                 There are currently no meetings!
               </div>
             ) : (
               meetings.map((m) => {
                 const isSelected = m.id === selectedId;
                 const baseCard =
-                  "relative cursor-pointer rounded-xl border p-3 transition-shadow hover:shadow-sm";
-                const selectedRing = isSelected
-                  ? "border-ring shadow-sm"
-                  : "border-border";
+                  'relative cursor-pointer rounded-xl border p-3 transition-shadow hover:shadow-sm';
+                const selectedRing = isSelected ? 'border-ring shadow-sm' : 'border-border';
 
                 return (
                   <div
@@ -292,7 +266,7 @@ export default function MeetingRequestsPage() {
                     {/* Delete X in top-right */}
                     <button
                       type="button"
-                      className="absolute right-2 top-2 rounded-full p-1 hover:bg-muted"
+                      className="hover:bg-muted absolute top-2 right-2 rounded-full p-1"
                       onClick={(e) => openDeleteConfirm(m, e)}
                       title="Delete meeting"
                     >
@@ -302,16 +276,16 @@ export default function MeetingRequestsPage() {
                     <div className="flex flex-col gap-1 pr-5">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center rounded-full bg-muted p-2">
+                          <span className="bg-muted inline-flex items-center rounded-full p-2">
                             <CalendarDays size={16} className="text-muted-foreground" />
                           </span>
                           <div className="flex flex-col">
-                            <span className="text-sm font-semibold text-foreground">
+                            <span className="text-foreground text-sm font-semibold">
                               {m.location}
                             </span>
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-muted-foreground text-xs">
                               {m.date}
-                              {m.time ? ` @ ${m.time}` : ""}
+                              {m.time ? ` @ ${m.time}` : ''}
                             </span>
                           </div>
                         </div>
@@ -327,27 +301,27 @@ export default function MeetingRequestsPage() {
 
         {/* Right pane: details */}
         <section className="w-1/2 p-2 pl-3">
-          <h2 className="mb-3 text-lg font-semibold text-foreground">Details</h2>
+          <h2 className="text-foreground mb-3 text-lg font-semibold">Details</h2>
 
           {!selected ? (
-            <div className="rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">
+            <div className="border-border text-muted-foreground rounded-xl border border-dashed p-8 text-center">
               Select a meeting to see details
             </div>
           ) : (
-            <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+            <div className="border-border bg-card rounded-2xl border p-4 shadow-sm">
               {/* Header */}
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center rounded-full bg-muted p-2">
+                  <span className="bg-muted inline-flex items-center rounded-full p-2">
                     <CalendarDays size={18} className="text-muted-foreground" />
                   </span>
                   <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-foreground">
+                    <span className="text-foreground text-sm font-semibold">
                       {selected.location}
                     </span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-muted-foreground text-xs">
                       {selected.date}
-                      {selected.time ? ` @ ${selected.time}` : ""}
+                      {selected.time ? ` @ ${selected.time}` : ''}
                     </span>
                   </div>
                 </div>
@@ -355,21 +329,19 @@ export default function MeetingRequestsPage() {
               </div>
 
               {/* Details body */}
-              <div className="space-y-3 text-sm text-foreground">
+              <div className="text-foreground space-y-3 text-sm">
                 <div className="flex items-center gap-2">
                   <Clock size={16} className="text-muted-foreground" />
                   <span>
-                    <span className="font-semibold">Date/Time:</span>{" "}
-                    {selected.date}
-                    {selected.time ? ` @ ${selected.time}` : ""}
+                    <span className="font-semibold">Date/Time:</span> {selected.date}
+                    {selected.time ? ` @ ${selected.time}` : ''}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <MapPin size={16} className="text-muted-foreground" />
                   <span>
-                    <span className="font-semibold">Location:</span>{" "}
-                    {selected.location}
+                    <span className="font-semibold">Location:</span> {selected.location}
                   </span>
                 </div>
 
@@ -379,55 +351,43 @@ export default function MeetingRequestsPage() {
                       <Users size={16} className="text-muted-foreground" />
                       <span className="font-semibold">Description</span>
                     </div>
-                    <p className="ml-6 text-muted-foreground">
-                      {selected.description}
-                    </p>
+                    <p className="text-muted-foreground ml-6">{selected.description}</p>
                   </div>
                 )}
 
                 {/* Attendance groups */}
                 <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
                   <div>
-                    <div className="text-xs font-semibold text-primary">
-                      Can make it
-                    </div>
-                    <ul className="mt-1 space-y-0.5 text-xs text-foreground">
+                    <div className="text-primary text-xs font-semibold">Can make it</div>
+                    <ul className="text-foreground mt-1 space-y-0.5 text-xs">
                       {selected.attendees.yes.length === 0 ? (
                         <li className="text-muted-foreground italic">None</li>
                       ) : (
-                        selected.attendees.yes.map((name, idx) => (
-                          <li key={idx}>{name}</li>
-                        ))
+                        selected.attendees.yes.map((name, idx) => <li key={idx}>{name}</li>)
                       )}
                     </ul>
                   </div>
 
                   <div>
-                    <div className="text-xs font-semibold text-destructive">
-                      Cannot make it
-                    </div>
-                    <ul className="mt-1 space-y-0.5 text-xs text-foreground">
+                    <div className="text-destructive text-xs font-semibold">Cannot make it</div>
+                    <ul className="text-foreground mt-1 space-y-0.5 text-xs">
                       {selected.attendees.no.length === 0 ? (
                         <li className="text-muted-foreground italic">None</li>
                       ) : (
-                        selected.attendees.no.map((name, idx) => (
-                          <li key={idx}>{name}</li>
-                        ))
+                        selected.attendees.no.map((name, idx) => <li key={idx}>{name}</li>)
                       )}
                     </ul>
                   </div>
 
                   <div>
-                    <div className="text-xs font-semibold text-muted-foreground">
+                    <div className="text-muted-foreground text-xs font-semibold">
                       Pending response
                     </div>
-                    <ul className="mt-1 space-y-0.5 text-xs text-foreground">
+                    <ul className="text-foreground mt-1 space-y-0.5 text-xs">
                       {selected.attendees.pending.length === 0 ? (
                         <li className="text-muted-foreground italic">None</li>
                       ) : (
-                        selected.attendees.pending.map((name, idx) => (
-                          <li key={idx}>{name}</li>
-                        ))
+                        selected.attendees.pending.map((name, idx) => <li key={idx}>{name}</li>)
                       )}
                     </ul>
                   </div>
@@ -435,13 +395,13 @@ export default function MeetingRequestsPage() {
               </div>
 
               {/* Actions: only when pending */}
-              {selected.status === "PENDING" && (
+              {selected.status === 'PENDING' && (
                 <div className="mt-6 flex flex-wrap items-center justify-end gap-2">
                   {/* Cancel */}
                   <button
                     type="button"
-                    onClick={() => openStatusConfirm("CANCELLED")}
-                    className="inline-flex items-center gap-2 rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90"
+                    onClick={() => openStatusConfirm('CANCELLED')}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium"
                   >
                     Cancel Meeting
                   </button>
@@ -450,9 +410,9 @@ export default function MeetingRequestsPage() {
                   <button
                     type="button"
                     onClick={() => {
-                        if (!selected) return;
-                        setEditorMode("edit");
-                        setEditorMeeting({
+                      if (!selected) return;
+                      setEditorMode('edit');
+                      setEditorMeeting({
                         id: selected.id,
                         location: selected.location,
                         description: selected.description,
@@ -460,19 +420,19 @@ export default function MeetingRequestsPage() {
                         time: selected.time,
                         inviteMembershipIds: selected.inviteMembershipIds,
                         createdById: selected.createdById
-                        });
-                        setEditorOpen(true);
+                      });
+                      setEditorOpen(true);
                     }}
-                    className="inline-flex items-center gap-2 rounded-lg bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-secondary/80"
-                    >
+                    className="bg-secondary text-secondary-foreground hover:bg-secondary/80 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium"
+                  >
                     Reschedule
-                    </button>
+                  </button>
 
                   {/* Finalize */}
                   <button
                     type="button"
-                    onClick={() => openStatusConfirm("FINALIZED")}
-                    className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                    onClick={() => openStatusConfirm('FINALIZED')}
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium"
                   >
                     Finalize Meeting
                   </button>
@@ -492,22 +452,15 @@ export default function MeetingRequestsPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-bold">
-              Delete this meeting?
-            </AlertDialogTitle>
+            <AlertDialogTitle className="font-bold">Delete this meeting?</AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground">
-              This will permanently delete the meeting{" "}
-              <span className="font-semibold">
-                {deleteConfirm.meeting?.location}
-              </span>{" "}
-              and all associated responses. This action cannot be undone.
+              This will permanently delete the meeting{' '}
+              <span className="font-semibold">{deleteConfirm.meeting?.location}</span> and all
+              associated responses. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={closeDeleteConfirm}
-              className="hover:bg-muted"
-            >
+            <AlertDialogCancel onClick={closeDeleteConfirm} className="hover:bg-muted">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
@@ -530,34 +483,29 @@ export default function MeetingRequestsPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="font-bold">
-              {statusConfirm.action === "FINALIZED"
-                ? "Finalize this meeting?"
-                : "Cancel this meeting?"}
+              {statusConfirm.action === 'FINALIZED'
+                ? 'Finalize this meeting?'
+                : 'Cancel this meeting?'}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground">
-              {statusConfirm.action === "FINALIZED"
-                ? "Finalizing this meeting confirms that it will go ahead as scheduled based on the current responses."
-                : "Cancelling this meeting will mark it as cancelled and notify attendees accordingly."}
+              {statusConfirm.action === 'FINALIZED'
+                ? 'Finalizing this meeting confirms that it will go ahead as scheduled based on the current responses.'
+                : 'Cancelling this meeting will mark it as cancelled and notify attendees accordingly.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={closeStatusConfirm}
-              className="hover:bg-muted"
-            >
+            <AlertDialogCancel onClick={closeStatusConfirm} className="hover:bg-muted">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={applyStatusChange}
               className={
-                statusConfirm.action === "FINALIZED"
-                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                  : "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                statusConfirm.action === 'FINALIZED'
+                  ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                  : 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
               }
             >
-              {statusConfirm.action === "FINALIZED"
-                ? "Confirm Finalize"
-                : "Confirm Cancel"}
+              {statusConfirm.action === 'FINALIZED' ? 'Confirm Finalize' : 'Confirm Cancel'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -570,6 +518,5 @@ export default function MeetingRequestsPage() {
         onSaved={refreshMeetings}
       />
     </main>
-    
   );
 }

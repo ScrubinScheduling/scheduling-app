@@ -1,122 +1,133 @@
-"use client";
+'use client';
 
-import { MoreHorizontal, Calendar } from 'lucide-react'
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { MoreHorizontal, Calendar } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { useAuth } from "@clerk/nextjs"
-import { useParams } from "next/navigation"
-import { useEffect, useState } from "react"
-import { useApiClient } from "@/hooks/useApiClient"
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table';
+import { useAuth } from '@clerk/nextjs';
+import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useApiClient } from '@/hooks/useApiClient';
 import { useSSEStream } from '@/hooks/useSSE';
-import { format, startOfWeek, endOfWeek, isToday, isTomorrow, parseISO } from "date-fns"
-import type { Shift } from "@scrubin/schemas"
+import { format, startOfWeek, endOfWeek, isToday, isTomorrow, parseISO } from 'date-fns';
+import type { Shift } from '@scrubin/schemas';
 
 export default function UpcomingScheduleCard() {
-  const { userId } = useAuth()
-  const { id: workspaceId } = useParams<{ id: string }>()
-  const apiClient = useApiClient()
-  const [shifts, setShifts] = useState<Array<{
-    id: string
-    date: string
-    time: string
-    startTime: Date
-  }>>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [isAlive, setIsAlive] = useState<boolean>(true); 
+  const { userId } = useAuth();
+  const { id: workspaceId } = useParams<{ id: string }>();
+  const apiClient = useApiClient();
+  const [shifts, setShifts] = useState<
+    Array<{
+      id: string;
+      date: string;
+      time: string;
+      startTime: Date;
+    }>
+  >([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isAlive, setIsAlive] = useState<boolean>(true);
 
-      async function fetchShifts() {
-      if (!userId || !workspaceId) return
+  async function fetchShifts() {
+    if (!userId || !workspaceId) return;
 
-      try {
-        setLoading(true)
-        setError(null)
+    try {
+      setLoading(true);
+      setError(null);
 
-        // Get shifts for this week
-        const now = new Date()
-        const weekStart = startOfWeek(now, { weekStartsOn: 0 })
-        const weekEnd = endOfWeek(now, { weekStartsOn: 0 })
-        
-        // Add one week to get upcoming shifts
-        weekEnd.setDate(weekEnd.getDate() + 7)
+      // Get shifts for this week
+      const now = new Date();
+      const weekStart = startOfWeek(now, { weekStartsOn: 0 });
+      const weekEnd = endOfWeek(now, { weekStartsOn: 0 });
 
-        const workspaceIdNum = Number(workspaceId)
-        const response = await apiClient.getUserShifts(workspaceIdNum, userId, {
-          start: weekStart.toISOString(),
-          end: weekEnd.toISOString(),
-        }) as { shifts: Shift[] }
+      // Add one week to get upcoming shifts
+      weekEnd.setDate(weekEnd.getDate() + 7);
 
-        if (!isAlive) return
+      const workspaceIdNum = Number(workspaceId);
+      const response = (await apiClient.getUserShifts(workspaceIdNum, userId, {
+        start: weekStart.toISOString(),
+        end: weekEnd.toISOString()
+      })) as { shifts: Shift[] };
 
-        // Filter out shifts that have been clocked out
-        const activeShifts = response.shifts.filter(shift => {
-          return !shift.timesheet || !shift.timesheet.clockOutTime
-        })
+      if (!isAlive) return;
 
-        // Extract and format shifts
-        const userShifts: Array<{
-          id: string
-          date: string
-          time: string
-          startTime: Date
-        }> = []
+      // Filter out shifts that have been clocked out
+      const activeShifts = response.shifts.filter((shift) => {
+        return !shift.timesheet || !shift.timesheet.clockOutTime;
+      });
 
-        for (const shift of activeShifts) {
-          const startTime = parseISO(shift.startTime)
-          const endTime = parseISO(shift.endTime)
-          
-          // Format date
-          let dateLabel = format(startTime, "EEE, MMM d")
-          if (isToday(startTime)) {
-            dateLabel = "Today"
-          } else if (isTomorrow(startTime)) {
-            dateLabel = "Tomorrow"
-          }
+      // Extract and format shifts
+      const userShifts: Array<{
+        id: string;
+        date: string;
+        time: string;
+        startTime: Date;
+      }> = [];
 
-          // Format time
-          const timeLabel = `${format(startTime, "h:mm a")} - ${format(endTime, "h:mm a")}`
+      for (const shift of activeShifts) {
+        const startTime = parseISO(shift.startTime);
+        const endTime = parseISO(shift.endTime);
 
-          userShifts.push({
-            id: String(shift.id),
-            date: dateLabel,
-            time: timeLabel,
-            startTime,
-          })
+        // Format date
+        let dateLabel = format(startTime, 'EEE, MMM d');
+        if (isToday(startTime)) {
+          dateLabel = 'Today';
+        } else if (isTomorrow(startTime)) {
+          dateLabel = 'Tomorrow';
         }
 
-        // Sort by start time
-        userShifts.sort((a, b) => a.startTime.getTime() - b.startTime.getTime())
+        // Format time
+        const timeLabel = `${format(startTime, 'h:mm a')} - ${format(endTime, 'h:mm a')}`;
 
-        setShifts(userShifts)
-      } catch (err) {
-        if (!isAlive) return
-        setError(err instanceof Error ? err.message : "Failed to load shifts")
-      } finally {
-        if (isAlive) {
-          setLoading(false)
-        }
+        userShifts.push({
+          id: String(shift.id),
+          date: dateLabel,
+          time: timeLabel,
+          startTime
+        });
+      }
+
+      // Sort by start time
+      userShifts.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+
+      setShifts(userShifts);
+    } catch (err) {
+      if (!isAlive) return;
+      setError(err instanceof Error ? err.message : 'Failed to load shifts');
+    } finally {
+      if (isAlive) {
+        setLoading(false);
       }
     }
+  }
   useEffect(() => {
-    setIsAlive(true); 
-    fetchShifts()
+    setIsAlive(true);
+    fetchShifts();
 
     return () => {
-      setIsAlive(false); 
-    }
-  }, [userId, workspaceId, apiClient])
+      setIsAlive(false);
+    };
+  }, [userId, workspaceId, apiClient]);
 
-  useSSEStream(Number(workspaceId), {'shift-updated' : () => {
-    fetchShifts(); 
-  }});
+  useSSEStream(Number(workspaceId), {
+    'shift-updated': () => {
+      fetchShifts();
+    }
+  });
 
   if (loading) {
     return (
@@ -126,7 +137,7 @@ export default function UpcomingScheduleCard() {
           <CardDescription>Loading shifts...</CardDescription>
         </CardHeader>
       </Card>
-    )
+    );
   }
 
   if (error) {
@@ -137,7 +148,7 @@ export default function UpcomingScheduleCard() {
           <CardDescription className="text-destructive">{error}</CardDescription>
         </CardHeader>
       </Card>
-    )
+    );
   }
 
   return (
@@ -150,7 +161,7 @@ export default function UpcomingScheduleCard() {
       </CardHeader>
       <CardContent>
         {shifts.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">
+          <p className="text-muted-foreground py-4 text-center text-sm">
             No upcoming shifts scheduled for this week.
           </p>
         ) : (
@@ -160,7 +171,9 @@ export default function UpcomingScheduleCard() {
                 <TableHead>Date</TableHead>
                 <TableHead>Time</TableHead>
                 <TableHead className="hidden md:table-cell">Role</TableHead>
-                <TableHead className="text-right"><span className="sr-only">Actions</span></TableHead>
+                <TableHead className="text-right">
+                  <span className="sr-only">Actions</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -168,7 +181,7 @@ export default function UpcomingScheduleCard() {
                 <TableRow key={shift.id}>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <Calendar className="text-muted-foreground h-4 w-4" />
                       {shift.date}
                     </div>
                   </TableCell>
@@ -186,7 +199,9 @@ export default function UpcomingScheduleCard() {
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem>View Details</DropdownMenuItem>
                         <DropdownMenuItem>Request Trade</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">Request Time Off</DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive">
+                          Request Time Off
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -197,5 +212,5 @@ export default function UpcomingScheduleCard() {
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

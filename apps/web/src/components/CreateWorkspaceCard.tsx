@@ -1,109 +1,105 @@
-"use client";
-import React, { useMemo, useState } from "react";
+'use client';
+import React, { useMemo, useState } from 'react';
+import { Card, CardHeader } from '@/components/ui/card';
 import {
-    Card,
-    CardHeader,
-} from "@/components/ui/card"
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
-import { Plus } from "lucide-react";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@clerk/nextjs";
-import { createApiClient } from "@scrubin/api-client";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog';
+import { Plus } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@clerk/nextjs';
+import { createApiClient } from '@scrubin/api-client';
 
 export default function CreateWorkspaceCard() {
-    const [isOpen, setIsOpen] = useState(false);
-    const [name, setName] = useState("");
-    const [location, setLocation] = useState("");
-    const { getToken } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [location, setLocation] = useState('');
+  const { getToken } = useAuth();
 
-	const apiClient = useMemo(
-		() =>
-			createApiClient({
-				baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL as string,
-				getToken,
-			}),
-		[getToken],
-	);
+  const apiClient = useMemo(
+    () =>
+      createApiClient({
+        baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL as string,
+        getToken
+      }),
+    [getToken]
+  );
 
-    const handleWorkspaceCreation = async () => {
-        try {
-            await apiClient.createWorkspace({
-                name,
-                location
-            });
+  const handleWorkspaceCreation = async () => {
+    try {
+      await apiClient.createWorkspace({
+        name,
+        location
+      });
 
-            setName("");
-            setLocation("");
-            setIsOpen(false);
-        } catch (error) {
-            console.error("Workspace Not Created", error);
-        }
+      setName('');
+      setLocation('');
+      setIsOpen(false);
+    } catch (error) {
+      console.error('Workspace Not Created', error);
     }
+  };
 
-    return (
-        <>
-            <Card
-                onClick={() => setIsOpen(true)}
-                className="hover:bg-muted/50 hover:cursor-pointer border border-dashed border-border"
-            >
-                <CardHeader className="flex items-center">
-                    <Plus className="h-4 w-4 text-muted-foreground" />
+  return (
+    <>
+      <Card
+        onClick={() => setIsOpen(true)}
+        className="hover:bg-muted/50 border-border border border-dashed hover:cursor-pointer"
+      >
+        <CardHeader className="flex items-center">
+          <Plus className="text-muted-foreground h-4 w-4" />
 
-                    <span className="text-md font-medium text-muted-foreground text-left">Create Workspace</span>
-                </CardHeader>
+          <span className="text-md text-muted-foreground text-left font-medium">
+            Create Workspace
+          </span>
+        </CardHeader>
+      </Card>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Create a New Workspace</DialogTitle>
+            <DialogDescription>Set up a new workspace for your team.</DialogDescription>
+          </DialogHeader>
 
-            </Card>
-            <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                <DialogContent className="sm:max-w-[600px]">
-                    <DialogHeader>
-                        <DialogTitle>Create a New Workspace</DialogTitle>
-                        <DialogDescription>Set up a new workspace for your team.</DialogDescription>
-                    </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label>Workspace Name</Label>
+              <Input
+                id="name"
+                placeholder="Workspace Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
 
-                    <div className="grid gap-4 py-4">
-                        <div className="grid gap-2">
-                            <Label>Workspace Name</Label>
-                            <Input
-                                id="name"
-                                placeholder="Workspace Name"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)} 
-                            />
-                        </div>
+            <div className="grid gap-2">
+              <Label>Location</Label>
+              <Input
+                id="location"
+                placeholder="Location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+              />
+            </div>
+          </div>
 
-                        <div className="grid gap-2">
-                            <Label>Location</Label>
-                            <Input
-                                id="location"
-                                placeholder="Location"
-                                value={location}
-                                onChange={(e) => setLocation(e.target.value)} 
-                            />
-                        </div>
-                    </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsOpen(false)}>
+              Cancel
+            </Button>
 
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsOpen(false)}>
-                            Cancel
-                        </Button>
-
-                        <Button onClick={handleWorkspaceCreation} disabled={!name.trim() || !location.trim()}>Create</Button>
-                    </DialogFooter>
-
-                </DialogContent>
-            </Dialog>
-
-        </>
-
-    );
-
+            <Button onClick={handleWorkspaceCreation} disabled={!name.trim() || !location.trim()}>
+              Create
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
 }

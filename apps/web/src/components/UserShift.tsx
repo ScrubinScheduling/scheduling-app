@@ -1,11 +1,7 @@
-import React from 'react'
+import React from 'react';
 
 const UserShift = () => {
-  return (
-    <div>
-        
-    </div>
-  )
-}
+  return <div></div>;
+};
 
-export default UserShift
+export default UserShift;
