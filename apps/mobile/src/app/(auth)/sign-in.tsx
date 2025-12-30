@@ -50,6 +50,7 @@ export default function Page() {
 
 		// Start the sign-in process using the email and password provided
 		try {
+			setIsLoading(true);
 			const signInAttempt = await signIn.create({
 				identifier: emailAddress,
 				password
@@ -96,6 +97,8 @@ export default function Page() {
 			// See https://clerk.com/docs/guides/development/custom-flows/error-handling
 			// for more info on error handling
 			console.error(JSON.stringify(err, null, 2));
+		} finally {
+			setIsLoading(false);
 		}
 	}, [isLoaded, emailAddress, password]);
 
@@ -103,6 +106,7 @@ export default function Page() {
 		if (!isLoaded) return;
 
 		try {
+			setIsLoading(true);
 			const signInAttempt = await signIn.attemptFirstFactor({
 				strategy: 'email_code',
 				code
@@ -125,6 +129,8 @@ export default function Page() {
 			}
 		} catch (err) {
 			console.error(JSON.stringify(err, null, 2));
+		} finally {
+			setIsLoading(false);
 		}
 	}, [isLoaded, code]);
 
@@ -136,6 +142,7 @@ export default function Page() {
 	const startOAuth = useCallback(
 		async (strategy: 'oauth_google' | 'oauth_apple' | 'oauth_microsoft') => {
 			try {
+				setIsLoading(true);
 				const { createdSessionId, setActive } = await startSSOFlow({
 					strategy,
 					redirectUrl: AuthSession.makeRedirectUri()
@@ -149,6 +156,8 @@ export default function Page() {
 				}
 			} catch (err) {
 				console.error(JSON.stringify(err, null, 2));
+			} finally {
+				setIsLoading(false);
 			}
 		},
 		[startSSOFlow, router]
