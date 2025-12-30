@@ -18,6 +18,7 @@ import type { EmailCodeFactor } from '@clerk/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import logo from '../../../assets/logo.png';
 import { MaterialIcons, AntDesign, Ionicons } from '@expo/vector-icons';
+import OAuthButtons from '@/src/components/OAuthButtons';
 
 // Preloads the browser for Android devices to reduce authentication load time
 // See: https://docs.expo.dev/guides/authentication/#improving-user-experience
@@ -135,33 +136,6 @@ export default function Page() {
 	}, [isLoaded, code]);
 
 	useWarmUpBrowser();
-
-	// Use the `useSSO()` hook to access the `startSSOFlow()` method
-	const { startSSOFlow } = useSSO();
-
-	const startOAuth = useCallback(
-		async (strategy: 'oauth_google' | 'oauth_apple' | 'oauth_microsoft') => {
-			try {
-				setIsLoading(true);
-				const { createdSessionId, setActive } = await startSSOFlow({
-					strategy,
-					redirectUrl: AuthSession.makeRedirectUri()
-				});
-
-				if (createdSessionId) {
-					setActive!({
-						session: createdSessionId,
-						navigate: async () => router.push('/')
-					});
-				}
-			} catch (err) {
-				console.error(JSON.stringify(err, null, 2));
-			} finally {
-				setIsLoading(false);
-			}
-		},
-		[startSSOFlow, router]
-	);
 
 	if (showEmailCode) {
 		return (
@@ -284,28 +258,7 @@ export default function Page() {
 					</View>
 
 					{/* OAuth Buttons */}
-					<View className="flex-row gap-3">
-						<TouchableOpacity
-							className="h-12 flex-1 flex-row items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white active:bg-slate-50"
-							onPress={() => startOAuth('oauth_google')}
-						>
-							<AntDesign name="google" size={22} color="#059669" />
-						</TouchableOpacity>
-
-						<TouchableOpacity
-							className="h-12 flex-1 flex-row items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white active:bg-slate-50"
-							onPress={() => startOAuth('oauth_apple')}
-						>
-							<MaterialIcons name="apple" size={22} color="#059669" />
-						</TouchableOpacity>
-
-						<TouchableOpacity
-							className="h-12 flex-1 flex-row items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white active:bg-slate-50"
-							onPress={() => startOAuth('oauth_microsoft')}
-						>
-							<Ionicons name="logo-microsoft" size={22} color="#059669" />
-						</TouchableOpacity>
-					</View>
+					<OAuthButtons />
 				</View>
 
 				{/* Security Badge */}

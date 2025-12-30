@@ -14,6 +14,8 @@ import { Link, useRouter } from 'expo-router';
 import logo from '../../../assets/logo.png';
 import { useState } from 'react';
 import { AntDesign, Ionicons, MaterialIcons } from '@expo/vector-icons';
+import OAuthButtons from '@/src/components/OAuthButtons';
+import VerificationModal from '@/src/components/VerificationModal';
 
 export default function SignUpScreen() {
 	const { isLoaded, signUp, setActive } = useSignUp();
@@ -54,46 +56,11 @@ export default function SignUpScreen() {
 		}
 	};
 
-	// Handle submission of verification form
-	const onVerifyPress = async () => {
-		if (!isLoaded) return;
-
-		try {
-			// Use the code the user provided to attempt verification
-			const signUpAttempt = await signUp.attemptEmailAddressVerification({
-				code
-			});
-
-			// If verification was completed, set the session to active
-			// and redirect the user
-			if (signUpAttempt.status === 'complete') {
-				await setActive({ session: signUpAttempt.createdSessionId });
-				router.replace('/');
-			} else {
-				// If the status is not complete, check why. User may need to
-				// complete further steps.
-				console.error(JSON.stringify(signUpAttempt, null, 2));
-			}
-		} catch (err) {
-			// See https://clerk.com/docs/guides/development/custom-flows/error-handling
-			// for more info on error handling
-			console.error(JSON.stringify(err, null, 2));
-		}
-	};
+	
 
 	if (pendingVerification) {
 		return (
-			<>
-				<Text>Verify your email</Text>
-				<TextInput
-					value={code}
-					placeholder="Enter your verification code"
-					onChangeText={(code) => setCode(code)}
-				/>
-				<TouchableOpacity onPress={onVerifyPress}>
-					<Text>Verify</Text>
-				</TouchableOpacity>
-			</>
+			<VerificationModal email={emailAddress}/>
 		);
 	}
 
@@ -220,28 +187,7 @@ export default function SignUpScreen() {
 						</View>
 
 						{/* OAuth Buttons */}
-						<View className="flex-row gap-3">
-							<TouchableOpacity
-								className="h-12 flex-1 flex-row items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white active:bg-slate-50"
-								//onPress={() => startOAuth('oauth_google')}
-							>
-								<AntDesign name="google" size={22} color="#059669" />
-							</TouchableOpacity>
-
-							<TouchableOpacity
-								className="h-12 flex-1 flex-row items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white active:bg-slate-50"
-								//onPress={() => startOAuth('oauth_apple')}
-							>
-								<MaterialIcons name="apple" size={22} color="#059669" />
-							</TouchableOpacity>
-
-							<TouchableOpacity
-								className="h-12 flex-1 flex-row items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white active:bg-slate-50"
-								//onPress={() => startOAuth('oauth_microsoft')}
-							>
-								<Ionicons name="logo-microsoft" size={22} color="#059669" />
-							</TouchableOpacity>
-						</View>
+						<OAuthButtons />
 					</View>
 
 					{/* Security Badge */}
