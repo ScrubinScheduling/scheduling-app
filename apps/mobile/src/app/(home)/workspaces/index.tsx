@@ -1,20 +1,34 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import WorkspaceCard from '@/src/components/workspace/WorkSpaceCard';
 import CreateCard from '@/src/components/workspace/CreateCard';
-import type { Workspace } from "@scrubin/schemas";
+import type { Workspace } from '@scrubin/schemas';
+import { useApiClient } from '@/src/hooks/useApiClient';
+import ErrorCard from '@/src/components/ErrorCard';
 
 export default function WorkspacesList() {
-	// Sample data
-	const workspaces: Workspace[] = [
-		{
-			id: 1,
-			name: 'Main Clinic',
-			adminId: 'asdjfklasfsa',
-			location: 'sadfjklasjflksjfla'
+	const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+	const [isLoading, setIsLoading] = useState(false);
+	const [error, setError] = useState<string | null>(null);
+	const apiClient = useApiClient();
+
+	const fetchWorkspaces = useCallback(async () => {
+		try {
+			setIsLoading(true);
+			const list = await apiClient.getWorkspaces();
+			setWorkspaces(list);
+		} catch (error) {
+			setError(error instanceof Error ? error.message : 'Unexpected error');
+			console.log(error);
+		} finally {
+			setIsLoading(false);
 		}
-	];
+	}, [apiClient]);
+
+	useEffect(() => {
+		fetchWorkspaces();
+	}, []);
 
 	return (
 		<SafeAreaView style={{ flex: 1 }} className="bg-slate-50">
@@ -25,17 +39,28 @@ export default function WorkspacesList() {
 					<Text className="text-base text-slate-600">Select a workspace to get started</Text>
 				</View>
 
+				<ErrorCard
+					visible={error !== null}
+					message={error || ''}
+					type="error"
+					onDismiss={() => setError(null)}
+				/>
+
 				{/* Create Workspace Card */}
 				<View className="mb-4">
 					<CreateCard />
 				</View>
 
 				{/* Workspace Cards */}
-				<View className="mb-6 gap-4">
-					{workspaces.map((workspace) => (
-						<WorkspaceCard key={workspace.id} workspace={workspace} />
-					))}
-				</View>
+				{isLoading ? (
+					<ActivityIndicator />
+				) : (
+					<View className="mb-6 gap-4">
+						{workspaces.map((workspace) => (
+							<WorkspaceCard key={workspace.id} workspace={workspace} />
+						))}
+					</View>
+				)}
 			</ScrollView>
 		</SafeAreaView>
 	);
