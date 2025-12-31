@@ -1,5 +1,5 @@
 import React from 'react';
 import { Stack } from 'expo-router';
-export default function WorkspacesLayout() {
+export default function UserRootLayout() {
 	return <Stack />;
 }
