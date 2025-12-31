@@ -10,7 +10,7 @@ export function useApiClient() {
 	return useMemo(
 		() =>
 			createApiClient({
-				baseUrl: 'http://localhost:4000',
+				baseUrl: process.env.EXPO_PUBLIC_API_URL,
 				getToken
 			}),
 		[getToken]
