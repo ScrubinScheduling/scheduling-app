@@ -22,16 +22,18 @@ import timeOffRequestsRouter from './routes/timeOffRequests.js'
 import timesheetsRouter from './routes/timesheets.js'
 import eventsRouter from './routes/events.js'
 
-
 const app = express()
-const allowedOrigins =
-  process.env.FRONTEND_ORIGIN?.split(',') ?? ['http://localhost:3000']
+const allowedOrigins = process.env.FRONTEND_ORIGIN?.split(',') ?? ['http://localhost:3000']
 app.use(helmet())
 app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  }),
+    cors({
+        origin: (origin, callback) => {
+            if (!origin) return callback(null, true) // native/mobile (no Origin)
+            if (allowedOrigins.includes(origin)) return callback(null, true)
+            return callback(new Error('Not allowed by CORS'))
+        },
+        credentials: true,
+    }),
 )
 app.use(express.json())
 app.use(morgan('dev'))
