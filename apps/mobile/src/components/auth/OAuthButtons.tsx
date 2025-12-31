@@ -41,7 +41,7 @@ export default function OAuthButtons() {
 				onPress={() => startOAuth('oauth_google')}
 				disabled={isLoading}
 			>
-				{isLoading ? <ActivityIndicator /> : <AntDesign name="google" size={22} color="#059669" />}
+				<AntDesign name="google" size={22} color="#059669" />
 			</TouchableOpacity>
 
 			<TouchableOpacity
@@ -49,11 +49,7 @@ export default function OAuthButtons() {
 				onPress={() => startOAuth('oauth_apple')}
 				disabled={isLoading}
 			>
-				{isLoading ? (
-					<ActivityIndicator />
-				) : (
-					<MaterialIcons name="apple" size={22} color="#059669" />
-				)}
+				<MaterialIcons name="apple" size={22} color="#059669" />
 			</TouchableOpacity>
 
 			<TouchableOpacity
@@ -61,11 +57,7 @@ export default function OAuthButtons() {
 				onPress={() => startOAuth('oauth_microsoft')}
 				disabled={isLoading}
 			>
-				{isLoading ? (
-					<ActivityIndicator />
-				) : (
-					<Ionicons name="logo-microsoft" size={22} color="#059669" />
-				)}
+				<Ionicons name="logo-microsoft" size={22} color="#059669" />
 			</TouchableOpacity>
 		</View>
 	);

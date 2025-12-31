@@ -7,5 +7,5 @@ export default function ProtectedRoutesLayout() {
 
 	if (!isLoaded) return <ActivityIndicator />;
 	if (!isSignedIn) return <Redirect href={'/(auth)/sign-in'} />;
-	return <Stack />;
+	return <Stack screenOptions={{headerShown: false}}/>;
 }
