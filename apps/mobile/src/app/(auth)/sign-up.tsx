@@ -9,13 +9,15 @@ import {
 	ScrollView
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useSignUp } from '@clerk/clerk-expo';
+import { useSignUp, isClerkRuntimeError } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
 import logo from '../../../assets/logo.png';
 import { useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import OAuthButtons from '@/src/components/OAuthButtons';
 import VerificationModal from '@/src/components/VerificationModal';
+import ErrorCard from '@/src/components/ErrorCard';
+import { getClerkErrorMessage } from '@/src/utils/error-handler';
 
 export default function SignUpScreen() {
 	const { isLoaded, signUp, setActive } = useSignUp();
@@ -28,6 +30,7 @@ export default function SignUpScreen() {
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 	const [confirmPassword, setConfirmPassword] = useState('');
 	const [isLoading, setIsLoading] = useState(false);
+	const [error, setError] = useState<string | null>(null);
 	const passwordsMatch = password.length > 0 && password === confirmPassword;
 
 	// Handle submission of sign-up form
@@ -35,7 +38,7 @@ export default function SignUpScreen() {
 		if (!isLoaded) return;
 
 		if (!passwordsMatch) {
-			console.log('Password Error');
+			setError('Passwords do not match.');
 			return;
 		}
 
@@ -55,6 +58,13 @@ export default function SignUpScreen() {
 		} catch (err) {
 			// See https://clerk.com/docs/guides/development/custom-flows/error-handling
 			// for more info on error handling
+			if (isClerkRuntimeError(err) && err.code === 'networl_error') {
+				setError('Network error. Please check your connection and try again.');
+				console.error('Network error occurred');
+			} else {
+				const errorMessage = getClerkErrorMessage(err);
+				setError(errorMessage);
+			}
 			console.error(JSON.stringify(err, null, 2));
 		} finally {
 			setIsLoading(false);
@@ -80,6 +90,14 @@ export default function SignUpScreen() {
 							<Text className="text-3xl font-bold text-slate-900">Create Account</Text>
 							<Text className="text-base text-slate-600">Sign up to get started</Text>
 						</View>
+
+						{/* Error Card */}
+						<ErrorCard
+							visible={error !== null}
+							message={error || ''}
+							type="error"
+							onDismiss={() => setError(null)}
+						/>
 
 						{/* Email Input */}
 						<View className="gap-2">

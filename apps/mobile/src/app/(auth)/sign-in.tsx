@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
-import { useSSO } from '@clerk/clerk-expo';
+import { isClerkRuntimeError, useSSO } from '@clerk/clerk-expo';
 import {
 	View,
 	Button,
@@ -12,13 +12,15 @@ import {
 	TouchableOpacity,
 	ActivityIndicator
 } from 'react-native';
-import { router, Link, useRouter, Redirect } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useSignIn } from '@clerk/clerk-expo';
 import type { EmailCodeFactor } from '@clerk/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import logo from '../../../assets/logo.png';
 import { MaterialIcons, AntDesign, Ionicons } from '@expo/vector-icons';
 import OAuthButtons from '@/src/components/OAuthButtons';
+import ErrorCard from '@/src/components/ErrorCard';
+import { getClerkErrorMessage } from '@/src/utils/error-handler';
 
 // Preloads the browser for Android devices to reduce authentication load time
 // See: https://docs.expo.dev/guides/authentication/#improving-user-experience
@@ -45,9 +47,11 @@ export default function Page() {
 	const [showEmailCode, setShowEmailCode] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 	const [showPassword, setShowPassword] = useState(false);
+	const [error, setError] = useState<string | null>(null);
 
 	const onSignInPress = useCallback(async () => {
 		if (!isLoaded) return;
+		setError(null);
 
 		// Start the sign-in process using the email and password provided
 		try {
@@ -92,11 +96,19 @@ export default function Page() {
 			} else {
 				// If the status is not complete, check why. User may need to
 				// complete further steps.
+				setError('Unable to complete sign-in. Please try again.');
 				console.error(JSON.stringify(signInAttempt, null, 2));
 			}
 		} catch (err) {
 			// See https://clerk.com/docs/guides/development/custom-flows/error-handling
 			// for more info on error handling
+			if (isClerkRuntimeError(err) && err.code === 'network_error') {
+				setError('Network error. Please check your connection and try again.');
+				console.error('Network error occurred');
+			} else {
+				const errorMessage = getClerkErrorMessage(err);
+				setError(errorMessage);
+			}
 			console.error(JSON.stringify(err, null, 2));
 		} finally {
 			setIsLoading(false);
@@ -129,6 +141,12 @@ export default function Page() {
 				console.error(JSON.stringify(signInAttempt, null, 2));
 			}
 		} catch (err) {
+			if (isClerkRuntimeError(err) && err.code === 'network_error') {
+				setError('Network error. Please check your connection and try again.');
+			} else {
+				const errorMessage = getClerkErrorMessage(err);
+				setError(errorMessage);
+			}
 			console.error(JSON.stringify(err, null, 2));
 		} finally {
 			setIsLoading(false);
@@ -173,6 +191,13 @@ export default function Page() {
 						<Text className="text-3xl font-bold text-slate-900">Welcome Back</Text>
 						<Text className="text-base text-slate-600">Sign in to access your schedule</Text>
 					</View>
+
+					<ErrorCard
+						visible={error !== null}
+						message={error || ''}
+						type="error"
+						onDismiss={() => setError(null)}
+					/>
 
 					{/* Email Input */}
 					<View className="gap-2">
