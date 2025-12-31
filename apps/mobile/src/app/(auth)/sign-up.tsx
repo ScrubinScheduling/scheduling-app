@@ -11,13 +11,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSignUp, isClerkRuntimeError } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
-import logo from '../../../assets/logo.png';
 import { useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
-import OAuthButtons from '@/src/components/OAuthButtons';
-import VerificationModal from '@/src/components/VerificationModal';
+import OAuthButtons from '@/src/components/auth/OAuthButtons';
+import VerificationModal from '@/src/components/auth/VerificationModal';
 import ErrorCard from '@/src/components/ErrorCard';
 import { getClerkErrorMessage } from '@/src/utils/error-handler';
+const logo = require('../../../assets/logo.png');
 
 export default function SignUpScreen() {
 	const { isLoaded, signUp, setActive } = useSignUp();

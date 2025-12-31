@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import * as WebBrowser from 'expo-web-browser';
-import * as AuthSession from 'expo-auth-session';
-import { isClerkRuntimeError, useSSO } from '@clerk/clerk-expo';
+import { useSignIn, isClerkRuntimeError } from '@clerk/clerk-expo';
+import type { EmailCodeFactor } from '@clerk/types';
 import {
 	View,
 	Button,
@@ -13,14 +13,12 @@ import {
 	ActivityIndicator
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useSignIn } from '@clerk/clerk-expo';
-import type { EmailCodeFactor } from '@clerk/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import logo from '../../../assets/logo.png';
-import { MaterialIcons, AntDesign, Ionicons } from '@expo/vector-icons';
-import OAuthButtons from '@/src/components/OAuthButtons';
+import { MaterialIcons } from '@expo/vector-icons';
+import OAuthButtons from '@/src/components/auth/OAuthButtons';
 import ErrorCard from '@/src/components/ErrorCard';
 import { getClerkErrorMessage } from '@/src/utils/error-handler';
+const logo = require('../../../assets/logo.png');
 
 // Preloads the browser for Android devices to reduce authentication load time
 // See: https://docs.expo.dev/guides/authentication/#improving-user-experience
