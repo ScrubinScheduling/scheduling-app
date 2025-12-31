@@ -20,7 +20,7 @@ import { getClerkErrorMessage } from '@/src/utils/error-handler';
 const logo = require('../../../assets/logo.png');
 
 export default function SignUpScreen() {
-	const { isLoaded, signUp, setActive } = useSignUp();
+	const { isLoaded, signUp } = useSignUp();
 	const router = useRouter();
 
 	const [emailAddress, setEmailAddress] = React.useState('');

@@ -33,7 +33,7 @@ export default function ErrorCard({
 				useNativeDriver: true
 			}).start();
 		}
-	}, [visible]);
+	}, [visible, fadeAnim]);
 
 	if (!visible) return null;
 

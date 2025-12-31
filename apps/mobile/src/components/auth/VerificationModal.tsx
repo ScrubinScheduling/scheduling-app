@@ -114,7 +114,7 @@ export default function VerificationModal({ email, visible, onClose }: ModalProp
 										Check Your Email
 									</Text>
 									<Text className="text-center text-sm text-slate-600">
-										We've sent a verification code to{'\n'}
+										We&apos;ve sent a verification code to{'\n'}
 										<Text className="font-semibold text-slate-900">
 											{email || 'your.email@vetclinic.com'}
 										</Text>
@@ -164,7 +164,7 @@ export default function VerificationModal({ email, visible, onClose }: ModalProp
 
 							{/* Resend Section */}
 							<View className="flex-row items-center justify-center gap-1">
-								<Text className="text-sm text-slate-600">Didn't receive the code?</Text>
+								<Text className="text-sm text-slate-600">Didn&apos;t receive the code?</Text>
 								<TouchableOpacity
 									onPress={onResendPress}
 									disabled={resendCooldown > 0 || isResending}
@@ -187,7 +187,7 @@ export default function VerificationModal({ email, visible, onClose }: ModalProp
 									<MaterialIcons name="info" size={20} color="#2563eb" style={{ marginTop: 2 }} />
 									<View className="flex-1">
 										<Text className="text-xs leading-5 text-blue-700">
-											The code will expire in 10 minutes. Check your spam folder if you don't see
+											The code will expire in 10 minutes. Check your spam folder if you don&apos;t see
 											the email.
 										</Text>
 									</View>

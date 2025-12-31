@@ -111,7 +111,7 @@ export default function Page() {
 		} finally {
 			setIsLoading(false);
 		}
-	}, [isLoaded, emailAddress, password]);
+	}, [isLoaded, emailAddress, password, router, setActive, signIn]);
 
 	const onVerifyPress = useCallback(async () => {
 		if (!isLoaded) return;
@@ -149,7 +149,7 @@ export default function Page() {
 		} finally {
 			setIsLoading(false);
 		}
-	}, [isLoaded, code]);
+	}, [isLoaded, code, signIn, setActive, router]);
 
 	useWarmUpBrowser();
 
