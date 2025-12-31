@@ -58,7 +58,7 @@ export default function SignUpScreen() {
 		} catch (err) {
 			// See https://clerk.com/docs/guides/development/custom-flows/error-handling
 			// for more info on error handling
-			if (isClerkRuntimeError(err) && err.code === 'networl_error') {
+			if (isClerkRuntimeError(err) && err.code === 'network_error') {
 				setError('Network error. Please check your connection and try again.');
 				console.error('Network error occurred');
 			} else {
