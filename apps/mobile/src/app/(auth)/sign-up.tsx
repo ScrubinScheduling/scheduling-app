@@ -16,7 +16,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import OAuthButtons from '@/src/components/auth/OAuthButtons';
 import VerificationModal from '@/src/components/auth/VerificationModal';
 import ErrorCard from '@/src/components/ErrorCard';
-import { getClerkErrorMessage } from '@/src/utils/error-handler';
+import { getClerkErrorMessage, logAuthError } from '@/src/utils/error-handler';
 const logo = require('../../../assets/logo.png');
 
 export default function SignUpScreen() {
@@ -65,7 +65,7 @@ export default function SignUpScreen() {
 				const errorMessage = getClerkErrorMessage(err);
 				setError(errorMessage);
 			}
-			console.error(JSON.stringify(err, null, 2));
+			logAuthError('sign-up', err)
 		} finally {
 			setIsLoading(false);
 		}

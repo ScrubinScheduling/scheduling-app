@@ -42,3 +42,13 @@ export function getClerkErrorMessage(error: any): string {
 	// Default fallback
 	return 'An unexpected error occurred. Please try again.';
 }
+
+export function logAuthError(context: string, err: unknown) {
+	if (!__DEV__) return;
+	const e = err as { code?: string; status?: number; name?: string };
+	console.warn(`[auth] ${context} failed`, {
+		code: e?.code,
+		status: e?.status,
+		name: e?.name
+	});
+}

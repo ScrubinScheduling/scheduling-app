@@ -11,6 +11,7 @@ import React, { useEffect, useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSignUp } from '@clerk/clerk-expo';
 import { router } from 'expo-router';
+import { getClerkErrorMessage, logAuthError } from '@/src/utils/error-handler';
 
 type ModalProps = {
 	email: string;
@@ -24,8 +25,10 @@ export default function VerificationModal({ email, visible, onClose }: ModalProp
 	const [code, setCode] = useState('');
 	const [isResending, setIsResending] = useState(false);
 	const [resendCooldown, setResendCooldown] = useState(0);
+	const [error, setError] = useState<string | null>(null);
 
 	const handleClose = () => {
+		setError(null);
 		setCode('');
 		onClose();
 	};
@@ -33,6 +36,7 @@ export default function VerificationModal({ email, visible, onClose }: ModalProp
 	// Handle submission of verification form
 	const onVerifyPress = async () => {
 		if (!isLoaded) return;
+		setError(null);
 
 		try {
 			// Use the code the user provided to attempt verification
@@ -54,7 +58,8 @@ export default function VerificationModal({ email, visible, onClose }: ModalProp
 		} catch (err) {
 			// See https://clerk.com/docs/guides/development/custom-flows/error-handling
 			// for more info on error handling
-			console.error(JSON.stringify(err, null, 2));
+			setError(getClerkErrorMessage(err));
+			logAuthError('verify-email', err);
 		} finally {
 			setIsLoading(false);
 		}
@@ -187,8 +192,8 @@ export default function VerificationModal({ email, visible, onClose }: ModalProp
 									<MaterialIcons name="info" size={20} color="#2563eb" style={{ marginTop: 2 }} />
 									<View className="flex-1">
 										<Text className="text-xs leading-5 text-blue-700">
-											The code will expire in 10 minutes. Check your spam folder if you don&apos;t see
-											the email.
+											The code will expire in 10 minutes. Check your spam folder if you don&apos;t
+											see the email.
 										</Text>
 									</View>
 								</View>

@@ -17,7 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import OAuthButtons from '@/src/components/auth/OAuthButtons';
 import ErrorCard from '@/src/components/ErrorCard';
-import { getClerkErrorMessage } from '@/src/utils/error-handler';
+import { getClerkErrorMessage, logAuthError } from '@/src/utils/error-handler';
 const logo = require('../../../assets/logo.png');
 
 // Preloads the browser for Android devices to reduce authentication load time
@@ -68,7 +68,7 @@ export default function Page() {
 						if (session?.currentTask) {
 							// Check for tasks and navigate to custom UI to help users resolve them
 							// See https://clerk.com/docs/guides/development/custom-flows/overview#session-tasks
-							console.log(session?.currentTask);
+							//console.log(session?.currentTask);
 							return;
 						}
 
@@ -95,7 +95,7 @@ export default function Page() {
 				// If the status is not complete, check why. User may need to
 				// complete further steps.
 				setError('Unable to complete sign-in. Please try again.');
-				console.error(JSON.stringify(signInAttempt, null, 2));
+				//console.error(JSON.stringify(signInAttempt, null, 2));
 			}
 		} catch (err) {
 			// See https://clerk.com/docs/guides/development/custom-flows/error-handling
@@ -145,7 +145,7 @@ export default function Page() {
 				const errorMessage = getClerkErrorMessage(err);
 				setError(errorMessage);
 			}
-			console.error(JSON.stringify(err, null, 2));
+			logAuthError('sign-in', err);
 		} finally {
 			setIsLoading(false);
 		}
