@@ -5,7 +5,7 @@ import CreateCard from '@/src/components/workspace/CreateWorkspaceCard';
 import type { Workspace } from '@scrubin/schemas';
 import { useApiClient } from '@/src/hooks/useApiClient';
 import ErrorCard from '@/src/components/ErrorCard';
-import WorkspaceCard from '@/src/components/workspace/WorkSpaceCard';
+import WorkspaceCard from '@/src/components/workspace/WorkspaceCard';
 
 export default function WorkspacesList() {
 	const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
@@ -28,7 +28,7 @@ export default function WorkspacesList() {
 
 	useEffect(() => {
 		fetchWorkspaces();
-	}, []);
+	}, [fetchWorkspaces]);
 
 	return (
 		<SafeAreaView style={{ flex: 1 }} className="bg-slate-50">

@@ -13,7 +13,7 @@ export default function WorkspaceCard({ workspace }: WorkspaceCardProps) {
 
 	return (
 		<TouchableOpacity
-			onPress={() => router.push(`/workspaces/${workspace.id}`)}
+			onPress={() => router.push(`/workspaces/${workspace.id}/dashboard`)}
 			className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm active:bg-slate-50"
 		>
 			<View className="flex-row items-center justify-between">

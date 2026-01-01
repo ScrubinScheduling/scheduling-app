@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 import WorkspaceModal from './WorkspaceModal';
 import { useApiClient } from '@/src/hooks/useApiClient';
 
 export default function CreateCard() {
-	const router = useRouter();
 	const apiClient = useApiClient();
 	const [isModalVisible, setIsModalVisible] = useState(false);
 	const handleCreateWorkspace = async (name: string, location: string) => {
