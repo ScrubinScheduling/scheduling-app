@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import WorkspaceCard from '@/src/components/workspace/WorkSpaceCard';
-import CreateCard from '@/src/components/workspace/CreateCard';
+import CreateCard from '@/src/components/workspace/CreateWorkspaceCard';
 import type { Workspace } from '@scrubin/schemas';
 import { useApiClient } from '@/src/hooks/useApiClient';
 import ErrorCard from '@/src/components/ErrorCard';
+import WorkspaceCard from '@/src/components/workspace/WorkSpaceCard';
 
 export default function WorkspacesList() {
 	const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
