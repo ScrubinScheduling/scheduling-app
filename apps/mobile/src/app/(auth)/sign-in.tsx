@@ -18,6 +18,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import OAuthButtons from '@/src/components/auth/OAuthButtons';
 import ErrorCard from '@/src/components/ErrorCard';
 import { getClerkErrorMessage, logAuthError } from '@/src/utils/error-handler';
+import SignInVerificationModal from '@/src/components/auth/SignInVerificationModal';
 const logo = require('../../../assets/logo.png');
 
 // Preloads the browser for Android devices to reduce authentication load time
@@ -40,8 +41,8 @@ export default function Page() {
 	const { signIn, setActive, isLoaded } = useSignIn();
 	const router = useRouter();
 	const [emailAddress, setEmailAddress] = useState('');
+	const [emailAddressId, setEmailAddressId] = useState<string | null>(null);
 	const [password, setPassword] = useState('');
-	const [code, setCode] = useState('');
 	const [showEmailCode, setShowEmailCode] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 	const [showPassword, setShowPassword] = useState(false);
@@ -58,6 +59,21 @@ export default function Page() {
 				identifier: emailAddress,
 				password
 			});
+
+			if (signInAttempt.status === 'needs_first_factor') {
+				const emailCodeFactor = signInAttempt.supportedFirstFactors?.find(
+					(factor) => factor.strategy === 'email_code'
+				);
+
+				if (emailCodeFactor) {
+					await signIn.prepareFirstFactor({
+						strategy: 'email_code',
+						emailAddressId: emailCodeFactor.emailAddressId
+					});
+					setEmailAddressId(emailCodeFactor.emailAddressId);
+					setShowEmailCode(true);
+				}
+			}
 
 			// If sign-in process is complete, set the created session as active
 			// and redirect the user
@@ -113,63 +129,7 @@ export default function Page() {
 		}
 	}, [isLoaded, emailAddress, password, router, setActive, signIn]);
 
-	const onVerifyPress = useCallback(async () => {
-		if (!isLoaded) return;
-
-		try {
-			setIsLoading(true);
-			const signInAttempt = await signIn.attemptFirstFactor({
-				strategy: 'email_code',
-				code
-			});
-
-			if (signInAttempt.status === 'complete') {
-				await setActive({
-					session: signInAttempt.createdSessionId,
-					navigate: async ({ session }) => {
-						if (session?.currentTask) {
-							console.log(session?.currentTask);
-							return;
-						}
-
-						router.replace('/');
-					}
-				});
-			} else {
-				console.error(JSON.stringify(signInAttempt, null, 2));
-			}
-		} catch (err) {
-			if (isClerkRuntimeError(err) && err.code === 'network_error') {
-				setError('Network error. Please check your connection and try again.');
-			} else {
-				const errorMessage = getClerkErrorMessage(err);
-				setError(errorMessage);
-			}
-			logAuthError('sign-in', err);
-		} finally {
-			setIsLoading(false);
-		}
-	}, [isLoaded, code, signIn, setActive, router]);
-
 	useWarmUpBrowser();
-
-	if (showEmailCode) {
-		return (
-			<SafeAreaView>
-				<View>
-					<Text>Verify your email</Text>
-					<Text>A verification code has been sent to your email.</Text>
-					<TextInput
-						value={code}
-						placeholder="Enter verification code"
-						placeholderTextColor="#666666"
-						onChangeText={(code) => setCode(code)}
-					/>
-					<Button title="Verify" onPress={onVerifyPress} />
-				</View>
-			</SafeAreaView>
-		);
-	}
 
 	return (
 		<SafeAreaView style={{ flex: 1 }} className="bg-slate-50">
@@ -190,6 +150,7 @@ export default function Page() {
 						<Text className="text-base text-slate-600">Sign in to access your schedule</Text>
 					</View>
 
+					{/* Error */}
 					<ErrorCard
 						visible={error !== null}
 						message={error || ''}
@@ -286,6 +247,12 @@ export default function Page() {
 					<Text className="text-xs text-slate-500">Secured with end-to-end encryption</Text>
 				</View>
 			</View>
+			<SignInVerificationModal
+				email={emailAddress}
+				emailAddressId={emailAddressId}
+				onClose={() => setShowEmailCode(false)}
+				visible={showEmailCode}
+			/>
 		</SafeAreaView>
 	);
 }

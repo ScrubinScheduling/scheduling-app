@@ -19,7 +19,7 @@ type ModalProps = {
 	onClose: () => void;
 };
 
-export default function VerificationModal({ email, visible, onClose }: ModalProps) {
+export default function SignUpVerificationModal({ email, visible, onClose }: ModalProps) {
 	const [isLoading, setIsLoading] = useState(false);
 	const { isLoaded, signUp, setActive } = useSignUp();
 	const [code, setCode] = useState('');

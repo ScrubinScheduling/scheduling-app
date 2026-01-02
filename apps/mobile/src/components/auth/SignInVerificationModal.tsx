@@ -1,0 +1,229 @@
+import {
+	View,
+	Text,
+	Modal,
+	Pressable,
+	TouchableOpacity,
+	ActivityIndicator,
+	TextInput
+} from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { MaterialIcons } from '@expo/vector-icons';
+import { isClerkRuntimeError, useSignIn } from '@clerk/clerk-expo';
+import { router } from 'expo-router';
+import { getClerkErrorMessage, logAuthError } from '@/src/utils/error-handler';
+import ErrorCard from '../ErrorCard';
+
+type ModalProps = {
+	email: string;
+	visible: boolean;
+	onClose: () => void;
+	emailAddressId: string | null;
+};
+
+export default function SignInVerificationModal({
+	email,
+	visible,
+	onClose,
+	emailAddressId
+}: ModalProps) {
+	const [isLoading, setIsLoading] = useState(false);
+	const { isLoaded, signIn, setActive } = useSignIn();
+	const [code, setCode] = useState('');
+	const [isResending, setIsResending] = useState(false);
+	const [resendCooldown, setResendCooldown] = useState(0);
+	const [error, setError] = useState<string | null>(null);
+
+	const handleClose = () => {
+		setError(null);
+		setCode('');
+		onClose();
+	};
+
+	// Handle submission of verification form
+	const onVerifyPress = useCallback(async () => {
+		if (!isLoaded) return;
+
+		try {
+			setIsLoading(true);
+			const signInAttempt = await signIn.attemptFirstFactor({
+				strategy: 'email_code',
+				code
+			});
+
+			if (signInAttempt.status === 'complete') {
+				await setActive({
+					session: signInAttempt.createdSessionId,
+					navigate: async ({ session }) => {
+						if (session?.currentTask) {
+							console.log(session?.currentTask);
+							return;
+						}
+
+						router.replace('/');
+					}
+				});
+			} else {
+				console.error(JSON.stringify(signInAttempt, null, 2));
+			}
+		} catch (err) {
+			if (isClerkRuntimeError(err) && err.code === 'network_error') {
+				setError('Network error. Please check your connection and try again.');
+			} else {
+				const errorMessage = getClerkErrorMessage(err);
+				setError(errorMessage);
+			}
+			logAuthError('sign-in', err);
+		} finally {
+			setIsLoading(false);
+		}
+	}, [isLoaded, code, signIn, setActive, router]);
+
+	const onResendPress = async () => {
+		if (!isLoaded || !emailAddressId || resendCooldown > 0 || isResending) return;
+
+		try {
+			setIsResending(true);
+			await signIn.prepareFirstFactor({
+				strategy: 'email_code',
+				emailAddressId
+			});
+			setResendCooldown(60);
+		} catch (err) {
+			console.error(JSON.stringify(err, null, 2));
+		} finally {
+			setIsResending(false);
+		}
+	};
+
+	// Countdown timer for resend cooldown
+	useEffect(() => {
+		if (resendCooldown > 0) {
+			const timer = setTimeout(() => {
+				setResendCooldown(resendCooldown - 1);
+			}, 1000);
+			return () => clearTimeout(timer);
+		}
+	}, [resendCooldown]);
+	return (
+		<Modal visible={visible} transparent={true} animationType="fade" onRequestClose={handleClose}>
+			{/* Backdrop */}
+			<Pressable className="flex-1 bg-black/50" onPress={handleClose}>
+				{/* Modal Content */}
+				<View className="flex-1 items-center justify-center px-6">
+					<Pressable className="w-full max-w-md" onPress={(e) => e.stopPropagation()}>
+						{/* Close Button */}
+						<View className="mb-4 items-end">
+							<TouchableOpacity
+								onPress={handleClose}
+								className="size-10 items-center justify-center rounded-full bg-white shadow-lg"
+							>
+								<MaterialIcons name="close" size={24} color="#475569" />
+							</TouchableOpacity>
+						</View>
+
+						{/* Main Card */}
+						<View className="gap-6 rounded-3xl border border-slate-200 bg-white px-8 py-8 shadow-2xl">
+							{/* Icon & Header */}
+							<View className="items-center gap-4">
+								<View className="size-20 items-center justify-center rounded-full bg-emerald-100">
+									<MaterialIcons name="mark-email-read" size={40} color="#059669" />
+								</View>
+								<View className="items-center gap-2">
+									<Text className="text-center text-2xl font-bold text-slate-900">
+										Check Your Email
+									</Text>
+									<Text className="text-center text-sm text-slate-600">
+										We&apos;ve sent a verification code to{'\n'}
+										<Text className="font-semibold text-slate-900">
+											{email || 'your.email@vetclinic.com'}
+										</Text>
+									</Text>
+								</View>
+							</View>
+
+							<ErrorCard
+								visible={error !== null}
+								message={error || ''}
+								type="error"
+								onDismiss={() => setError(null)}
+							/>
+
+							{/* Code Input */}
+							<View className="gap-2">
+								<Text className="text-sm font-medium text-slate-700">Verification Code</Text>
+								<View className="h-16 flex-row items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4">
+									<MaterialIcons name="lock-outline" size={20} color="#94a3b8" />
+									<TextInput
+										className="flex-1 text-center text-2xl font-semibold tracking-widest text-slate-900"
+										placeholder="000000"
+										placeholderTextColor="#cbd5e1"
+										value={code}
+										onChangeText={setCode}
+										keyboardType="number-pad"
+										maxLength={6}
+										autoFocus
+									/>
+								</View>
+								<Text className="text-xs text-slate-500">
+									Enter the 6-digit code sent to your email
+								</Text>
+							</View>
+
+							{/* Verify Button */}
+							<TouchableOpacity
+								onPress={onVerifyPress}
+								disabled={isLoading || code.length !== 6}
+								className="h-14 flex-row items-center justify-center gap-2 rounded-lg bg-emerald-600 shadow-lg active:bg-emerald-700 disabled:opacity-50"
+							>
+								{isLoading ? (
+									<>
+										<ActivityIndicator size="small" color="white" />
+										<Text className="text-base font-semibold text-white">Verifying...</Text>
+									</>
+								) : (
+									<>
+										<Text className="text-base font-semibold text-white">Verify Email</Text>
+										<MaterialIcons name="check-circle" size={20} color="white" />
+									</>
+								)}
+							</TouchableOpacity>
+
+							{/* Resend Section */}
+							<View className="flex-row items-center justify-center gap-1">
+								<Text className="text-sm text-slate-600">Didn&apos;t receive the code?</Text>
+								<TouchableOpacity
+									onPress={onResendPress}
+									disabled={resendCooldown > 0 || isResending}
+								>
+									{isResending ? (
+										<ActivityIndicator size="small" color="#059669" />
+									) : resendCooldown > 0 ? (
+										<Text className="text-sm font-medium text-slate-400">
+											Resend ({resendCooldown}s)
+										</Text>
+									) : (
+										<Text className="text-sm font-medium text-emerald-600">Resend</Text>
+									)}
+								</TouchableOpacity>
+							</View>
+
+							{/* Info Box */}
+							<View className="gap-3 rounded-lg border border-blue-100 bg-blue-50 p-4">
+								<View className="flex-row gap-3">
+									<MaterialIcons name="info" size={20} color="#2563eb" style={{ marginTop: 2 }} />
+									<View className="flex-1">
+										<Text className="text-xs leading-5 text-blue-700">
+											The code will expire in 10 minutes. Check your spam folder if you don&apos;t
+											see the email.
+										</Text>
+									</View>
+								</View>
+							</View>
+						</View>
+					</Pressable>
+				</View>
+			</Pressable>
+		</Modal>
+	);
+}

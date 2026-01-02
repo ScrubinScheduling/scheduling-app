@@ -14,7 +14,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import OAuthButtons from '@/src/components/auth/OAuthButtons';
-import VerificationModal from '@/src/components/auth/VerificationModal';
+import SignUpVerificationModal from '@/src/components/auth/SignUpVerificationModal';
 import ErrorCard from '@/src/components/ErrorCard';
 import { getClerkErrorMessage, logAuthError } from '@/src/utils/error-handler';
 const logo = require('../../../assets/logo.png');
@@ -65,7 +65,7 @@ export default function SignUpScreen() {
 				const errorMessage = getClerkErrorMessage(err);
 				setError(errorMessage);
 			}
-			logAuthError('sign-up', err)
+			logAuthError('sign-up', err);
 		} finally {
 			setIsLoading(false);
 		}
@@ -212,7 +212,7 @@ export default function SignUpScreen() {
 					</View>
 				</View>
 			</ScrollView>
-			<VerificationModal
+			<SignUpVerificationModal
 				email={emailAddress}
 				visible={showVerificationModal}
 				onClose={() => {
