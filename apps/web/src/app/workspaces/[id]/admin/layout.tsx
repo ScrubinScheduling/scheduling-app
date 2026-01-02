@@ -1,15 +1,28 @@
-"use client";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
-import { useParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
+import { auth } from "@clerk/nextjs/server";
+import { createApiClient } from "@scrubin/api-client";
 
-export default function AppLayout({
-  children,
+export default async function AppLayout({
+	children,
+	params
 }: {
-  children: React.ReactNode;
+	children: React.ReactNode;
+	params: Promise<{ id: string }>
 }) {
 
-  const { id } = useParams<{ id: string }>();
+	const { id } = await params
+
+	const { getToken } = await auth();
+
+	const apiClient = createApiClient({
+		baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
+		getToken
+	});
+
+	const workspaces = await apiClient.getWorkspaces();
+	console.log(workspaces)
+	//   const { id } = useParams<{ id: string }>();
 	const navlinks = [
 		{
 			href: `/workspaces/${id}/admin/dashboard`,
@@ -23,21 +36,21 @@ export default function AppLayout({
 		// 	href: `/workspaces/${id}/admin/requests`,
 		// 	name: "Requests"
 		// },
-    	{
+		{
 			href: `/workspaces/${id}/admin/timesheets`,
 			name: "Timesheets"
 		}
 	];
-  return (
-    <>
-      <SignedIn>
-        <Navbar navlinks={navlinks}/>
-        {children}
-      </SignedIn>
-      <SignedOut>
-        {/* Hide app chrome when signed out */}
-      </SignedOut>
-    </>
-  );
+	return (
+		<>
+			<SignedIn>
+				<Navbar workspaces={workspaces} navlinks={navlinks} />
+				{children}
+			</SignedIn>
+			<SignedOut>
+				{/* Hide app chrome when signed out */}
+			</SignedOut>
+		</>
+	);
 }
 

@@ -5,7 +5,9 @@ import {
     CalendarDays,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
+import WorkspaceSelector from "./WorkspaceSelector";
+import { Workspace } from "@scrubin/schemas";
 
 
 type NavLink = {
@@ -13,9 +15,11 @@ type NavLink = {
     name: string;
 };
 
-export default function Navbar({ navlinks }: { navlinks: NavLink[] }) {
+export default function Navbar({ navlinks, workspaces }: { navlinks: NavLink[]; workspaces: Workspace[]}) {
 
     const pathname = usePathname();
+    const params = useParams<{ id: string }>();
+
 
     return (
 
@@ -40,8 +44,11 @@ export default function Navbar({ navlinks }: { navlinks: NavLink[] }) {
             </div>
 
             <div className="flex items-center gap-4">
+
+                <WorkspaceSelector selectedWorkspace={workspaces.find((w) => w.id === Number(params.id))} workspaces={workspaces} />
                 <Bell className="w-5 h-5 text-muted-foreground" />
                 <UserButton />
+
             </div>
 
         </nav>
