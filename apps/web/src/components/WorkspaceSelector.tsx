@@ -3,6 +3,7 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { useState } from "react";
 import { Workspace } from "@scrubin/schemas";
+import { redirect } from "next/navigation";
 
 const colors = [
     "bg-blue-500",
@@ -45,7 +46,7 @@ export default function WorkspaceSelector({ selectedWorkspace, workspaces }: { s
                 {workspaces.map((workspace, index) =>
                     <DropdownMenuItem key={workspace.id}
                         className="flex items-center gap-3 cursor-pointer"
-                        onClick={() => setCurrentWorkspace(workspace)}
+                        onClick={() => redirect(`/workspaces/${workspace.id}`)}
                     >
                         <div className={`w-6 h-6 rounded ${colors[index % colors.length]} flex items-center justify-center flex-shrink-0`}>
                             <span className="text-xs font-semibold !text-white">{getInitials(workspace.name)}</span>
