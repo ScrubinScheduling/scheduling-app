@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Modal, Select, TimePicker, Alert, Button } from 'antd';
-import { Dayjs } from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import { User } from '@scrubin/schemas';
 import { useApiClient } from '@/hooks/useApiClient';
 
@@ -25,6 +25,7 @@ const SingleAddShiftModal = ({ open, setOpen, user, selectedDay, users, workspac
   const [timeRange, setTimeRange] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [err, setErr] = useState<string>('');
+  const today = dayjs().startOf('day');
 
   useEffect(() => setDay(selectedDay), [selectedDay]);
   useEffect(() => setSelectedUser(user), [user]);
@@ -33,6 +34,7 @@ const SingleAddShiftModal = ({ open, setOpen, user, selectedDay, users, workspac
     try {
       if (!timeRange[0] || !timeRange[1] || !selectedDay || !day || !selectedUser)
         throw new Error('Not all fields filled out');
+      if (day.startOf('day').isBefore(today)) throw new Error("Can't create shifts in the past");
       setIsLoading(true);
       const startTime = withTime(day, timeRange[0]);
       const endTime = withTime(day, timeRange[1]);
@@ -108,6 +110,7 @@ const SingleAddShiftModal = ({ open, setOpen, user, selectedDay, users, workspac
           format={'YYYY-MM-d'}
           className="w-full"
           value={day}
+          disabledDate={(current) => !!current && current.startOf('day').isBefore(today)}
           onChange={(val: Dayjs) => {
             setDay(val);
           }}

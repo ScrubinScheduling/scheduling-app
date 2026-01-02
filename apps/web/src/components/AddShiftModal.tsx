@@ -1,6 +1,6 @@
 import React from 'react';
 import { useState } from 'react';
-import { Dayjs } from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import { useApiClient } from '@/hooks/useApiClient';
 import { Modal, Select, TimePicker, DatePicker, Button, Flex, Alert } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
@@ -22,6 +22,7 @@ const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen, users, wor
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const clientAPI = useApiClient();
+  const today = dayjs().startOf('day');
 
   const handleCancel = () => {
     setOpen(false);
@@ -33,6 +34,11 @@ const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen, users, wor
     setAlertDesc(null);
     if (!user || !dates || !timeRange) {
       setAlertDesc('Please fill in all fields.');
+      setOpenAlert(true);
+      return;
+    }
+    if (dates.some((d) => d.isBefore(today))) {
+      setAlertDesc("You can't create shifts in the past.");
       setOpenAlert(true);
       return;
     }
@@ -133,6 +139,7 @@ const AddShiftModal: React.FC<AddShiftModalProps> = ({ open, setOpen, users, wor
                   format={'YYYY-MM-DD'}
                   maxTagCount={'responsive'}
                   open={datePickerOpen}
+                  disabledDate={(current) => !!current && current.startOf('day').isBefore(today)}
                   onChange={(vals) => {
                     setDates(vals as Dayjs[] | null);
                   }}

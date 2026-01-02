@@ -12,7 +12,7 @@ import { useSSEStream } from '@/hooks/useSSE';
 import { getToday, makeWeek, moveWeek } from '../../../../../../helpers/time';
 import { UsersRound, ChevronLeft, ChevronRight, Plus, Coffee } from 'lucide-react';
 
-import { format, isWithinInterval, parseISO } from 'date-fns';
+import { format, isBefore, isWithinInterval, parseISO, startOfDay } from 'date-fns';
 import ShiftModal from '@/components/ShiftModal';
 import { Shift, User } from '@scrubin/schemas';
 import SingleAddShiftModal from '@/components/SingleAddShiftModal';
@@ -30,6 +30,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const workspaceId = Number(id);
   const hasValidWorkspace = Number.isInteger(workspaceId);
+  const today = startOfDay(new Date());
   const [anchor, setAnchor] = useState<Date>(getToday());
   const [isModal, setIsModal] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -204,15 +205,20 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
             <div className="min-w-[1200px]">
               <div className="mb-2 grid grid-cols-8 gap-2">
                 <div className="text-muted-foreground py-3 text-sm font-medium">Employee</div>
-                {week.days.map((d) => (
-                  <div
-                    key={d.toDateString()}
-                    className="text-muted-foreground py-3 text-center text-sm font-medium"
-                  >
-                    <div>{format(d, 'EEE')}</div>
-                    <div className="text-muted-foreground/70 text-xs">{format(d, 'MMM d')}</div>
-                  </div>
-                ))}
+                {week.days.map((d) => {
+                  const isPastDay = isBefore(startOfDay(d), today);
+                  return (
+                    <div
+                      key={d.toDateString()}
+                      className={`text-muted-foreground rounded-md py-3 text-center text-sm font-medium ${
+                        isPastDay ? 'bg-muted/20 opacity-60' : ''
+                      }`}
+                    >
+                      <div>{format(d, 'EEE')}</div>
+                      <div className="text-muted-foreground/70 text-xs">{format(d, 'MMM d')}</div>
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="space-y-1">
@@ -229,14 +235,23 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
                       </div>
                     </div>
                     {shifts.days.map((dayKey) => {
+                      const dayDate = startOfDay(parseISO(dayKey));
+                      const isPastDay = isBefore(dayDate, today);
                       const items = shifts?.buckets[user.id]?.[dayKey] ?? [];
                       return (
-                        <div key={dayKey} className="flex min-h-[100px] flex-col gap-1 p-2">
+                        <div
+                          key={dayKey}
+                          className={`flex min-h-[100px] flex-col gap-1 rounded-md p-2 ${
+                            isPastDay ? 'bg-muted/20 opacity-60' : ''
+                          }`}
+                        >
                           {items.length === 0 ? (
                             <Button
                               variant="outline"
-                              className="flex-1 bg-background text-muted-foreground hover:bg-muted"
+                              disabled={isPastDay}
+                              className="flex-1 bg-background text-muted-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
                               onClick={() => {
+                                if (isPastDay) return;
                                 setSelectedUser(user);
                                 setSelectedDay(dayjs(dayKey));
                                 setOpenAddShift(true);
