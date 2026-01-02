@@ -7,7 +7,9 @@ const isWorkspaceRoute = createRouteMatcher([
 	'/workspaces/:workspaceId',
 	'/workspaces/:workspaceId/:path*'
 ]);
+
 const isWorkspaceAdminRoute = createRouteMatcher(['/workspaces/:workspaceId/admin/:path*']);
+const isWorkspaceUserRoute = createRouteMatcher(['/workspaces/:workspaceId/user/:path*']);
 
 const isDisabledPage = createRouteMatcher([
 	'/workspaces/:workspaceId/admin/requests/:path*',
@@ -82,6 +84,16 @@ export default clerkMiddleware(async (auth, req) => {
 		if (isDisabledPage(req)) {
 			return NextResponse.redirect(new URL('/not-found', req.url));
 		}
+
+		if (membershipStatus === 200 && 
+			((isUserAdmin && isWorkspaceUserRoute(req)) || (!isUserAdmin && isWorkspaceAdminRoute(req)))) {
+			return NextResponse.redirect(
+				new URL(`/workspaces/${workspaceId}/${isUserAdmin ? 'admin' : 'user'}/dashboard`, req.url)
+			);
+		}
+
+		
+
 	}
 });
 
