@@ -31,11 +31,10 @@ import { Shift, User } from "@scrubin/schemas";
 import SingleAddShiftModal from "@/components/SingleAddShiftModal";
 
 
-type ApiShift = { id: number; startTime: string; endTime: string; breakDuration: number | null };
 type WeeklyResponse = {
     days: string[];
     users: User[];
-    buckets: Record<string, Record<string, ApiShift[]>>;
+    buckets: Record<string, Record<string, Shift[]>>;
 };
 
 const emptyWeekly: WeeklyResponse = { days: [], users: [], buckets: {} };

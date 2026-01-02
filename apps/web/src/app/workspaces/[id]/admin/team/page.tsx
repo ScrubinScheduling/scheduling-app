@@ -21,7 +21,7 @@ import AddMemberModal from "@/components/AddMemberModal";
 import { useParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { createApiClient } from "@scrubin/api-client";
-import { type MemberApi } from "@scrubin/schemas";
+import { Member } from "@scrubin/schemas";
 
 // NEW: dialog + input/button imports for role editing
 import {
@@ -74,7 +74,7 @@ export default function TeamPage() {
                 const data = await res.json();
 
                 // CHANGED: map backend DTO → TeamMember, preserving roleId, first/last
-                const mapped: TeamMember[] = (data.members as MemberApi[] ?? []).map((m) => ({
+                const mapped: TeamMember[] = (data.members as Member[] ?? []).map((m) => ({
                     id: String(m.id),
                     
                     // Member.name used elsewhere; keep it

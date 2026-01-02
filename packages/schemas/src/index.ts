@@ -1,7 +1,5 @@
 // Shared application DTO types
-import * as z from "zod"; 
-
-
+import * as z from 'zod';
 
 // Legacy/mobile shape where clock/break fields live on the shift directly
 // Keep for compatibility while mobile migrates to Timesheet
@@ -35,14 +33,11 @@ export type User = {
 	lastName?: string | null;
 };
 
-
-
 export type UserShiftsResponseLegacy = {
 	shifts: ShiftLegacy[];
 };
 
-
-export type MeetingStatus = "PENDING" | "FINALIZED" | "CANCELLED" | "RESCHEDULED";
+export type MeetingStatus = 'PENDING' | 'FINALIZED' | 'CANCELLED' | 'RESCHEDULED';
 const WorkspaceSchema = z.object({
 	id: z.number(),
 	name: z.string(),
@@ -57,42 +52,57 @@ const InvitationInfoSchema = z.object({
 	workspaceName: z.string(),
 	workspaceOwnerName: z.string(),
 	workspaceOwnerEmail: z.email(),
-	invitationId: z.string(),
+	invitationId: z.string()
 });
 export type InvitationInfo = z.infer<typeof InvitationInfoSchema>;
 export const InvitationInfosSchema = z.array(InvitationInfoSchema);
-export type InvitationInfos = z.infer<typeof InvitationInfoSchema>;
+export type InvitationInfos = z.infer<typeof InvitationInfosSchema>;
 
-const ShiftSchema = z.object({
-	id: z.number(),
-	startTime: z.string(),
-	endTime: z.string(),
-	breakDuration: z.number().default(0),
-	userId: z.string(),
-	workspaceId: z.number()
-});
+// These are here to bypass typescript errors when building
+export type ShiftShape = {
+	id: number;
+	startTime: string;
+	endTime: string;
+	breakDuration: number;
+	userId: string;
+	workspaceId: number;
+	timesheet?: TimesheetShape;
+};
+
+export type TimesheetShape = {
+	id: number;
+	clockInTime: string | null;
+	clockOutTime: string | null;
+	startBreakTime: string | null;
+	endBreakTime: string | null;
+	shift: ShiftShape;
+};
+
+
+const ShiftSchema: z.ZodType<ShiftShape> = z.lazy(() =>
+	z.object({
+		id: z.number(),
+		startTime: z.string(),
+		endTime: z.string(),
+		breakDuration: z.number().default(0),
+		userId: z.string(),
+		workspaceId: z.number(),
+		timesheet: TimesheetSchema.optional()
+	})
+);
 export type Shift = z.infer<typeof ShiftSchema>;
 export const ShiftsSchema = z.array(ShiftSchema);
 export type Shifts = z.infer<typeof ShiftSchema>;
 
-const TimesheetSchema = z.object({
+const TimesheetSchema: z.ZodType<TimesheetShape> = z.object({
 	id: z.number(),
-    clockInTime: z.string().nullable(),
-    clockOutTime: z.string().nullable(),
-    startBreakTime: z.string().nullable(),
-    endBreakTime: z.string().nullable(),
-    shift: z.object({
-        id: z.number(),
-        startTime: z.string(),
-        endTime: z.string(),
-        breakDuration: z.number().default(0),
-        user: z.object({
-            id: z.string(),
-            firstName: z.string().nullable(),
-            lastName: z.string().nullable()
-        })
-    })
+	clockInTime: z.string().nullable(),
+	clockOutTime: z.string().nullable(),
+	startBreakTime: z.string().nullable(),
+	endBreakTime: z.string().nullable(),
+	shift: ShiftSchema
 });
+
 export type Timesheet = z.infer<typeof TimesheetSchema>;
 export const TimesheetsSchema = z.array(TimesheetSchema);
 export type Timesheets = z.infer<typeof TimesheetSchema>;
@@ -103,7 +113,7 @@ const MeetingSchema = z.object({
 	description: z.string(),
 	date: z.string(),
 	time: z.string(),
-	status: z.enum(["PENDING", "FINALIZED", "CANCELLED", "RESCHEDULED"]),
+	status: z.enum(['PENDING', 'FINALIZED', 'CANCELLED', 'RESCHEDULED']),
 	inviteMembershipIds: z.array(z.number()),
 	createdById: z.string(),
 	attendees: z.object({
@@ -117,17 +127,16 @@ export type Meeting = z.infer<typeof MeetingSchema>;
 export const MeetingsSchema = z.array(MeetingSchema);
 export type Meetings = z.infer<typeof MeetingSchema>;
 
-
 const MemberSchema = z.object({
-  membershipId: z.number(),
-  id: z.string(),
-  firstName: z.string().nullable().optional(),
-  lastName: z.string().nullable().optional(),
-  role: z.string().nullable().optional(),
-  email: z.string().optional(),
-  phone: z.string(),
-  roleId: z.string(),
-  isAdmin: z.boolean(),
+	membershipId: z.number(),
+	id: z.string(),
+	firstName: z.string().nullable().optional(),
+	lastName: z.string().nullable().optional(),
+	role: z.string().nullable().optional(),
+	email: z.string().optional(),
+	phone: z.string(),
+	roleId: z.string(),
+	isAdmin: z.boolean()
 });
 
 export type Member = z.infer<typeof MemberSchema>;
