@@ -5,7 +5,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import { createApiClient } from '@scrubin/api-client';
 
 export function useApiClient() {
-	const { getToken } = useAuth();
+  const { getToken } = useAuth();
 
 	return useMemo(
 		() =>

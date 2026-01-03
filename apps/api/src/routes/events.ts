@@ -134,12 +134,10 @@ export function emitWorkspaceCreated(userId: string) {
     })
 }
 
-export function emitUpdateMeetings(workspaceId : number) {
+export function emitUpdateMeetings(workspaceId: number) {
     broadcastToWorkspace(workspaceId, {
         type: 'meeting-updated',
     })
 }
-
-
 
 export default router

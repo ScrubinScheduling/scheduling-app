@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useCallback, useMemo, useEffect, useState } from "react";
 import { useApiClient } from "@/hooks/useApiClient";

@@ -100,9 +100,7 @@ router.post('/', async (req, res) => {
                 where: { workspaceId, userId },
             })
             if (!userMembership) {
-                return res
-                    .status(404)
-                    .json({ error: 'User is not a member of this workspace' })
+                return res.status(404).json({ error: 'User is not a member of this workspace' })
             }
 
             const existing = await prisma.userRoleMembership.findFirst({

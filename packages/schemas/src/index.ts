@@ -1,44 +1,105 @@
 // Shared application DTO types
-import * as z from "zod"; 
+import * as z from 'zod';
 
+<<<<<<< HEAD
 
+=======
+export type Timesheet = {
+  id: number;
+  clockInTime: string | null;
+  clockOutTime: string | null;
+  startBreakTime: string | null;
+  endBreakTime: string | null;
+  shift: {
+    id: number;
+    startTime: string;
+    endTime: string;
+    breakDuration: number | null;
+    user?: {
+      id: string;
+      firstName?: string | null;
+      lastName?: string | null;
+    };
+  };
+};
+
+// Primary Shift DTO shape used by web UI (Timesheet is separate table, optionally included)
+export type Shift = {
+  id: number;
+  startTime: string;
+  endTime: string;
+  breakDuration: number | null;
+  userId?: string;
+  workspaceId?: number;
+  timesheet?: Timesheet | null;
+};
+>>>>>>> refactor/adminDashboard
 
 // Legacy/mobile shape where clock/break fields live on the shift directly
 // Keep for compatibility while mobile migrates to Timesheet
 export type ShiftLegacy = {
-	id: number;
-	startTime: string;
-	endTime: string;
-	clockInTime: string | null;
-	clockOutTime: string | null;
-	startBreakTime: string | null;
-	endBreakTime: string | null;
-	breakDuration: number;
-	userId: number;
-	workspaceId: number;
-	user?: {
-		id: number;
-		firstName: string | null;
-		lastName: string | null;
-		clerkId: string;
-	};
-	workspace?: {
-		id: number;
-		name: string;
-		location: string;
-	};
+  id: number;
+  startTime: string;
+  endTime: string;
+  clockInTime: string | null;
+  clockOutTime: string | null;
+  startBreakTime: string | null;
+  endBreakTime: string | null;
+  breakDuration: number;
+  userId: number;
+  workspaceId: number;
+  user?: {
+    id: number;
+    firstName: string | null;
+    lastName: string | null;
+    clerkId: string;
+  };
+  workspace?: {
+    id: number;
+    name: string;
+    location: string;
+  };
 };
 
+<<<<<<< HEAD
+=======
+export type Member = {
+  userId: string;
+  id: string;
+  membershipId: number;
+  role: string;
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone?: string;
+};
+
+>>>>>>> refactor/adminDashboard
 export type User = {
-	id: string;
-	firstName: string;
-	lastName?: string | null;
+  id: string;
+  firstName: string;
+  lastName?: string | null;
 };
 
+// yyyy-MM-dd (used as a stable key for calendar buckets)
+export type DayKey = string;
+
+// Shape returned by `GET /workspaces/:id/shifts` for a given time window (month grid, day, etc.)
+export type WorkspaceMonthlySchedule = {
+  days: DayKey[];
+  users: User[];
+  buckets: Record<User['id'], Record<DayKey, Shift[]>>;
+};
+
+export const emptyWorkspaceMonthlySchedule: WorkspaceMonthlySchedule = {
+  days: [],
+  users: [],
+  buckets: {}
+};
 
 
 export type UserShiftsResponseLegacy = {
-	shifts: ShiftLegacy[];
+  shifts: ShiftLegacy[];
 };
 
 

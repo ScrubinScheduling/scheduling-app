@@ -1,11 +1,6 @@
-import { redirect } from "next/navigation";
+import { redirect } from 'next/navigation';
 
-export default async function RequestsIndexPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-
+export default async function RequestsIndexPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   redirect(`/workspaces/${id}/admin/requests/shift`);
 }

@@ -1,41 +1,39 @@
-import React from "react";
-import { redirect } from "next/navigation";
-import { auth } from "@clerk/nextjs/server";
-import InvitationCard from "@/components/InvitationCard";
-import { createApiClient } from "@scrubin/api-client";
+import React from 'react';
+import { redirect } from 'next/navigation';
+import { auth } from '@clerk/nextjs/server';
+import InvitationCard from '@/components/InvitationCard';
+import { createApiClient } from '@scrubin/api-client';
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+  const { getToken } = await auth();
 
-    const { getToken } = await auth();
+  const { id } = await params;
 
-    const { id } = await params;
+  const apiClient = createApiClient({
+    baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL as string,
+    getToken: async () => await getToken()
+  });
 
-    const apiClient = createApiClient({
-        baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL as string,
-        getToken: async () => await getToken()
-    });
+  try {
+    const data = await apiClient.getInvitation(id);
+    const { workspaceOwnerName, workspaceOwnerEmail, workspaceName, invitationId } = data;
 
-    try {
-        const data = await apiClient.getInvitation(id);
-        const { workspaceOwnerName, workspaceOwnerEmail, workspaceName, invitationId } = data;
-
-        return (
-            <main className="min-h-screen flex flex-col bg-white">
-                <div className="flex flex-1 items-center justify-center px-4">
-                    <div className="w-full max-w-md">
-                        <InvitationCard
-                            workspaceName={workspaceName}
-                            workspaceOwnerEmail={workspaceOwnerEmail}
-                            workspaceOwnerName={workspaceOwnerName}
-                            invitationId={invitationId}
-                        />
-
-                    </div>
-                </div>
-            </main>
-        );
-    } catch (error) {
-        console.error(error)
-        return redirect("/not-found");
-    }
+    return (
+      <main className="bg-background flex min-h-screen flex-col">
+        <div className="flex flex-1 items-center justify-center px-4">
+          <div className="w-full max-w-md">
+            <InvitationCard
+              workspaceName={workspaceName}
+              workspaceOwnerEmail={workspaceOwnerEmail}
+              workspaceOwnerName={workspaceOwnerName}
+              invitationId={invitationId}
+            />
+          </div>
+        </div>
+      </main>
+    );
+  } catch (error) {
+    console.error(error);
+    return redirect('/not-found');
+  }
 }

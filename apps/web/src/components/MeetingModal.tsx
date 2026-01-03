@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import "antd/dist/reset.css";
-import React from "react";
-import { useAuth } from "@clerk/nextjs";
-import { useParams } from "next/navigation";
+import 'antd/dist/reset.css';
+import React from 'react';
+import { useAuth } from '@clerk/nextjs';
+import { useParams } from 'next/navigation';
 import {
 	Dialog,
 	DialogContent,

@@ -40,8 +40,8 @@ The following screenshots are referenced from `docs/images/`:
 
 1. Create a Clerk account at [https://dashboard.clerk.com/sign-in](https://dashboard.clerk.com/sign-in)
 2. Create application and get keys (view screenshots below)
-    - Web and API will need the Secret Key. Web and Mobile need a Publishable Key.
-    - Where to get them (Clerk dashboard → Configure → API keys):
+   - Web and API will need the Secret Key. Web and Mobile need a Publishable Key.
+   - Where to get them (Clerk dashboard → Configure → API keys):
 
 ![Clerk application settings and IDs](README/Screenshot_2025-12-02_at_2.54.04_PM.png)
 
@@ -67,8 +67,6 @@ Copy the api keys here and paste them into apps/mobile/.env
 
 1. Create an ngrok account at [https://dashboard.ngrok.com/login](https://dashboard.ngrok.com/login)
 2. Install and authenticate ngrok using instruction provided for your OS Platform
-    
-    
 
 ![ngrok install and auth token](README/Screenshot_2025-12-02_at_2.59.56_PM.png)
 
@@ -79,10 +77,10 @@ Copy the api keys here and paste them into apps/mobile/.env
 ## Clerk Webhook Setup
 
 1. Create a webhook endpoint
-    - Clerk → Configure → Webhooks → Add Endpoint
-    - Subscribe to at least `user.created` (you may also include `user.updated`, `user.deleted`)
-    - Set URL to `https://<your-ngrok-domain>/clerk/webhook`
-    - See screenshots below for assistance
+   - Clerk → Configure → Webhooks → Add Endpoint
+   - Subscribe to at least `user.created` (you may also include `user.updated`, `user.deleted`)
+   - Set URL to `https://<your-ngrok-domain>/clerk/webhook`
+   - See screenshots below for assistance
 
 ![Create webhook endpoint and select user events](README/Screenshot_2025-12-02_at_3.03.05_PM.png)
 
@@ -103,7 +101,7 @@ The API runs Prisma on install, so make sure these files exist first.
 ```
 
 # Please check Clerk Setup to get these keys
-CLERK_SECRET_KEY=sk_test_xxx 
+CLERK_SECRET_KEY=sk_test_xxx
 CLERK_PUBLISHABLE_KEY=pk_test_xxx
 CLERK_WEBHOOK_SIGNING_SECRET=whsec_xxx
 
@@ -150,7 +148,7 @@ pnpm dev:web
 pnpm dev:mobile
 ```
 
-1. Run `ngrok http —url=<ngrok-url> 4000` 
+1. Run `ngrok http —url=<ngrok-url> 4000`
 
 ---
 
@@ -193,11 +191,11 @@ Mobile (`apps/mobile/package.json`):
 ## Project structure
 
 - apps/
-    - api/ — Express + Prisma
-    - web/ — Next.js app (Clerk SSR + middleware)
-    - mobile/ — Expo app
+  - api/ — Express + Prisma
+  - web/ — Next.js app (Clerk SSR + middleware)
+  - mobile/ — Expo app
 - packages/
-    - api-client/ — typed API client wrapper used by Web/Mobile
-    - schemas/ — shared schema/types
+  - api-client/ — typed API client wrapper used by Web/Mobile
+  - schemas/ — shared schema/types
 
 ---

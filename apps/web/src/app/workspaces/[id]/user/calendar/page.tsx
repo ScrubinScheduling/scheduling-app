@@ -1,452 +1,321 @@
-"use client";
-import { CardHeader, CardTitle, Card, CardContent } from '@/components/ui/card';
-import { Button, DatePicker, Spin } from 'antd';
-import { LoadingOutlined, RightOutlined, LeftOutlined } from '@ant-design/icons';
-import React, { useState, useMemo, use, useEffect, useCallback } from 'react';
+'use client';
+
+import React, { use, useCallback, useEffect, useMemo, useState } from 'react';
+import { addDays, format, parseISO, startOfDay } from 'date-fns';
+
 import { useApiClient } from '@/hooks/useApiClient';
 import { useSSEStream } from '@/hooks/useSSE';
+import MonthlyCalendarCard from '@/components/schedule/MonthlyCalendarCard';
+import DayScheduleCard from '@/components/schedule/DayScheduleCard';
+import ShiftSummaryButton from '@/components/schedule/ShiftSummaryButton';
 import { useAuth } from '@clerk/nextjs';
-import dayjs from 'dayjs';
-import {
-  addMonths,
-  subMonths,
-  startOfWeek,
-  endOfWeek,
-  startOfMonth,
-  endOfMonth,
-  eachDayOfInterval,
-  isSameMonth,
-  isSameDay,
-  format,
-  parseISO,
-  startOfDay,
-  addDays
-} from 'date-fns';
+import type { DayKey, Shift, WorkspaceMonthlySchedule } from '@scrubin/schemas';
 
-
-type Shift = {
-    id: number, 
-    date: string,
-    startTime: string, 
-    endTime: string, 
-    role: string,
-    kind: 'shift'
-}
-
-type ApiShift = {
-    id: number,
-    startTime: string,
-    endTime: string,
-    breakDuration: number, 
-    userId: string,
-    workspaceId: string,
-
-}
-
-type WorkspaceShcedule = {
-    days: string[];
-    users: {id: number; firstName: string | null; lastName: string | null;}[]
-    buckets: Record<number, Record<string, ApiShift[]>>;
-}
+import { getVisibleMonthWindow } from '../../../../../../helpers/schedule';
 
 type ApiTimeOffRequest = {
-    id: string;
-    status: 'pending' | 'approved' | 'denied';
-    requesterNames: string[];
-    dateRange: {
-        start: string;
-        end: string;
-    }
-}
+  id: string;
+  status: 'pending' | 'approved' | 'denied';
+  requesterNames: string[];
+  dateRange: {
+    start: string;
+    end: string;
+  };
+};
 
 type TimeOffEvent = {
-    id: string; 
-    date: string;
-    startDate: string,
-    endDate: string,
-    requesterName: string;
-    kind: 'timeoff'; 
-}
-
-type CoworkerEntry = {
-    member: WorkspaceShcedule['users'][number];
-    shifts: ApiShift[];
-}
-
-
-function cn(...classes: (string | false | null | undefined)[]) {
-  return classes.filter(Boolean).join(" ")
-}
+  id: string;
+  date: string;
+  startDate: string;
+  endDate: string;
+  requesterName: string;
+  kind: 'timeoff';
+};
 
 const expandTimeOffRequests = (requests: ApiTimeOffRequest[]): TimeOffEvent[] => {
-    const events: TimeOffEvent[] = [];
+  const events: TimeOffEvent[] = [];
 
-    for (const req of requests) {
-        const requesterName= req.requesterNames[0] ?? 'Unkown';
+  for (const req of requests) {
+    const requesterName = req.requesterNames[0] ?? 'Unknown';
 
-        const rangeStart = new Date(req.dateRange.start); 
-        const rangeEnd = new Date(req.dateRange.end);
+    const rangeStart = startOfDay(new Date(req.dateRange.start));
+    const rangeEnd = startOfDay(new Date(req.dateRange.end));
 
-        let cursor = startOfDay(rangeStart); 
+    let cursor = rangeStart;
 
-        while (cursor <= rangeEnd) {
-            events.push({
-                id: req.id,
-                date: format(cursor, 'yyyy-MM-dd'),
-                startDate: req.dateRange.start,
-                endDate: req.dateRange.end,
-                requesterName,
-                kind: 'timeoff'
-            });
+    while (cursor <= rangeEnd) {
+      events.push({
+        id: req.id,
+        date: format(cursor, 'yyyy-MM-dd'),
+        startDate: req.dateRange.start,
+        endDate: req.dateRange.end,
+        requesterName,
+        kind: 'timeoff'
+      });
 
-            cursor = addDays(cursor, 1); 
-        }
-    }
-
-    return events;
-}
-
-  
-
-  const mapApiShift = (shift: ApiShift): Shift => {
-    const start = parseISO(shift.startTime);
-    const end = parseISO(shift.endTime);
-
-    return {
-        id: shift.id, 
-        date: format(start, 'yyyy-MM-dd'),
-        startTime: format(start, 'HH:mm'),
-        endTime: format(end, 'HH:mm'),
-        role: "Shift",
-        kind: "shift",
+      cursor = addDays(cursor, 1);
     }
   }
-  
+
+  return events;
+};
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const apiClient = useApiClient();
   const { id } = use(params);
-  const workspaceId = Number(id); 
-  const { userId } = useAuth();  
-  const [currentDate, setCurrentDate] = useState<Date>(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(currentDate); 
-  const [shifts, setShifts] = useState<Shift[]>([]); 
-  const [isLoading, setIsloading] = useState<boolean>(false);
-  const [teamSchedule, setTeamSchedule] = useState<WorkspaceShcedule | null>(null);
-  const [timeOff, setTimeOff] = useState<TimeOffEvent[]>([]); 
+  const workspaceId = Number(id);
+  const hasValidWorkspace = Number.isInteger(workspaceId);
+  const { userId } = useAuth();
+
+  const today = startOfDay(new Date());
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(today);
+  const [shifts, setShifts] = useState<Shift[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [teamSchedule, setTeamSchedule] = useState<WorkspaceMonthlySchedule | null>(null);
+  const [timeOff, setTimeOff] = useState<TimeOffEvent[]>([]);
   // Todo: Add Error Checks const [err, setErr] = useState<string>('');
-  
 
-
-  
-
-  const fetchShifts = useCallback( async() => {
+  const fetchShifts = useCallback(async () => {
     try {
-        setIsloading(true);
-        const monthStart = startOfMonth(currentDate);
-        const monthEnd = endOfMonth(currentDate);
+      if (!userId || !hasValidWorkspace) return;
+      setIsLoading(true);
 
-        const data = await apiClient.getUserShifts(id, userId, {
-            start: monthStart.toISOString(),
-            end: monthEnd.toISOString(),
-        });
+      const { start, endExclusive } = getVisibleMonthWindow(currentMonth, { weekStartsOn: 0 });
+      const data = (await apiClient.getUserShifts(id, userId, {
+        start: start.toISOString(),
+        end: endExclusive.toISOString()
+      })) as { shifts?: Shift[] };
 
-        const apiShifts: ApiShift[] = data.shifts ?? []; 
-        setShifts(apiShifts.map(mapApiShift)); 
+      setShifts(data.shifts ?? []);
     } catch (error) {
-        console.log(error);
+      console.log(error);
     } finally {
-        setIsloading(false); 
+      setIsLoading(false);
     }
-  }, [apiClient, currentDate, id, userId]);
+  }, [apiClient, currentMonth, hasValidWorkspace, id, userId]);
 
-  const fetchTeamSchedule = useCallback(async (day: Date) => {
-    const dayStart = startOfDay(day);
-    const dayEnd = addDays(day, 1);
+  const fetchTeamSchedule = useCallback(
+    async (day: Date) => {
+      if (!hasValidWorkspace) return;
+      const dayStart = startOfDay(day);
+      const dayEndExclusive = addDays(dayStart, 1);
 
-    const data = await apiClient.getWorkspaceShifts(id, 
-        {
-            start: dayStart.toISOString(),
-            end: dayEnd.toISOString()
-        }
-    ); 
+      const data = await apiClient.getWorkspaceShifts(id, {
+        start: dayStart.toISOString(),
+        end: dayEndExclusive.toISOString()
+      });
 
-    setTeamSchedule(data);
-  }, [apiClient, id]);
-  
-  const fetchTimeOff = useCallback(async() => {
+      setTeamSchedule(data);
+    },
+    [apiClient, hasValidWorkspace, id]
+  );
+
+  const fetchTimeOff = useCallback(async () => {
     try {
-        // Todo: Implement time range for getting TimeOffRequests
-        //const monthStart = startOfMonth(currentDate);
-        //const monthEnd = endOfMonth(currentDate);
+      if (!hasValidWorkspace) return;
+      // Todo: Implement time range for getting TimeOffRequests
+      //const monthStart = startOfMonth(currentDate);
+      //const monthEnd = endOfMonth(currentDate);
 
-        const data = await apiClient.getTimeOffRequests(id, {
-            status: "approved"
-        });
-        
-        const apiRequests: ApiTimeOffRequest[] = data.requests ?? [];
-        const events = expandTimeOffRequests(apiRequests);
-        setTimeOff(events); 
+      const data = await apiClient.getTimeOffRequests(id, {
+        status: 'approved'
+      });
+
+      const apiRequests: ApiTimeOffRequest[] = data.requests ?? [];
+      const events = expandTimeOffRequests(apiRequests);
+      setTimeOff(events);
     } catch (error) {
-        console.log(error); 
+      console.log(error);
     }
-  }, [apiClient, id])
+  }, [apiClient, hasValidWorkspace, id]);
 
   useEffect(() => {
-    if (!selectedDate) return;
     fetchTeamSchedule(selectedDate);
-  }, [selectedDate, fetchTeamSchedule])
+  }, [selectedDate, fetchTeamSchedule]);
 
   useEffect(() => {
     if (!userId) return;
     fetchShifts();
-    fetchTimeOff();  
-  }, [userId, fetchShifts, fetchTimeOff])
+    fetchTimeOff();
+  }, [userId, fetchShifts, fetchTimeOff]);
 
-  const getShiftsForDay = useCallback( (day: Date) => {
-    const key = format(day, 'yyyy-MM-dd');
-    return shifts.filter((s) => s.date === key); 
-  }, [shifts]); 
+  const selectedDayKey = useMemo<DayKey>(() => format(selectedDate, 'yyyy-MM-dd'), [selectedDate]);
 
-  const getTimeOffForDay = useCallback((day: Date) => {
-    const key = format(day, 'yyyy-MM-dd');
-    return timeOff.filter((t) => t.date === key); 
-  }, [timeOff]); 
+  const myShiftsForSelectedDay = useMemo(() => {
+    return shifts.filter((shift) => format(parseISO(shift.startTime), 'yyyy-MM-dd') === selectedDayKey);
+  }, [shifts, selectedDayKey]);
 
-  const selectedDayEntries = useMemo(() => {
-    if (!selectedDate) return [];
+  const timeOffForSelectedDay = useMemo(() => {
+    return timeOff.filter((t) => t.date === selectedDayKey);
+  }, [timeOff, selectedDayKey]);
 
-    const shiftsForDay = getShiftsForDay(selectedDate);
-    const timeOffForDay = getTimeOffForDay(selectedDate);
+  const coworkerEntries = useMemo(() => {
+    if (!teamSchedule || !userId) return [];
 
-    return [...shiftsForDay, ...timeOffForDay];
-  }, [selectedDate, getShiftsForDay, getTimeOffForDay]); 
-
-  const calendarDays = useMemo( () => {
-    const startOfMonthDate = startOfMonth(currentDate);
-    const endOfMonthDate = endOfMonth(currentDate); 
-
-    const start = startOfWeek(startOfMonthDate, {weekStartsOn: 0});
-    const end = endOfWeek(endOfMonthDate, {weekStartsOn: 0});
-
-    return eachDayOfInterval({start, end});
-  }, [currentDate]); 
-
-  const coworkerEntries = useMemo<CoworkerEntry[]>(() => {
-    if (!teamSchedule || !selectedDate) return [];
-    const key = format(selectedDate, 'yyyy-MM-dd');
     return teamSchedule.users
-        .filter(member => String(member.id) !== userId)
-        .map(member => ({
-        member,
-        shifts: teamSchedule.buckets[member.id]?.[key] ?? [],
-        }))
-        .filter(entry => entry.shifts.length > 0);
-  }, [teamSchedule, selectedDate, userId]);
+      .filter((member) => member.id !== userId)
+      .map((member) => ({
+        user: member,
+        shifts: teamSchedule.buckets[member.id]?.[selectedDayKey] ?? []
+      }))
+      .filter((entry) => entry.shifts.length > 0);
+  }, [teamSchedule, selectedDayKey, userId]);
 
-  const previousMonth = () =>
-    setCurrentDate((d) => subMonths(d, 1));
+  const calendarDayMeta = useMemo(() => {
+    const shiftsByDay: Record<DayKey, Shift[]> = {};
+    for (const shift of shifts) {
+      const key = format(parseISO(shift.startTime), 'yyyy-MM-dd');
+      (shiftsByDay[key] ??= []).push(shift);
+    }
 
-  const nextMonth = () =>
-    setCurrentDate((d) => addMonths(d, 1));
+    for (const key of Object.keys(shiftsByDay)) {
+      shiftsByDay[key]?.sort(
+        (a, b) => parseISO(a.startTime).getTime() - parseISO(b.startTime).getTime()
+      );
+    }
 
-  useSSEStream(workspaceId, {'shift-updated' : () => {
-    fetchShifts();
-  }})
-  
+    const timeOffCountByDay: Record<DayKey, number> = {};
+    for (const entry of timeOff) {
+      timeOffCountByDay[entry.date] = (timeOffCountByDay[entry.date] ?? 0) + 1;
+    }
+
+    const out: Record<string, React.ReactNode> = {};
+    const allDayKeys = new Set<string>([
+      ...Object.keys(shiftsByDay),
+      ...Object.keys(timeOffCountByDay)
+    ]);
+
+    for (const dayKey of allDayKeys) {
+      const dayShifts = shiftsByDay[dayKey] ?? [];
+      const timeOffCount = timeOffCountByDay[dayKey] ?? 0;
+      if (dayShifts.length === 0 && timeOffCount === 0) continue;
+
+      const visibleShifts = dayShifts.slice(0, 2);
+      const moreCount = dayShifts.length - visibleShifts.length;
+
+      out[dayKey] = (
+        <div className="space-y-1">
+          {visibleShifts.map((shift) => (
+            <div key={shift.id} className="text-[10px] leading-4">
+              {format(parseISO(shift.startTime), 'HH:mm')} – {format(parseISO(shift.endTime), 'HH:mm')}
+            </div>
+          ))}
+
+          {moreCount > 0 ? <div className="text-[10px]">+{moreCount} more</div> : null}
+
+          {timeOffCount > 0 ? (
+            <div className="mt-1 inline-flex items-center gap-1">
+              <span className="h-2 w-2 rounded-full bg-amber-400" />
+              <span className="text-[10px] text-amber-900">
+                {timeOffCount === 1 ? 'Time off' : `${timeOffCount} time off`}
+              </span>
+            </div>
+          ) : null}
+        </div>
+      );
+    }
+
+    return out;
+  }, [shifts, timeOff]);
+
+  useSSEStream(hasValidWorkspace ? workspaceId : null, {
+    'shift-updated': () => {
+      fetchShifts();
+      fetchTeamSchedule(selectedDate);
+    }
+  });
+
+  if (!hasValidWorkspace) {
+    return (
+      <div className="mx-auto w-[90vw] max-w-none space-y-6 px-2 py-6 sm:px-4">
+        <div className="border-destructive/20 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm">
+          Error: Invalid workspace id
+        </div>
+      </div>
+    );
+  }
 
   return (
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className='grid lg:grid-cols-3 gap-6 py-10'>
-            <Card className='lg:col-span-2'>
-                <CardHeader className='border-b'>
-                    <div className="flex items-center justify-between">
-                        <CardTitle className='text-2xl font-semibold'>
-                            {format(currentDate, "MMMM yyyy")}
-                        </CardTitle>
-                        <div className='flex gap-4 flex-row'>
-                            <div className='flex gap-2 flex-row'>
-                                <Button icon={<LeftOutlined/>} onClick={previousMonth}/>
-                                <DatePicker
-                                    picker="month"
-                                    format="MMM"
-                                    value={dayjs(currentDate)}
-                                    onChange={(value) => {
-                                    if (!value) return
-                                    // value is a dayjs; convert to Date
-                                    setCurrentDate(value.toDate())
-                                    setSelectedDate(null)
-                                    }}
-                                />
-                                <Button icon={<RightOutlined/>} onClick={nextMonth}/>
-                            </div>
-                            
-                            <Button type='primary' onClick={() => {
-                                const today = new Date();
-                                setCurrentDate(today)
-                                setSelectedDate(today)
-                            }}>
-                                Today
-                            </Button>
-                        </div> 
-                    </div>
-                </CardHeader>
-                <div className='grid grid-cols-7 gap-2 mb-2'>
-                    { ["Sun", "Mon", "Tues", "Wed", "Thur", "Fri", "Sat"].map(day => (
-                        <div className="text-center text-xs font-medium text-muted-foreground uppercase py-2"
-                        key={day}
-                        >
-                            {day}
-                        </div>
+    <div className="mx-auto w-[90vw] max-w-none space-y-6 px-2 py-6 sm:px-4">
+      <div className="grid gap-6 lg:grid-cols-3">
+        <MonthlyCalendarCard
+          className="lg:col-span-2"
+          currentMonth={currentMonth}
+          selectedDate={selectedDate}
+          onSelectDate={(d) => setSelectedDate(startOfDay(d))}
+          onChangeMonth={(next) => {
+            setCurrentMonth(next);
+            setSelectedDate(startOfDay(next));
+          }}
+          onToday={() => {
+            const now = new Date();
+            setCurrentMonth(now);
+            setSelectedDate(startOfDay(now));
+          }}
+          isLoading={isLoading}
+          dayMeta={calendarDayMeta}
+        />
+
+        <DayScheduleCard
+          selectedDate={selectedDate}
+          entries={coworkerEntries}
+          shiftTitle="Shift"
+          primaryAction={
+            <div className="space-y-4">
+              <div>
+                <div className="text-sm font-semibold">Your shifts</div>
+                {isLoading && shifts.length === 0 ? (
+                  <p className="text-muted-foreground mt-1 text-sm">Loading shifts…</p>
+                ) : myShiftsForSelectedDay.length === 0 ? (
+                  <p className="text-muted-foreground mt-1 text-sm">No shifts scheduled for you.</p>
+                ) : (
+                  <div className="mt-2 space-y-2">
+                    {myShiftsForSelectedDay.map((shift) => (
+                      <ShiftSummaryButton key={shift.id} shift={shift} title="Shift" />
                     ))}
-                </div>
-                
-                {/* Calendar Grid */}
-                <div className='grid grid-cols-7 gap-2 px-2'>
-                    {calendarDays.map((day, index) => {
-                        const dayShifts = getShiftsForDay(day);
-                        const dayTimeOff = getTimeOffForDay(day);
-                        const isCurrentMonthDay = isSameMonth(day, currentDate);
-                        const isSelected = selectedDate && isSameDay(day, selectedDate);
-                        const isToday = isSameDay(day, new Date());
-
-                        return (
-                            <Button key={index} onClick={() => setSelectedDate(day)}
-                            type='default'
-                            style={{
-                                minHeight: 100,
-                                borderRadius: '0.5rem',
-                                borderColor: isToday || isSelected ? 'var(--color-primary)' : undefined,
-                                borderWidth: isToday ? 2 : 1,
-                                textAlign: 'center',
-                                opacity: !isCurrentMonthDay ? 0.4 : 1
-                            }}
-                            >
-                                <div className='flex flex-col h-full items-center flex-1 '>
-                                    <span className={cn("text-sm font-medium mb-2 pt-2", isToday && "text-primary font-bold")}>
-                                        {format(day, "d")}
-                                    </span>
-                                    <div className='space-y-1.5 w-full'>
-                                        {dayShifts.map((shift) => (
-                                            <div key={shift.id} className='space-y-0.5'>
-                                                <div className='text-[11px] font-medium text-foreground truncate'>
-                                                    {/* Where user role will go once implemented */}
-                                                    <span>Manager</span>
-                                                </div>
-
-                                                <div className='text-[10px] text-muted-foreground'>
-                                                    {shift.startTime} - {shift.endTime}
-                                                </div>
-                                            </div>
-                                        ))}
-
-                                        {dayTimeOff.length > 0 && (
-                                            <div className="mt-1 inline-flex items-center gap-1">
-                                                <span className="h-2 w-2 rounded-full bg-amber-400" />
-                                                <span className="text-[10px] text-amber-900">
-                                                    Time off
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </Button>
-                        )
-                    })}
-
-                </div>
-                {isLoading && (
-                    <Spin spinning={isLoading} indicator={<LoadingOutlined />}/>
+                  </div>
                 )}
-            </Card>
-             <Card>
-                <CardHeader>
-                    <CardTitle className="text-lg">
-                        {selectedDate
-                        ? format(selectedDate, "EEEE, MMMM d")
-                        : "Select a date"}
-                    </CardTitle>
-                </CardHeader>
+              </div>
 
-                <CardContent className='flex flex-col gap-3'>
-                {selectedDate && selectedDayEntries.length > 0 ? (
-                    <div className="space-y-3">
-                    {selectedDayEntries.map((entry) => (
-                        <div
-                        key={`${entry.kind}-${entry.id}`}
-                        className="p-4 rounded-lg border bg-card space-y-2"
-                        >   
-                            {entry.kind === 'shift' ? (
-                            <div className="flex justify-between text-sm">
-                                <span className="font-medium">
-                                    {entry.startTime} - {entry.endTime}
-                                </span>
-                                <span className="text-xs text-muted-foreground">
-                                    Shift
-                                </span>
-                            </div>
-                            ): (
-                                // Time Off Card
-                                <>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="font-medium">
-                                            Time off – {entry.requesterName}
-                                        </span>
-                                        <span className="text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
-                                            Time off
-                                        </span>
-                                    </div>
-                                    <div className="text-xs text-muted-foreground">
-                                        {entry.startDate} – {entry.endDate}
-                                    </div>
-                                </>
-                            )}
-                            
-                            
+              {timeOffForSelectedDay.length > 0 ? (
+                <div>
+                  <div className="text-sm font-semibold">Time off</div>
+                  <div className="mt-2 space-y-2">
+                    {timeOffForSelectedDay.map((entry) => (
+                      <div
+                        key={`${entry.id}-${entry.date}`}
+                        className="bg-card space-y-2 rounded-lg border p-3"
+                      >
+                        <div className="flex items-start justify-between gap-2 text-sm">
+                          <span className="font-medium">Time off – {entry.requesterName}</span>
+                          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700">
+                            Time off
+                          </span>
                         </div>
+                        <div className="text-muted-foreground text-xs">
+                          {entry.startDate} – {entry.endDate}
+                        </div>
+                      </div>
                     ))}
-                    </div>
-                    ) : selectedDate ? (
-                        <p className="text-sm text-muted-foreground text-center py-8">
-                        No shifts scheduled for this day
-                        </p>
-                    ) : (
-                        <p className="text-sm text-muted-foreground text-center py-8">
-                        Click on a date to view shift details
-                        </p>
-                    )}
+                  </div>
+                </div>
+              ) : null}
 
-                    <CardTitle className='text-lg'>
-                        Scheduled:
-                    </CardTitle>
-
-                    <div>
-                        {coworkerEntries.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">
-                            No coworkers scheduled for this day.
-                        </p>
-                        ) : (
-                        <div className="space-y-3">
-                            {coworkerEntries.map(({ member, shifts }) => (
-                            <div key={member.id} className="border rounded-lg p-3">
-                                <div className="text-sm font-medium">
-                                {member.firstName} {member.lastName ?? ''}
-                                </div>
-                                <div className="mt-1 space-y-1 text-xs text-muted-foreground">
-                                {shifts.map(shift => (
-                                    <div key={shift.id}>
-                                    {format(parseISO(shift.startTime), 'HH:mm')} – {format(parseISO(shift.endTime), 'HH:mm')}
-                                    </div>
-                                ))}
-                                </div>
-                            </div>
-                            ))}
-                        </div>
-                        )}
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
+              <div className="border-t pt-3">
+                <div className="text-sm font-semibold">Scheduled coworkers</div>
+              </div>
+            </div>
+          }
+          emptyState={
+            teamSchedule == null ? (
+              <p className="text-muted-foreground text-sm">Loading coworkers…</p>
+            ) : (
+              <p className="text-muted-foreground text-sm">No coworkers scheduled for this day.</p>
+            )
+          }
+        />
+      </div>
     </div>
-  )
+  );
 }
