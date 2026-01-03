@@ -1,7 +1,5 @@
 'use client';
 import React, { useCallback, useEffect, useMemo, use, useState } from 'react';
-import AddShiftModal from '@/components/AddShiftModal';
-import dayjs, { Dayjs } from 'dayjs';
 import { Button } from '@/components/ui/button';
 import { useApiClient } from '@/hooks/useApiClient';
 import { useSSEStream } from '@/hooks/useSSE';
@@ -21,13 +19,12 @@ import {
   startOfMonth,
   startOfWeek
 } from 'date-fns';
-import ShiftModal from '@/components/ShiftModal';
-import SingleAddShiftModal from '@/components/SingleAddShiftModal';
 import MonthlyCalendarCard from '@/components/schedule/MonthlyCalendarCard';
+import AdminScheduleActions from '@/components/admin/AdminScheduleActions';
+import AdminScheduleModals from '@/components/admin/AdminScheduleModals';
 import {
   emptyWorkspaceMonthlySchedule,
   type DayKey,
-  type Shift,
   type User,
   type WorkspaceMonthlySchedule
 } from '@scrubin/schemas';
@@ -39,18 +36,12 @@ export default function AdminScheduleDashboard({ params }: { params: Promise<{ i
   const today = startOfDay(new Date());
   const [currentMonth, setCurrentMonth] = useState<Date>(getToday());
   const [selectedDate, setSelectedDate] = useState<Date>(today);
-  const [isModal, setIsModal] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [users, setUsers] = useState<User[]>([]);
   const [monthSchedule, setMonthSchedule] = useState<WorkspaceMonthlySchedule>(
     emptyWorkspaceMonthlySchedule
   );
   const [error, setError] = useState<string | null>(null);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
-  const [openShiftDetails, setOpenShiftDeatils] = useState<boolean>(false);
-  const [selectedDay, setSelectedDay] = useState<Dayjs | null>(null);
-  const [openAddShift, setOpenAddShift] = useState<boolean>(false);
 
   const apiClient = useApiClient();
 
@@ -95,22 +86,20 @@ export default function AdminScheduleDashboard({ params }: { params: Promise<{ i
     }
   }, [hasValidWorkspace, apiClient, currentMonth, id]);
 
-  const handleDelete = async (shiftId: number) => {
-    if (!confirm) return;
+  const deleteShift = useCallback(
+    async (shiftId: number) => {
+      if (!hasValidWorkspace) return;
 
-    try {
-      setIsLoading(true);
-      await apiClient.deleteShift(id, shiftId);
-      //await handleShiftReload();
-      setOpenShiftDeatils(false);
-      setSelectedShift(null);
-      setSelectedUser(null);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      try {
+        await apiClient.deleteShift(id, shiftId);
+        await getMonthSchedule();
+      } catch (err) {
+        console.error('Error deleting shift:', err);
+        setError('Could not delete shift');
+      }
+    },
+    [apiClient, getMonthSchedule, hasValidWorkspace, id]
+  );
 
   useEffect(() => {
     if (!hasValidWorkspace) return;
@@ -162,124 +151,97 @@ export default function AdminScheduleDashboard({ params }: { params: Promise<{ i
   }, [shiftCountByDayKey]);
 
   return (
-    <div className="mx-auto w-[90vw] max-w-none space-y-6 px-2 py-6 sm:px-4">
-      {error && (
-        <div>
-          <div className="border-destructive/20 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm">
-            Error: {error}
+    <AdminScheduleModals workspaceId={workspaceId} users={users} onDeleteShift={deleteShift}>
+      {({ openBulkAssign, openShiftDetails, openSingleAddShift }) => (
+        <div className="mx-auto w-[90vw] max-w-none space-y-6 px-2 py-6 sm:px-4">
+          {error && (
+            <div>
+              <div className="border-destructive/20 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm">
+                Error: {error}
+              </div>
+            </div>
+          )}
+
+          <div className="grid gap-6 lg:grid-cols-3">
+            <MonthlyCalendarCard
+              className="lg:col-span-2"
+              currentMonth={currentMonth}
+              selectedDate={selectedDate}
+              onSelectDate={setSelectedDate}
+              onChangeMonth={setCurrentMonth}
+              onToday={() => {
+                const now = getToday();
+                setCurrentMonth(now);
+                setSelectedDate(startOfDay(now));
+              }}
+              isLoading={isLoading}
+              dayMeta={calendarDayMeta}
+              headerActions={<AdminScheduleActions onBulkAssign={openBulkAssign} disabled={isLoading} />}
+            />
+
+            <Card>
+              <CardHeader className="border-b">
+                <CardTitle className="text-base font-semibold">{format(selectedDate, 'EEEE, MMMM d')}</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                <Button
+                  size="lg"
+                  disabled={isSelectedDateInPast}
+                  onClick={() => {
+                    if (isSelectedDateInPast) return;
+                    openSingleAddShift({ date: selectedDate, user: null });
+                  }}
+                >
+                  Schedule on this date
+                </Button>
+
+                <div className="space-y-3">
+                  {scheduledEntries.length === 0 ? (
+                    <p className="text-muted-foreground text-sm">No one is scheduled for this day.</p>
+                  ) : (
+                    scheduledEntries.map(({ user, shifts }) => (
+                      <div key={user.id} className="rounded-lg border p-3">
+                        <div className="flex items-center gap-2">
+                          <UsersRound className="text-muted-foreground h-4 w-4" />
+                          <div className="min-w-0 flex-1 truncate text-sm font-medium">
+                            {user.firstName} {user.lastName ?? ''}
+                          </div>
+                        </div>
+
+                        <div className="mt-2 space-y-2">
+                          {shifts.map((shift) => (
+                            <Button
+                              key={shift.id}
+                              variant="outline"
+                              className="h-auto w-full items-start justify-start py-3"
+                              onClick={() => openShiftDetails({ user, shift })}
+                            >
+                              <div className="min-w-0 flex flex-1 flex-col gap-1 text-left">
+                                <span className="text-sm font-medium">Manager</span>
+                                <span className="text-xs whitespace-nowrap">
+                                  {format(parseISO(shift.startTime), 'HH:mm')} –{' '}
+                                  {format(parseISO(shift.endTime), 'HH:mm')}
+                                </span>
+                                {shift.breakDuration != null ? (
+                                  <div className="text-muted-foreground flex flex-row items-center gap-1 text-xs whitespace-nowrap">
+                                    <Coffee size={12} />
+                                    <span>{shift.breakDuration}min</span>
+                                  </div>
+                                ) : null}
+                              </div>
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       )}
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        <MonthlyCalendarCard
-          className="lg:col-span-2"
-          currentMonth={currentMonth}
-          selectedDate={selectedDate}
-          onSelectDate={setSelectedDate}
-          onChangeMonth={setCurrentMonth}
-          onToday={() => {
-            const now = getToday();
-            setCurrentMonth(now);
-            setSelectedDate(startOfDay(now));
-          }}
-          isLoading={isLoading}
-          dayMeta={calendarDayMeta}
-          headerActions={
-            <Button size="lg" onClick={() => setIsModal(true)}>
-              Bulk assign shifts
-            </Button>
-          }
-        />
-
-        <Card>
-          <CardHeader className="border-b">
-            <CardTitle className="text-base font-semibold">{format(selectedDate, 'EEEE, MMMM d')}</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <Button
-              size="lg"
-              disabled={isSelectedDateInPast}
-              onClick={() => {
-                if (isSelectedDateInPast) return;
-                setSelectedUser(null);
-                setSelectedDay(dayjs(selectedDate));
-                setOpenAddShift(true);
-              }}
-            >
-              Schedule on this date
-            </Button>
-
-            <div className="space-y-3">
-              {scheduledEntries.length === 0 ? (
-                <p className="text-muted-foreground text-sm">No one is scheduled for this day.</p>
-              ) : (
-                scheduledEntries.map(({ user, shifts }) => (
-                  <div key={user.id} className="rounded-lg border p-3">
-                    <div className="flex items-center gap-2">
-                      <UsersRound className="text-muted-foreground h-4 w-4" />
-                      <div className="min-w-0 flex-1 truncate text-sm font-medium">
-                        {user.firstName} {user.lastName ?? ''}
-                      </div>
-                    </div>
-
-                    <div className="mt-2 space-y-2">
-                      {shifts.map((shift) => (
-                        <Button
-                          key={shift.id}
-                          variant="outline"
-                          className="h-auto w-full items-start justify-start py-3"
-                          onClick={() => {
-                            setSelectedShift(shift);
-                            setSelectedUser(user);
-                            setOpenShiftDeatils(true);
-                          }}
-                        >
-                          <div className="min-w-0 flex flex-1 flex-col gap-1 text-left">
-                            <span className="text-sm font-medium">Manager</span>
-                            <span className="text-xs whitespace-nowrap">
-                              {format(parseISO(shift.startTime), 'HH:mm')} –{' '}
-                              {format(parseISO(shift.endTime), 'HH:mm')}
-                            </span>
-                            {shift.breakDuration != null ? (
-                              <div className="text-muted-foreground flex flex-row items-center gap-1 text-xs whitespace-nowrap">
-                                <Coffee size={12} />
-                                <span>{shift.breakDuration}min</span>
-                              </div>
-                            ) : null}
-                          </div>
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {selectedUser && selectedShift && (
-        <ShiftModal
-          shift={selectedShift}
-          user={selectedUser}
-          onDelete={handleDelete}
-          workspaceId={workspaceId}
-          isVisiable={openShiftDetails}
-          setIsVisiable={setOpenShiftDeatils}
-          users={users}
-        />
-      )}
-      <SingleAddShiftModal
-        open={openAddShift}
-        setOpen={setOpenAddShift}
-        user={selectedUser}
-        selectedDay={selectedDay}
-        users={users}
-        workspaceId={workspaceId}
-      />
-      <AddShiftModal open={isModal} setOpen={setIsModal} users={users} workspaceId={Number(id)} />
-    </div>
+    </AdminScheduleModals>
   );
 }
 
