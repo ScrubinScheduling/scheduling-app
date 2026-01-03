@@ -1,18 +1,33 @@
 'use client';
-import React, { useState, useMemo, useEffect, use, useCallback } from 'react';
+import React, { useCallback, useEffect, useMemo, use, useState } from 'react';
 import AddShiftModal from '@/components/AddShiftModal';
 import dayjs, { Dayjs } from 'dayjs';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Spinner } from '@/components/ui/spinner';
 import { useApiClient } from '@/hooks/useApiClient';
 import { useSSEStream } from '@/hooks/useSSE';
 
-import { getToday, makeWeek, moveWeek } from '../../../../../../helpers/time';
-import { UsersRound, ChevronLeft, ChevronRight, Plus, Coffee } from 'lucide-react';
+import { getToday } from '../../../../../../helpers/time';
+import { ChevronLeft, ChevronRight, Coffee, UsersRound } from 'lucide-react';
 
-import { format, isBefore, isWithinInterval, parseISO, startOfDay } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  addDays,
+  addMonths,
+  eachDayOfInterval,
+  endOfMonth,
+  endOfWeek,
+  format,
+  isBefore,
+  isSameDay,
+  isSameMonth,
+  parseISO,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+  subMonths
+} from 'date-fns';
 import ShiftModal from '@/components/ShiftModal';
 import { Shift, User } from '@scrubin/schemas';
 import SingleAddShiftModal from '@/components/SingleAddShiftModal';
@@ -31,23 +46,20 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const workspaceId = Number(id);
   const hasValidWorkspace = Number.isInteger(workspaceId);
   const today = startOfDay(new Date());
-  const [anchor, setAnchor] = useState<Date>(getToday());
+  const [currentMonth, setCurrentMonth] = useState<Date>(getToday());
+  const [selectedDate, setSelectedDate] = useState<Date>(today);
   const [isModal, setIsModal] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [users, setUsers] = useState<User[]>([]);
-  const [shifts, setShifts] = useState<WeeklyResponse>(emptyWeekly);
+  const [monthSchedule, setMonthSchedule] = useState<WeeklyResponse>(emptyWeekly);
   const [error, setError] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
   const [openShiftDetails, setOpenShiftDeatils] = useState<boolean>(false);
   const [selectedDay, setSelectedDay] = useState<Dayjs | null>(null);
   const [openAddShift, setOpenAddShift] = useState<boolean>(false);
-  const [isWeekPickerOpen, setIsWeekPickerOpen] = useState<boolean>(false);
 
   const apiClient = useApiClient();
-  const week = useMemo(() => makeWeek(anchor), [anchor]);
-  const nextWeek = () => setAnchor((w) => moveWeek(w, 1).anchor); // Moves 1 week forwards
-  const prevWeek = () => setAnchor((w) => moveWeek(w, -1).anchor); // Moves 1 week backwards
 
   const getUsers = useCallback(async () => {
     if (!hasValidWorkspace) return;
@@ -64,26 +76,31 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     }
   }, [hasValidWorkspace, id, apiClient]);
 
-  const getShifts = useCallback(async () => {
+  const getMonthSchedule = useCallback(async () => {
     if (!hasValidWorkspace) return;
     try {
       setIsLoading(true);
 
+      const monthStart = startOfWeek(startOfMonth(currentMonth), { weekStartsOn: 0 });
+      // backend expects an exclusive end; use the start of the day *after* the last visible day
+      const monthEndExclusive = addDays(
+        startOfDay(endOfWeek(endOfMonth(currentMonth), { weekStartsOn: 0 })),
+        1
+      );
+
       // API client throws error; start/end are required
       const data: WeeklyResponse = await apiClient.getWorkspaceShifts(id, {
-        start: week.start.toISOString(),
-        end: week.end.toISOString()
+        start: monthStart.toISOString(),
+        end: monthEndExclusive.toISOString()
       });
-      console.log(data);
-      setShifts(data ?? emptyWeekly);
-      setIsLoading(false);
+      setMonthSchedule(data ?? emptyWeekly);
     } catch (error) {
       console.log(error);
       setError('Could not load shifts');
     } finally {
       setIsLoading(false);
     }
-  }, [hasValidWorkspace, apiClient, week, id]);
+  }, [hasValidWorkspace, apiClient, currentMonth, id]);
 
   const handleDelete = async (shiftId: number) => {
     if (!confirm) return;
@@ -105,195 +122,229 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   useEffect(() => {
     if (!hasValidWorkspace) return;
     getUsers();
-    getShifts(); // Refetch when workspace changes or week window moves
-  }, [hasValidWorkspace, getUsers, getShifts]);
+  }, [hasValidWorkspace, getUsers]);
+
+  useEffect(() => {
+    if (!hasValidWorkspace) return;
+    getMonthSchedule(); // refetch when workspace changes or month window moves
+  }, [hasValidWorkspace, getMonthSchedule]);
 
   useSSEStream(workspaceId, {
     'shift-updated': () => {
-      getShifts();
+      getMonthSchedule();
     }
   });
 
-  return (
-    <div className="border-border bg-card min-h-screen border-b px-6 py-4">
-      {/* Navigation */}
-      <div className="border-muted flex items-center justify-between border-b py-2">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={prevWeek}
-              variant="outline"
-              size="icon-lg"
-              className="bg-background hover:bg-muted"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Popover open={isWeekPickerOpen} onOpenChange={setIsWeekPickerOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="min-w-[200px] justify-start bg-background hover:bg-muted"
-                >
-                  {format(week.start, 'yyyy MMMM d')}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={anchor}
-                  defaultMonth={anchor}
-                  onSelect={(d) => {
-                    if (!d) return;
-                    setAnchor(d);
-                    setIsWeekPickerOpen(false);
-                  }}
-                  captionLayout="dropdown"
-                  modifiers={{
-                    selectedWeek: (d) => isWithinInterval(d, { start: week.start, end: week.end })
-                  }}
-                  modifiersClassNames={{
-                    selectedWeek: 'bg-muted/60 text-foreground'
-                  }}
-                  className="rounded-md border"
-                />
-              </PopoverContent>
-            </Popover>
-            <Button
-              onClick={nextWeek}
-              variant="outline"
-              size="icon-lg"
-              className="bg-background hover:bg-muted"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() => setAnchor(getToday())}
-            className="bg-background hover:bg-muted"
-          >
-            Today
-          </Button>
-        </div>
-        {/* Add connection to AddModalShift */}
-        <Button
-          size="lg"
-          onClick={() => setIsModal(true)}
-        >
-          Add Shifts
-        </Button>
-      </div>
+  const shiftCountByDayKey = useMemo(() => {
+    const out: Record<string, number> = {};
+    for (const userId of Object.keys(monthSchedule.buckets ?? {})) {
+      const byDay = monthSchedule.buckets[userId] ?? {};
+      for (const [dayKey, items] of Object.entries(byDay)) {
+        out[dayKey] = (out[dayKey] ?? 0) + (items?.length ?? 0);
+      }
+    }
+    return out;
+  }, [monthSchedule]);
 
-      {/* Day headers */}
+  const selectedDayKey = useMemo(() => format(selectedDate, 'yyyy-MM-dd'), [selectedDate]);
+
+  const scheduledEntries = useMemo(() => {
+    return users
+      .map((user) => ({
+        user,
+        shifts: monthSchedule?.buckets?.[user.id]?.[selectedDayKey] ?? []
+      }))
+      .filter((entry) => entry.shifts.length > 0);
+  }, [users, monthSchedule, selectedDayKey]);
+
+  const isSelectedDateInPast = isBefore(startOfDay(selectedDate), today);
+
+  const calendarDays = useMemo(() => {
+    const monthStartDate = startOfMonth(currentMonth);
+    const monthEndDate = endOfMonth(currentMonth);
+    const start = startOfWeek(monthStartDate, { weekStartsOn: 0 });
+    const end = endOfWeek(monthEndDate, { weekStartsOn: 0 });
+    return eachDayOfInterval({ start, end });
+  }, [currentMonth]);
+
+  const prevMonth = () => setCurrentMonth((d) => subMonths(d, 1));
+  const nextMonth = () => setCurrentMonth((d) => addMonths(d, 1));
+
+  return (
+    <div className="mx-auto max-w-7xl space-y-6 px-6 py-6">
       {error && (
-        <div className="mb-3">
+        <div>
           <div className="border-destructive/20 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm">
             Error: {error}
           </div>
         </div>
       )}
-      <div className="relative">
-        {isLoading && (
-          <div className="bg-background/60 absolute inset-0 z-10 flex items-center justify-center">
-            <Spinner className="size-6" />
-          </div>
-        )}
-        <div className={isLoading ? 'pointer-events-none opacity-50' : ''}>
-          <div className="flex-1 overflow-auto pt-5">
-            <div className="min-w-[1200px]">
-              <div className="mb-2 grid grid-cols-8 gap-2">
-                <div className="text-muted-foreground py-3 text-sm font-medium">Employee</div>
-                {week.days.map((d) => {
-                  const isPastDay = isBefore(startOfDay(d), today);
-                  return (
-                    <div
-                      key={d.toDateString()}
-                      className={`text-muted-foreground rounded-md py-3 text-center text-sm font-medium ${
-                        isPastDay ? 'bg-muted/20 opacity-60' : ''
-                      }`}
-                    >
-                      <div>{format(d, 'EEE')}</div>
-                      <div className="text-muted-foreground/70 text-xs">{format(d, 'MMM d')}</div>
-                    </div>
-                  );
-                })}
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader className="border-b">
+            <div className="flex items-center justify-between gap-3">
+              <CardTitle className="text-lg font-semibold">{format(currentMonth, 'MMMM yyyy')}</CardTitle>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => {
+                    const now = getToday();
+                    setCurrentMonth(now);
+                    setSelectedDate(startOfDay(now));
+                  }}
+                >
+                  Today
+                </Button>
+                <Button size="lg" onClick={() => setIsModal(true)}>
+                  Bulk assign shifts
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="relative">
+            {isLoading && (
+              <div className="bg-background/60 absolute inset-0 z-10 flex items-center justify-center">
+                <Spinner className="size-6" />
+              </div>
+            )}
+
+            <div className={cn(isLoading && 'pointer-events-none opacity-50')}>
+              {/* Month navigation */}
+              <div className="mb-4 flex items-center justify-between">
+                <Button variant="ghost" size="icon" onClick={prevMonth}>
+                  <ChevronLeft className="h-5 w-5" />
+                </Button>
+                <div className="text-sm font-medium">{format(currentMonth, 'MMMM yyyy')}</div>
+                <Button variant="ghost" size="icon" onClick={nextMonth}>
+                  <ChevronRight className="h-5 w-5" />
+                </Button>
               </div>
 
-              <div className="space-y-1">
-                {users?.map((user) => (
+              {/* Weekday headers */}
+              <div className="mb-2 grid grid-cols-7 gap-2">
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
                   <div
-                    key={user.id}
-                    className="border-border bg-card hover:bg-card/80 grid grid-cols-8 gap-2 rounded-lg border transition-colors"
+                    key={day}
+                    className="text-muted-foreground py-2 text-center text-xs font-medium uppercase"
                   >
-                    {/* Emplyee Profile Card for row */}
-                    <div className="border-border flex items-center gap-3 border-r p-4">
-                      <UsersRound />
-                      <div className="text-foreground truncate text-sm font-medium">
-                        {user.firstName}
-                      </div>
-                    </div>
-                    {shifts.days.map((dayKey) => {
-                      const dayDate = startOfDay(parseISO(dayKey));
-                      const isPastDay = isBefore(dayDate, today);
-                      const items = shifts?.buckets[user.id]?.[dayKey] ?? [];
-                      return (
-                        <div
-                          key={dayKey}
-                          className={`flex min-h-[100px] flex-col gap-1 rounded-md p-2 ${
-                            isPastDay ? 'bg-muted/20 opacity-60' : ''
-                          }`}
-                        >
-                          {items.length === 0 ? (
-                            <Button
-                              variant="outline"
-                              disabled={isPastDay}
-                              className="flex-1 bg-background text-muted-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
-                              onClick={() => {
-                                if (isPastDay) return;
-                                setSelectedUser(user);
-                                setSelectedDay(dayjs(dayKey));
-                                setOpenAddShift(true);
-                              }}
-                            >
-                              <Plus />
-                            </Button>
-                          ) : (
-                            items.map((shift) => (
-                              <Button
-                                key={shift.id}
-                                className="w-full flex-1 justify-start"
-                                onClick={() => {
-                                  setSelectedShift(shift);
-                                  setSelectedUser(user);
-                                  setOpenShiftDeatils(true);
-                                }}
-                              >
-                                <div className="flex flex-1 flex-col gap-1 text-left">
-                                  <span className="text-sm font-medium">Manager</span>
-                                  <span className="text-xs">
-                                    {format(parseISO(shift.startTime), 'HH:mm')} to{' '}
-                                    {format(parseISO(shift.endTime), 'HH:mm')}
-                                  </span>
-                                  <div className="flex flex-row items-center gap-1">
-                                    <Coffee size={12} />
-                                    <span className="text-xs">{shift.breakDuration}min</span>
-                                  </div>
-                                </div>
-                              </Button>
-                            ))
-                          )}
-                        </div>
-                      );
-                    })}
+                    {day}
                   </div>
                 ))}
               </div>
+
+              {/* Calendar grid */}
+              <div className="grid grid-cols-7 gap-2">
+                {calendarDays.map((day, index) => {
+                  const dayKey = format(day, 'yyyy-MM-dd');
+                  const count = shiftCountByDayKey[dayKey] ?? 0;
+                  const isCurrentMonthDay = isSameMonth(day, currentMonth);
+                  const isSelected = isSameDay(day, selectedDate);
+                  const isToday = isSameDay(day, new Date());
+
+                  return (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => setSelectedDate(day)}
+                      className={cn(
+                        'flex min-h-[100px] flex-col items-start justify-start rounded-lg border p-3 text-left transition-colors',
+                        'hover:bg-muted/50',
+                        !isCurrentMonthDay && 'opacity-40',
+                        isToday && 'border-primary border-2',
+                        isSelected && 'ring-primary/40 ring-2'
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          'text-sm font-medium',
+                          isToday && 'text-primary font-bold'
+                        )}
+                      >
+                        {format(day, 'd')}
+                      </span>
+                      {count > 0 && (
+                        <span className="text-muted-foreground mt-1 text-xs">
+                          {count} {count === 1 ? 'shift' : 'shifts'}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="border-b">
+            <CardTitle className="text-base font-semibold">{format(selectedDate, 'EEEE, MMMM d')}</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <Button
+              size="lg"
+              disabled={isSelectedDateInPast}
+              onClick={() => {
+                if (isSelectedDateInPast) return;
+                setSelectedUser(null);
+                setSelectedDay(dayjs(selectedDate));
+                setOpenAddShift(true);
+              }}
+            >
+              Schedule on this date
+            </Button>
+
+            <div className="space-y-3">
+              {scheduledEntries.length === 0 ? (
+                <p className="text-muted-foreground text-sm">No one is scheduled for this day.</p>
+              ) : (
+                scheduledEntries.map(({ user, shifts }) => (
+                  <div key={user.id} className="rounded-lg border p-3">
+                    <div className="flex items-center gap-2">
+                      <UsersRound className="text-muted-foreground h-4 w-4" />
+                      <div className="min-w-0 flex-1 truncate text-sm font-medium">
+                        {user.firstName} {user.lastName ?? ''}
+                      </div>
+                    </div>
+
+                    <div className="mt-2 space-y-2">
+                      {shifts.map((shift) => (
+                        <Button
+                          key={shift.id}
+                          variant="outline"
+                          className="h-auto w-full items-start justify-start py-3"
+                          onClick={() => {
+                            setSelectedShift(shift);
+                            setSelectedUser(user);
+                            setOpenShiftDeatils(true);
+                          }}
+                        >
+                          <div className="min-w-0 flex flex-1 flex-col gap-1 text-left">
+                            <span className="text-sm font-medium">Manager</span>
+                            <span className="text-xs whitespace-nowrap">
+                              {format(parseISO(shift.startTime), 'HH:mm')} –{' '}
+                              {format(parseISO(shift.endTime), 'HH:mm')}
+                            </span>
+                            {shift.breakDuration != null ? (
+                              <div className="text-muted-foreground flex flex-row items-center gap-1 text-xs whitespace-nowrap">
+                                <Coffee size={12} />
+                                <span>{shift.breakDuration}min</span>
+                              </div>
+                            ) : null}
+                          </div>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
       {selectedUser && selectedShift && (
         <ShiftModal
           shift={selectedShift}
