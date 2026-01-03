@@ -95,17 +95,23 @@ export function useWorkspaceMonthlySchedule(workspaceId: string | number, curren
   });
 
   const deleteShift = useCallback(
-    async (shiftId: number) => {
+    async (shiftId: number, options?: { confirm?: boolean }) => {
       if (!hasValidWorkspace) return;
+      const shouldConfirm = options?.confirm ?? true;
       // Fix confirm guard bug: confirm is a function; call window.confirm instead.
-      if (!window.confirm('Delete this shift?')) return;
+      if (shouldConfirm && !window.confirm('Delete this shift?')) return;
 
       setError(null);
 
-      await withLoading(async () => {
-        await api.deleteShift(workspaceIdString, shiftId);
-        await fetchSchedule();
-      });
+      try {
+        await withLoading(async () => {
+          await api.deleteShift(workspaceIdString, shiftId);
+          await fetchSchedule();
+        });
+      } catch (err) {
+        console.error('Error deleting shift:', err);
+        setError('Could not delete shift');
+      }
     },
     [api, fetchSchedule, hasValidWorkspace, workspaceIdString, withLoading]
   );
