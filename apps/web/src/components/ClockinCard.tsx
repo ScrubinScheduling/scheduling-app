@@ -21,6 +21,7 @@ import { useAuth } from '@clerk/nextjs';
 import { useParams } from 'next/navigation';
 import { toast } from 'sonner';
 import type { Shift } from '@scrubin/schemas';
+import type { WorkspaceMonthlySchedule } from '@scrubin/schemas';
 
 function ShiftTradeDialog({
   children,
@@ -239,9 +240,7 @@ export default function ClockinCard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentShift, setCurrentShift] = useState<Shift | null>(null);
-  const [coworkers, setCoworkers] = useState<
-    Array<{ id: string; firstName: string | null; lastName: string | null }>
-  >([]);
+  const [coworkers, setCoworkers] = useState<WorkspaceMonthlySchedule['users']>([]);
 
   // Determine status from shift and timesheet data
   const getStatus = (): 'scheduled' | 'active' | 'break' | 'completed' => {
@@ -359,14 +358,7 @@ export default function ClockinCard() {
         const response = (await apiClient.getWorkspaceShifts(workspaceId, {
           start: searchStart.toISOString(),
           end: searchEnd.toISOString()
-        })) as {
-          days: string[];
-          users: Array<{ id: string; firstName: string | null; lastName: string | null }>;
-          buckets: Record<
-            string,
-            Record<string, Array<{ id: number; startTime: string; endTime: string }>>
-          >;
-        };
+        })) as WorkspaceMonthlySchedule;
 
         const overlappingUserIds = new Set<string>();
 

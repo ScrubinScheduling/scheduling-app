@@ -36,17 +36,14 @@ import {
   subMonths
 } from 'date-fns';
 import ShiftModal from '@/components/ShiftModal';
-import { Shift, User } from '@scrubin/schemas';
 import SingleAddShiftModal from '@/components/SingleAddShiftModal';
-
-type ApiShift = { id: number; startTime: string; endTime: string; breakDuration: number | null };
-type WeeklyResponse = {
-  days: string[];
-  users: User[];
-  buckets: Record<string, Record<string, ApiShift[]>>;
-};
-
-const emptyWeekly: WeeklyResponse = { days: [], users: [], buckets: {} };
+import {
+  emptyWorkspaceMonthlySchedule,
+  type DayKey,
+  type Shift,
+  type User,
+  type WorkspaceMonthlySchedule
+} from '@scrubin/schemas';
 
 const MONTH_OPTIONS = Array.from({ length: 12 }, (_, monthIndex) =>
   format(new Date(2020, monthIndex, 1), 'MMM')
@@ -62,7 +59,9 @@ export default function AdminScheduleDashboard({ params }: { params: Promise<{ i
   const [isModal, setIsModal] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [users, setUsers] = useState<User[]>([]);
-  const [monthSchedule, setMonthSchedule] = useState<WeeklyResponse>(emptyWeekly);
+  const [monthSchedule, setMonthSchedule] = useState<WorkspaceMonthlySchedule>(
+    emptyWorkspaceMonthlySchedule
+  );
   const [error, setError] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
@@ -100,11 +99,11 @@ export default function AdminScheduleDashboard({ params }: { params: Promise<{ i
       );
 
       // API client throws error; start/end are required
-      const data: WeeklyResponse = await apiClient.getWorkspaceShifts(id, {
+      const data: WorkspaceMonthlySchedule = await apiClient.getWorkspaceShifts(id, {
         start: monthStart.toISOString(),
         end: monthEndExclusive.toISOString()
       });
-      setMonthSchedule(data ?? emptyWeekly);
+      setMonthSchedule(data ?? emptyWorkspaceMonthlySchedule);
     } catch (error) {
       console.log(error);
       setError('Could not load shifts');
@@ -147,7 +146,7 @@ export default function AdminScheduleDashboard({ params }: { params: Promise<{ i
   });
 
   const shiftCountByDayKey = useMemo(() => {
-    const out: Record<string, number> = {};
+    const out: Record<DayKey, number> = {};
     for (const userId of Object.keys(monthSchedule.buckets ?? {})) {
       const byDay = monthSchedule.buckets[userId] ?? {};
       for (const [dayKey, items] of Object.entries(byDay)) {

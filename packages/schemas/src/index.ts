@@ -74,6 +74,22 @@ export type User = {
   lastName?: string | null;
 };
 
+// yyyy-MM-dd (used as a stable key for calendar buckets)
+export type DayKey = string;
+
+// Shape returned by `GET /workspaces/:id/shifts` for a given time window (month grid, day, etc.)
+export type WorkspaceMonthlySchedule = {
+  days: DayKey[];
+  users: User[];
+  buckets: Record<User['id'], Record<DayKey, Shift[]>>;
+};
+
+export const emptyWorkspaceMonthlySchedule: WorkspaceMonthlySchedule = {
+  days: [],
+  users: [],
+  buckets: {}
+};
+
 export type Workspace = {
   id: number;
   name: string;

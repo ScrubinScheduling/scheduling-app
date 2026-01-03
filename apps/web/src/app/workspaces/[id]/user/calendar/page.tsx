@@ -7,6 +7,7 @@ import { useApiClient } from '@/hooks/useApiClient';
 import { useSSEStream } from '@/hooks/useSSE';
 import { useAuth } from '@clerk/nextjs';
 import dayjs from 'dayjs';
+import type { Shift as ApiShift, WorkspaceMonthlySchedule } from '@scrubin/schemas';
 import {
   addMonths,
   subMonths,
@@ -32,21 +33,6 @@ type Shift = {
   kind: 'shift';
 };
 
-type ApiShift = {
-  id: number;
-  startTime: string;
-  endTime: string;
-  breakDuration: number;
-  userId: string;
-  workspaceId: string;
-};
-
-type WorkspaceShcedule = {
-  days: string[];
-  users: { id: number; firstName: string | null; lastName: string | null }[];
-  buckets: Record<number, Record<string, ApiShift[]>>;
-};
-
 type ApiTimeOffRequest = {
   id: string;
   status: 'pending' | 'approved' | 'denied';
@@ -67,7 +53,7 @@ type TimeOffEvent = {
 };
 
 type CoworkerEntry = {
-  member: WorkspaceShcedule['users'][number];
+  member: WorkspaceMonthlySchedule['users'][number];
   shifts: ApiShift[];
 };
 
@@ -126,7 +112,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(currentDate);
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [isLoading, setIsloading] = useState<boolean>(false);
-  const [teamSchedule, setTeamSchedule] = useState<WorkspaceShcedule | null>(null);
+  const [teamSchedule, setTeamSchedule] = useState<WorkspaceMonthlySchedule | null>(null);
   const [timeOff, setTimeOff] = useState<TimeOffEvent[]>([]);
   // Todo: Add Error Checks const [err, setErr] = useState<string>('');
 
