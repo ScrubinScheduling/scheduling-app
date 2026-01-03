@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Bell, CalendarDays } from 'lucide-react';
 import { UserButton } from '@clerk/nextjs';
 import { usePathname } from 'next/navigation';
+import { ModeToggle } from '@/components/mode-toggle';
 
 type NavLink = {
   href: string;
@@ -34,6 +35,7 @@ export default function Navbar({ navlinks }: { navlinks: NavLink[] }) {
       </div>
 
       <div className="flex items-center gap-4">
+        <ModeToggle />
         <Bell className="text-muted-foreground h-5 w-5" />
         <UserButton />
       </div>
