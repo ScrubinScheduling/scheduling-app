@@ -171,7 +171,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const nextMonth = () => setCurrentMonth((d) => addMonths(d, 1));
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-6 py-6">
+    <div className="mx-auto w-[90vw] max-w-none space-y-6 px-2 py-6 sm:px-4">
       {error && (
         <div>
           <div className="border-destructive/20 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm">
@@ -211,7 +211,12 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
               </div>
             )}
 
-            <div className={cn(isLoading && 'pointer-events-none opacity-50')}>
+            <div
+              className={cn(
+                isLoading && 'pointer-events-none opacity-50',
+                'flex min-h-[800px] flex-col'
+              )}
+            >
               {/* Month navigation */}
               <div className="mb-4 flex items-center justify-between">
                 <Button variant="ghost" size="icon" onClick={prevMonth}>
@@ -236,7 +241,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
               </div>
 
               {/* Calendar grid */}
-              <div className="grid grid-cols-7 gap-2">
+              <div className="grid flex-1 auto-rows-fr grid-cols-7 gap-2">
                 {calendarDays.map((day, index) => {
                   const dayKey = format(day, 'yyyy-MM-dd');
                   const count = shiftCountByDayKey[dayKey] ?? 0;
@@ -250,7 +255,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
                       type="button"
                       onClick={() => setSelectedDate(day)}
                       className={cn(
-                        'flex min-h-[100px] flex-col items-start justify-start rounded-lg border p-3 text-left transition-colors',
+                        'flex h-full flex-col items-start justify-start rounded-lg border p-3 text-left transition-colors',
                         'hover:bg-muted/50',
                         !isCurrentMonthDay && 'opacity-40',
                         isToday && 'border-primary border-2',
@@ -267,9 +272,9 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
                       </span>
                       {count > 0 && (
                         <span className="text-muted-foreground mt-1 text-xs">
-                          {count} {count === 1 ? 'shift' : 'shifts'}
+                          {count} {count === 1 ? 'shift scheduled' : 'shifts scheduled'}
                         </span>
-                      )}
+                      )} 
                     </button>
                   );
                 })}
