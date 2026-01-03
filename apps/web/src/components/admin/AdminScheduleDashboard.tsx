@@ -3,40 +3,27 @@ import React, { useCallback, useEffect, useMemo, use, useState } from 'react';
 import AddShiftModal from '@/components/AddShiftModal';
 import dayjs, { Dayjs } from 'dayjs';
 import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
 import { useApiClient } from '@/hooks/useApiClient';
 import { useSSEStream } from '@/hooks/useSSE';
 
 import { getToday } from '../../../helpers/time';
-import { ChevronLeft, ChevronRight, Coffee, UsersRound } from 'lucide-react';
+import { Coffee, UsersRound } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   addDays,
-  addMonths,
-  eachDayOfInterval,
   endOfMonth,
   endOfWeek,
   format,
   isBefore,
-  isSameDay,
-  isSameMonth,
   parseISO,
   startOfDay,
   startOfMonth,
-  startOfWeek,
-  subMonths
+  startOfWeek
 } from 'date-fns';
 import ShiftModal from '@/components/ShiftModal';
 import SingleAddShiftModal from '@/components/SingleAddShiftModal';
+import MonthlyCalendarCard from '@/components/schedule/MonthlyCalendarCard';
 import {
   emptyWorkspaceMonthlySchedule,
   type DayKey,
@@ -44,10 +31,6 @@ import {
   type User,
   type WorkspaceMonthlySchedule
 } from '@scrubin/schemas';
-
-const MONTH_OPTIONS = Array.from({ length: 12 }, (_, monthIndex) =>
-  format(new Date(2020, monthIndex, 1), 'MMM')
-);
 
 export default function AdminScheduleDashboard({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -169,23 +152,14 @@ export default function AdminScheduleDashboard({ params }: { params: Promise<{ i
 
   const isSelectedDateInPast = isBefore(startOfDay(selectedDate), today);
 
-  const calendarDays = useMemo(() => {
-    const monthStartDate = startOfMonth(currentMonth);
-    const monthEndDate = endOfMonth(currentMonth);
-    const start = startOfWeek(monthStartDate, { weekStartsOn: 0 });
-    const end = endOfWeek(monthEndDate, { weekStartsOn: 0 });
-    return eachDayOfInterval({ start, end });
-  }, [currentMonth]);
-
-  const prevMonth = () => setCurrentMonth((d) => subMonths(d, 1));
-  const nextMonth = () => setCurrentMonth((d) => addMonths(d, 1));
-
-  const currentMonthIndex = currentMonth.getMonth();
-  const currentYear = currentMonth.getFullYear();
-  const yearOptions = useMemo(() => {
-    const start = currentYear - 50;
-    return Array.from({ length: 101 }, (_, i) => start + i);
-  }, [currentYear]);
+  const calendarDayMeta = useMemo(() => {
+    const out: Record<string, React.ReactNode> = {};
+    for (const [dayKey, count] of Object.entries(shiftCountByDayKey)) {
+      if (!count) continue;
+      out[dayKey] = `${count} ${count === 1 ? 'shift scheduled' : 'shifts scheduled'}`;
+    }
+    return out;
+  }, [shiftCountByDayKey]);
 
   return (
     <div className="mx-auto w-[90vw] max-w-none space-y-6 px-2 py-6 sm:px-4">
@@ -198,147 +172,25 @@ export default function AdminScheduleDashboard({ params }: { params: Promise<{ i
       )}
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader className="border-b">
-            <div className="flex items-center justify-between gap-3">
-              <CardTitle className="text-lg font-semibold">{format(currentMonth, 'MMMM yyyy')}</CardTitle>
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={() => {
-                    const now = getToday();
-                    setCurrentMonth(now);
-                    setSelectedDate(startOfDay(now));
-                  }}
-                >
-                  Today
-                </Button>
-                <Button size="lg" onClick={() => setIsModal(true)}>
-                  Bulk assign shifts
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-
-          <CardContent className="relative">
-            {isLoading && (
-              <div className="bg-background/60 absolute inset-0 z-10 flex items-center justify-center">
-                <Spinner className="size-6" />
-              </div>
-            )}
-
-            <div
-              className={cn(
-                isLoading && 'pointer-events-none opacity-50',
-                'flex min-h-[800px] flex-col'
-              )}
-            >
-              {/* Month navigation */}
-              <div className="mb-4 flex items-center justify-between">
-                <Button variant="ghost" size="icon" onClick={prevMonth}>
-                  <ChevronLeft className="h-5 w-5" />
-                </Button>
-                <div className="flex items-center gap-2">
-                  <Select
-                    value={String(currentMonthIndex)}
-                    onValueChange={(value) => {
-                      const nextMonthIndex = Number(value);
-                      if (!Number.isInteger(nextMonthIndex)) return;
-                      setCurrentMonth(startOfMonth(new Date(currentYear, nextMonthIndex, 1)));
-                    }}
-                  >
-                    <SelectTrigger size="sm" aria-label="Select month">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent align="center">
-                      {MONTH_OPTIONS.map((label, monthIndex) => (
-                        <SelectItem key={label} value={String(monthIndex)}>
-                          {label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Select
-                    value={String(currentYear)}
-                    onValueChange={(value) => {
-                      const nextYear = Number(value);
-                      if (!Number.isInteger(nextYear)) return;
-                      setCurrentMonth(startOfMonth(new Date(nextYear, currentMonthIndex, 1)));
-                    }}
-                  >
-                    <SelectTrigger size="sm" aria-label="Select year">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent align="center">
-                      {yearOptions.map((year) => (
-                        <SelectItem key={year} value={String(year)}>
-                          {year}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button variant="ghost" size="icon" onClick={nextMonth}>
-                  <ChevronRight className="h-5 w-5" />
-                </Button>
-              </div>
-
-              {/* Weekday headers */}
-              <div className="mb-2 grid grid-cols-7 gap-2">
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                  <div
-                    key={day}
-                    className="text-muted-foreground py-2 text-center text-xs font-medium uppercase"
-                  >
-                    {day}
-                  </div>
-                ))}
-              </div>
-
-              {/* Calendar grid */}
-              <div className="grid flex-1 auto-rows-fr grid-cols-7 gap-2">
-                {calendarDays.map((day, index) => {
-                  const dayKey = format(day, 'yyyy-MM-dd');
-                  const count = shiftCountByDayKey[dayKey] ?? 0;
-                  const isCurrentMonthDay = isSameMonth(day, currentMonth);
-                  const isSelected = isSameDay(day, selectedDate);
-                  const isToday = isSameDay(day, new Date());
-
-                  return (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => setSelectedDate(day)}
-                      className={cn(
-                        'flex h-full flex-col items-start justify-start rounded-lg border p-3 text-left transition-colors',
-                        'hover:bg-muted/50',
-                        !isCurrentMonthDay && 'opacity-40',
-                        isToday && 'border-primary border-2',
-                        isSelected && 'ring-primary/40 ring-2'
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          'text-sm font-medium',
-                          isToday && 'text-primary font-bold'
-                        )}
-                      >
-                        {format(day, 'd')}
-                      </span>
-                      {count > 0 && (
-                        <span className="text-muted-foreground mt-1 text-xs">
-                          {count} {count === 1 ? 'shift scheduled' : 'shifts scheduled'}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <MonthlyCalendarCard
+          className="lg:col-span-2"
+          currentMonth={currentMonth}
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+          onChangeMonth={setCurrentMonth}
+          onToday={() => {
+            const now = getToday();
+            setCurrentMonth(now);
+            setSelectedDate(startOfDay(now));
+          }}
+          isLoading={isLoading}
+          dayMeta={calendarDayMeta}
+          headerActions={
+            <Button size="lg" onClick={() => setIsModal(true)}>
+              Bulk assign shifts
+            </Button>
+          }
+        />
 
         <Card>
           <CardHeader className="border-b">
