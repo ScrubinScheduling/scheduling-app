@@ -15,13 +15,20 @@ export default function CreateCard() {
 		<>
 			<TouchableOpacity
 				onPress={() => setIsModalVisible(true)}
-				className="rounded-xl border-2 border-dashed border-emerald-300 bg-emerald-50 p-5 active:bg-emerald-100"
+				className="rounded-xl bg-emerald-600 p-4 shadow-lg shadow-emerald-900/30 active:bg-emerald-700"
+				style={{
+					shadowColor: '#064e3b',
+					shadowOffset: { width: 0, height: 4 },
+					shadowOpacity: 0.3,
+					shadowRadius: 8,
+					elevation: 8
+				}}
 			>
 				<View className="flex-row items-center justify-center gap-3">
-					<View className="rounded-full bg-emerald-600 p-2">
-						<MaterialIcons name="add" size={24} color="white" />
+					<View className="rounded-full bg-white p-2 shadow-sm">
+						<MaterialIcons name="add" size={24} color="#059669" />
 					</View>
-					<Text className="text-lg font-semibold text-emerald-700">Create New Workspace</Text>
+					<Text className="text-lg font-semibold text-white">Create New Workspace</Text>
 				</View>
 			</TouchableOpacity>
 
