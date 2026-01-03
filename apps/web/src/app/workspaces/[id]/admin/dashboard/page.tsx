@@ -4,6 +4,13 @@ import AddShiftModal from '@/components/AddShiftModal';
 import dayjs, { Dayjs } from 'dayjs';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
 import { useApiClient } from '@/hooks/useApiClient';
 import { useSSEStream } from '@/hooks/useSSE';
 
@@ -40,6 +47,10 @@ type WeeklyResponse = {
 };
 
 const emptyWeekly: WeeklyResponse = { days: [], users: [], buckets: {} };
+
+const MONTH_OPTIONS = Array.from({ length: 12 }, (_, monthIndex) =>
+  format(new Date(2020, monthIndex, 1), 'MMM')
+);
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -170,6 +181,13 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const prevMonth = () => setCurrentMonth((d) => subMonths(d, 1));
   const nextMonth = () => setCurrentMonth((d) => addMonths(d, 1));
 
+  const currentMonthIndex = currentMonth.getMonth();
+  const currentYear = currentMonth.getFullYear();
+  const yearOptions = useMemo(() => {
+    const start = currentYear - 50;
+    return Array.from({ length: 101 }, (_, i) => start + i);
+  }, [currentYear]);
+
   return (
     <div className="mx-auto w-[90vw] max-w-none space-y-6 px-2 py-6 sm:px-4">
       {error && (
@@ -222,7 +240,47 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
                 <Button variant="ghost" size="icon" onClick={prevMonth}>
                   <ChevronLeft className="h-5 w-5" />
                 </Button>
-                <div className="text-sm font-medium">{format(currentMonth, 'MMMM yyyy')}</div>
+                <div className="flex items-center gap-2">
+                  <Select
+                    value={String(currentMonthIndex)}
+                    onValueChange={(value) => {
+                      const nextMonthIndex = Number(value);
+                      if (!Number.isInteger(nextMonthIndex)) return;
+                      setCurrentMonth(startOfMonth(new Date(currentYear, nextMonthIndex, 1)));
+                    }}
+                  >
+                    <SelectTrigger size="sm" aria-label="Select month">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent align="center">
+                      {MONTH_OPTIONS.map((label, monthIndex) => (
+                        <SelectItem key={label} value={String(monthIndex)}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select
+                    value={String(currentYear)}
+                    onValueChange={(value) => {
+                      const nextYear = Number(value);
+                      if (!Number.isInteger(nextYear)) return;
+                      setCurrentMonth(startOfMonth(new Date(nextYear, currentMonthIndex, 1)));
+                    }}
+                  >
+                    <SelectTrigger size="sm" aria-label="Select year">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent align="center">
+                      {yearOptions.map((year) => (
+                        <SelectItem key={year} value={String(year)}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <Button variant="ghost" size="icon" onClick={nextMonth}>
                   <ChevronRight className="h-5 w-5" />
                 </Button>
