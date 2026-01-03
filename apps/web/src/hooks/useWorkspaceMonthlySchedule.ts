@@ -1,11 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { addDays, endOfMonth, endOfWeek, startOfDay, startOfMonth, startOfWeek } from 'date-fns';
 import { useApiClient } from '@/hooks/useApiClient';
 import { useSSEStream } from '@/hooks/useSSE';
 import type { User, WorkspaceMonthlySchedule } from '@scrubin/schemas';
 import { emptyWorkspaceMonthlySchedule } from '@scrubin/schemas';
+import { getVisibleMonthWindow } from '../../helpers/schedule';
 
 type WorkspaceMembersResponse = {
   members?: User[];
@@ -51,12 +51,10 @@ export function useWorkspaceMonthlySchedule(workspaceId: string | number, curren
     if (!hasValidWorkspace) return Promise.resolve();
 
     return withLoading(async () => {
-      const monthStart = startOfWeek(startOfMonth(currentMonth), { weekStartsOn: 0 });
       // backend expects an exclusive end; use the start of the day *after* the last visible day
-      const monthEndExclusive = addDays(
-        startOfDay(endOfWeek(endOfMonth(currentMonth), { weekStartsOn: 0 })),
-        1
-      );
+      const { start: monthStart, endExclusive: monthEndExclusive } = getVisibleMonthWindow(currentMonth, {
+        weekStartsOn: 0
+      });
 
       // API client throws error; start/end are required
       const data: WorkspaceMonthlySchedule | null = await api.getWorkspaceShifts(workspaceIdString, {
