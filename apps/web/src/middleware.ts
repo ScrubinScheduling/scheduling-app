@@ -17,6 +17,8 @@ const isDisabledPage = createRouteMatcher([
 ]);
 const isWorkspaceRoot = createRouteMatcher(['/workspaces/:workspaceId']);
 
+const isWorkspaceCreateRoute = createRouteMatcher(["/workspaces/create"]);
+
 async function getWorkspaceMembershipStatus(token: string | null, workspaceId: number) {
 	try {
 		const apiClient = createApiClient({
@@ -59,7 +61,7 @@ export default clerkMiddleware(async (auth, req) => {
 		await auth.protect();
 	}
 
-	if (isWorkspaceRoute(req)) {
+	if (isWorkspaceRoute(req) && !isWorkspaceCreateRoute(req)) {
 		const { getToken, userId } = await auth();
 		const token = await getToken();
 		const workspaceId = Number(req.url.split('/')[4]);
