@@ -33,8 +33,8 @@ export default function RootLayout({
       publishableKey={publishableKey}
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
-      signInFallbackRedirectUrl="/workspaces"
-      signUpFallbackRedirectUrl="/workspaces"
+      signInFallbackRedirectUrl="/workspaces/onboarding"
+      signUpFallbackRedirectUrl="/workspaces/onboarding"
     >
       <html lang="en" className={roboto.variable} suppressHydrationWarning>
         <body

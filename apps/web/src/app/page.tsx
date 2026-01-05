@@ -11,7 +11,7 @@ import Footer from '@/components/landing/Footer';
 
 export default async function Home() {
 	const { userId } = await auth();
-	if (userId) redirect('/workspaces');
+	if (userId) redirect('/workspaces/onboarding');
 	return (
 		<div className="bg-background min-h-screen">
 			<SignedOut>
