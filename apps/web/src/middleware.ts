@@ -7,13 +7,17 @@ const isWorkspaceRoute = createRouteMatcher([
   '/workspaces/:workspaceId',
   '/workspaces/:workspaceId/:path*'
 ]);
+
 const isWorkspaceAdminRoute = createRouteMatcher(['/workspaces/:workspaceId/admin/:path*']);
+const isWorkspaceUserRoute = createRouteMatcher(['/workspaces/:workspaceId/user/:path*']);
 
 const isDisabledPage = createRouteMatcher([
   '/workspaces/:workspaceId/admin/requests/:path*',
   '/workspaces/:workspaceId/user/requests/:path*'
 ]);
 const isWorkspaceRoot = createRouteMatcher(['/workspaces/:workspaceId']);
+
+const isWorkspaceOnboardingRoute = createRouteMatcher(["/workspaces/onboarding"]);
 
 async function getWorkspaceMembershipStatus(token: string | null, workspaceId: number) {
   try {
@@ -57,11 +61,11 @@ export default clerkMiddleware(async (auth, req) => {
     await auth.protect();
   }
 
-  if (isWorkspaceRoute(req)) {
-    const { getToken, userId } = await auth();
-    const token = await getToken();
-    const workspaceId = Number(req.url.split('/')[4]);
-    const membershipStatus = await getWorkspaceMembershipStatus(token, workspaceId);
+	if (isWorkspaceRoute(req) && !isWorkspaceOnboardingRoute(req)) {
+		const { getToken, userId } = await auth();
+		const token = await getToken();
+		const workspaceId = Number(req.url.split('/')[4]);
+		const membershipStatus = await getWorkspaceMembershipStatus(token, workspaceId);
 
     if (membershipStatus === 403 || !token) {
       return NextResponse.redirect(new URL('/not-found', req.url));
@@ -79,10 +83,20 @@ export default clerkMiddleware(async (auth, req) => {
       return NextResponse.redirect(new URL('/not-found', req.url));
     }
 
-    if (isDisabledPage(req)) {
-      return NextResponse.redirect(new URL('/not-found', req.url));
-    }
-  }
+		if (isDisabledPage(req)) {
+			return NextResponse.redirect(new URL('/not-found', req.url));
+		}
+
+		if (membershipStatus === 200 && 
+			((isUserAdmin && isWorkspaceUserRoute(req)) || (!isUserAdmin && isWorkspaceAdminRoute(req)))) {
+			return NextResponse.redirect(
+				new URL(`/workspaces/${workspaceId}/${isUserAdmin ? 'admin' : 'user'}/dashboard`, req.url)
+			);
+		}
+
+		
+
+	}
 });
 
 export const config = {

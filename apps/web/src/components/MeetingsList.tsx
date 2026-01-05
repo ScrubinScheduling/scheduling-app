@@ -24,6 +24,7 @@ export default function MeetingsList({ meetings, onSelect, selectedId, onDelete 
                         onSelect={onSelect}
                         isSelected={isSelected}
                         onDelete={onDelete}
+                        key={m.id}
                    />
                 );
             })}

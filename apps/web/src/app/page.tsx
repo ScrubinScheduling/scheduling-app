@@ -10,18 +10,18 @@ import Future from '@/components/landing/Future';
 import Footer from '@/components/landing/Footer';
 
 export default async function Home() {
-  const { userId } = await auth();
-  if (userId) redirect('/workspaces');
-  return (
-    <div className="bg-background min-h-screen">
-      <SignedOut>
-        <Header />
-        <Hero />
-        <Features />
-        <Benefits />
-        <Future />
-        <Footer />
-      </SignedOut>
-    </div>
-  );
+	const { userId } = await auth();
+	if (userId) redirect('/workspaces/onboarding');
+	return (
+		<div className="bg-background min-h-screen">
+			<SignedOut>
+				<Header />
+				<Hero />
+				<Features />
+				<Benefits />
+				<Future />
+				<Footer />
+			</SignedOut>
+		</div>
+	);
 }

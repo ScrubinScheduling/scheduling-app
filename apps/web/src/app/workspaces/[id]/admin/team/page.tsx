@@ -1,22 +1,22 @@
 'use client';
-import { UsersRound, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import React, { useState } from 'react';
+import { UsersRound, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger
-} from '@/components/ui/alert-dialog';
-import AddMemberModal from '@/components/AddMemberModal';
-import { useParams } from 'next/navigation';
-import { useAuth } from '@clerk/nextjs';
-import { createApiClient } from '@scrubin/api-client';
-import { type MemberApi } from '@scrubin/schemas';
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import AddMemberModal from "@/components/AddMemberModal";
+import { useParams } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
+import { createApiClient } from "@scrubin/api-client";
+import { Member } from "@scrubin/schemas";
 
 // NEW: dialog + input/button imports for role editing
 import {
@@ -55,105 +55,105 @@ export default function TeamPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  React.useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        setLoading(true);
-        const token = await getToken();
-        const res = await fetch(`${API}/workspaces/${workspaceId}/users`, {
-          headers: { Authorization: `Bearer ${token ?? ''}` },
-          cache: 'no-store'
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
+    React.useEffect(() => {
+        let alive = true;
+        (async () => {
+            try {
+                setLoading(true);
+                const token = await getToken();
+                const res = await fetch(`${API}/workspaces/${workspaceId}/users`, {
+                    headers: { Authorization: `Bearer ${token ?? ""}` },
+                    cache: "no-store",
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
 
-        // CHANGED: map backend DTO → TeamMember, preserving roleId, first/last
-        const mapped: TeamMember[] = ((data.members as MemberApi[]) ?? []).map((m) => ({
-          id: String(m.id),
+                // CHANGED: map backend DTO → TeamMember, preserving roleId, first/last
+                const mapped: TeamMember[] = (data.members as Member[] ?? []).map((m) => ({
+                    id: String(m.id),
+                    
+                    // Member.name used elsewhere; keep it
+                    name: `${m.firstName ?? ""} ${m.lastName ?? ""}`.trim() || "Unnamed",
+                    role: m.role ?? "Member",
+                    email: m.email ?? "",
+                    phone: m.phone ?? "",
+                    roleId: m.roleId ? Number(m.roleId) : null,
+                    firstName: m.firstName ?? "",
+                    lastName: m.lastName ?? "",
+					isAdmin: m.isAdmin ?? false,
+                }));
+                if (alive) setMembers(mapped);
+            } catch (err) {
+                if (alive) setError(err instanceof Error ? err.message : "Failed to load team");
+            } finally {
+                if (alive) setLoading(false);
+            }
+        })();
+        return () => {
+            alive = false;
+        };
+    }, [API, workspaceId, getToken]);
 
-          // Member.name used elsewhere; keep it
-          name: `${m.firstName ?? ''} ${m.lastName ?? ''}`.trim() || 'Unnamed',
-          role: m.role ?? 'Member',
-          email: m.email ?? '',
-          phone: m.phone ?? '',
-          roleId: m.roleId ? Number(m.roleId) : null,
-          firstName: m.firstName ?? '',
-          lastName: m.lastName ?? '',
-          isAdmin: m.isAdmin ?? false
+    //Toggle function to switch the setExpanded for true to false and vice versa
+    function toggle(id: string) {
+        setExpanded((prev) => ({
+            ...prev,
+            [id]: !prev[id],
         }));
-        if (alive) setMembers(mapped);
-      } catch (err) {
-        if (alive) setError(err instanceof Error ? err.message : 'Failed to load team');
-      } finally {
-        if (alive) setLoading(false);
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [API, workspaceId, getToken]);
+    }
 
-  //Toggle function to switch the setExpanded for true to false and vice versa
-  function toggle(id: string) {
-    setExpanded((prev) => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
-  }
+    const [confirmState, setConfirmState] = useState<{
+        open: boolean;
+        member: TeamMember | null; // CHANGED: TeamMember
+    }>({ open: false, member: null });
 
-  const [confirmState, setConfirmState] = useState<{
-    open: boolean;
-    member: TeamMember | null; // CHANGED: TeamMember
-  }>({ open: false, member: null });
+    function openConfirm(member: TeamMember) {
+        setConfirmState({ open: true, member });
+    }
 
-  function openConfirm(member: TeamMember) {
-    setConfirmState({ open: true, member });
-  }
+    function closeConfirm() {
+        setConfirmState({ open: false, member: null });
+    }
 
-  function closeConfirm() {
-    setConfirmState({ open: false, member: null });
-  }
+    function confirmRemove() {
+        const id = confirmState.member?.id;
+        if (id == null) return;
+        (async () => {
+            try {
+                const token = await getToken();
+                const res = await fetch(`${API}/workspaces/${workspaceId}/users/${id}`, {
+                    method: "DELETE",
+                    headers: { Authorization: `Bearer ${token ?? ""}` },
+                });
+                if (res.status !== 204 && !res.ok) throw new Error(`HTTP ${res.status}`);
+                setMembers((prev) => prev.filter((m) => m.id !== id));
+            } catch {
+                // optional: surface an error
+            } finally {
+                closeConfirm();
+            }
+        })();
+    }
 
-  function confirmRemove() {
-    const id = confirmState.member?.id;
-    if (id == null) return;
-    (async () => {
-      try {
-        const token = await getToken();
-        const res = await fetch(`${API}/workspaces/${workspaceId}/users/${id}`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token ?? ''}` }
+	const apiClient = React.useMemo(
+		() =>
+			createApiClient({
+				baseUrl: API,
+				getToken,
+			}),
+		[API, getToken],
+	);
+
+    const [invitationLink, setInvitationLink] = useState("");
+    const [addOpen, setAddOpen] = useState(false);
+
+    const handleOpen = async () => {
+        const inv = await apiClient.createInvitation({
+            workspaceId: Number(workspaceId),
         });
-        if (res.status !== 204 && !res.ok) throw new Error(`HTTP ${res.status}`);
-        setMembers((prev) => prev.filter((m) => m.id !== id));
-      } catch {
-        // optional: surface an error
-      } finally {
-        closeConfirm();
-      }
-    })();
-  }
-
-  const apiClient = React.useMemo(
-    () =>
-      createApiClient({
-        baseUrl: API,
-        getToken
-      }),
-    [API, getToken]
-  );
-
-  const [invitationLink, setInvitationLink] = useState('');
-  const [addOpen, setAddOpen] = useState(false);
-
-  const handleOpen = async () => {
-    const inv = await apiClient.createInvitation({
-      workspaceId: Number(workspaceId)
-    });
-    setInvitationLink(`${window.location.origin}/invitations/${inv.id}`);
-    setAddOpen(true);
-  };
+        setInvitationLink(`${window.location.origin}/invitations/${inv.id}`);
+        setAddOpen(true);
+    };
 
   // State for role editing dialog
   const [roleDialogMember, setRoleDialogMember] = useState<TeamMember | null>(null);
