@@ -25,10 +25,30 @@ export default function Page() {
 
             if (invitation.invitationId) {
                 const { workspaceId } = await apiClient.acceptInvitation(invitation.invitationId);
+                setInviteLink("");
                 router.push(`/workspaces/${workspaceId}`);
 
             }
 
+
+        } catch (err) {
+            console.error(err)
+        }
+    }
+
+    async function handleWorkspaceCreation() {
+        try {
+
+            const workspace = await apiClient.createWorkspace({
+                name: workspaceName,
+                location: workspaceLocation
+            });
+
+            if (workspace) {
+                setWorkspaceName("");
+                setWorkspaceLocation("");
+                router.push(`/workspaces/${workspace.id}`);
+            }
 
         } catch (err) {
             console.error(err)
@@ -138,7 +158,7 @@ export default function Page() {
                                 />
                             </div>
 
-                            <Button disabled={!workspaceLocation.trim() || !workspaceName.trim()} className="w-full hover:cursor-pointer group group-hover:bg-secondary/80">
+                            <Button onClick={handleWorkspaceCreation} disabled={!workspaceLocation.trim() || !workspaceName.trim()} className="w-full hover:cursor-pointer group group-hover:bg-secondary/80">
                                 Create Workspace
                                 <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-0.5 transition-transform hover:cursor-pointer" />
 
