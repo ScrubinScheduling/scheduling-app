@@ -3,7 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useApiClient } from "@/hooks/useApiClient";
 import { ArrowLeft, ArrowRight, Building2, Link2, Plus, Users2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
 export default function Page() {
@@ -11,6 +13,28 @@ export default function Page() {
     const [workspaceName, setWorkspaceName] = useState("");
     const [workspaceLocation, setWorkspaceLocation] = useState("");
     const [mode, setMode] = useState<"create" | "join" | "select">("select");
+    const router = useRouter();
+    const apiClient = useApiClient();
+
+    async function handleInvitation() {
+
+        try {
+
+            const invitationId = inviteLink.split("/").at(-1);
+            const invitation = await apiClient.getInvitation(invitationId);
+
+            if (invitation.invitationId) {
+                const { workspaceId } = await apiClient.acceptInvitation(invitation.invitationId);
+                router.push(`/workspaces/${workspaceId}`);
+
+            }
+
+
+        } catch (err) {
+            console.error(err)
+        }
+    }
+
 
     if (mode === "join") {
         return (
@@ -40,7 +64,6 @@ export default function Page() {
                         </CardHeader>
 
                         <CardContent className="space-y-4">
-
                             <div className="space-y-2">
                                 <Label htmlFor="invite-link">Invite Link</Label>
                                 <Input
@@ -51,12 +74,12 @@ export default function Page() {
                                 />
                             </div>
 
-                            <Button disabled={!inviteLink.trim()} className="w-full group group-hover:bg-secondary/80 hover:cursor-pointer">
+
+
+                            <Button onClick={handleInvitation} disabled={!inviteLink.trim()} className="w-full group group-hover:bg-secondary/80 hover:cursor-pointer">
                                 Join Workspace
                                 <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
-
                             </Button>
-
                         </CardContent>
                     </Card>
                 </div>
