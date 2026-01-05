@@ -1,21 +1,29 @@
-"use client";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
 import Navbar from "@/components/Navbar";
-import { useParams } from "next/navigation";
+import { createApiClient } from "@scrubin/api-client";
+import { auth } from "@clerk/nextjs/server";
 
 type NavLink = {
 	href: string;
 	name: string;
 };
-export default function AppLayout({
+export default async function AppLayout({
 	children,
+	params
 }: {
 	children: React.ReactNode;
+	params: Promise<{ id: string }>
 }) {
 
-	
-	const { id } = useParams<{ id: string }>();
+	const { id } = await params
 
+	const { getToken } = await auth();
+	const apiClient = createApiClient({
+		baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
+		getToken
+	});
+
+	const workspaces = await apiClient.getWorkspaces();
 	const navlinks: NavLink[] = [
 		{ href: `/workspaces/${id}/user/dashboard`, name: "Dashboard" },
 		// { href: `/workspaces/${id}/user/requests`, name: "Requests" },
@@ -25,7 +33,7 @@ export default function AppLayout({
 	return (
 		<>
 			<SignedIn>
-				<Navbar navlinks={navlinks}/>
+				<Navbar workspaces={workspaces} navlinks={navlinks}/>
 				{children}
 			</SignedIn>
 			<SignedOut>
