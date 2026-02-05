@@ -13,6 +13,7 @@ import type { Workspace } from '@scrubin/schemas';
 import { useApiClient } from '@/src/hooks/useApiClient';
 import ErrorCard from '@/src/components/ErrorCard';
 import WorkspaceCard from '@/src/components/workspace/WorkspaceCard';
+import InvatationCard from '@/src/components/workspace/InvatationInput';
 
 export default function WorkspacesList() {
 	const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
@@ -25,6 +26,7 @@ export default function WorkspacesList() {
 		try {
 			setIsLoading(true);
 			const list = await apiClient.getWorkspaces();
+			setError('Valid URL');
 			setWorkspaces(list);
 		} catch (error) {
 			setError(error instanceof Error ? error.message : 'Unexpected error');
@@ -55,31 +57,7 @@ export default function WorkspacesList() {
 				/>
 
 				<View className="mb-4">
-					<View className="rounded-xl bg-white p-4 shadow-sm">
-						<Text className="mb-3 text-sm font-semibold text-slate-700">Join via Invitation</Text>
-						<View className="flex-row gap-2">
-							<View className="flex-1">
-								<TextInput
-									//value={invitationUrl}
-									//onChangeText={(text) => setInvitationUrl(text)}
-									placeholder="Paste invitation URL here..."
-									className="h-11 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 placeholder:text-slate-400"
-									//editable={!isJoining}
-								/>
-							</View>
-							<TouchableOpacity
-								//onPress={handleJoinWorkspace}
-								//disabled={isJoining || !invitationUrl.trim()}
-								className="h-11 justify-center rounded-lg bg-emerald-600 px-6 disabled:opacity-50"
-							>
-								{isJoining ? (
-									<ActivityIndicator size="small" color="#ffffff" />
-								) : (
-									<Text className="font-semibold text-white">Add</Text>
-								)}
-							</TouchableOpacity>
-						</View>
-					</View>
+					<InvatationCard />
 				</View>
 
 				{/* Workspace Cards */}
@@ -93,7 +71,7 @@ export default function WorkspacesList() {
 					</View>
 				)}
 			</ScrollView>
-			<View className='px-10 py-4'>
+			<View className="px-10 py-4">
 				<CreateCard />
 			</View>
 		</SafeAreaView>
