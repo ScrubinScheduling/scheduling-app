@@ -26,7 +26,6 @@ export default function WorkspacesList() {
 		try {
 			setIsLoading(true);
 			const list = await apiClient.getWorkspaces();
-			setError('Valid URL');
 			setWorkspaces(list);
 		} catch (error) {
 			setError(error instanceof Error ? error.message : 'Unexpected error');

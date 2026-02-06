@@ -2,6 +2,8 @@ import { Text } from 'react-native';
 import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
+import { SignOutButton } from '@/src/components/auth/SignOutButton';
+import WorkSpaceButton from '@/src/components/WorkSpaceButton';
 
 export default function DashBoard() {
 	const { id } = useLocalSearchParams<{ id?: string | string[] }>();
@@ -9,6 +11,8 @@ export default function DashBoard() {
 	return (
 		<SafeAreaView className="flex-1">
 			<Text>User Side Page {id}</Text>
+			<SignOutButton />
+			<WorkSpaceButton />
 		</SafeAreaView>
 	);
 }
