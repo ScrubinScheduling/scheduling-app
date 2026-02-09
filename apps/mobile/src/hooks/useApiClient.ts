@@ -3,7 +3,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import { createApiClient } from '@scrubin/api-client';
 import { Platform } from 'react-native';
 
-const baseUrl =
+export const MOBILE_BASE_URL =
 	Platform.OS === 'android'
 		? process.env.EXPO_PUBLIC_API_URL_ANDROID
 		: Platform.OS === 'ios'
@@ -22,7 +22,7 @@ export function useApiClient() {
 	return useMemo(
 		() =>
 			createApiClient({
-				baseUrl,
+				baseUrl : MOBILE_BASE_URL,
 				// Defer token lookup so the client always uses the latest auth state.
 				getToken: () => getTokenRef.current()
 			}),

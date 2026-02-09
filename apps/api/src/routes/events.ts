@@ -78,48 +78,53 @@ function broadCastToUser(userId: string, message: SEEMessage) {
 }
 
 router.get('/stream', async (req, res) => {
-    const { userId, isAuthenticated } = getAuth(req)
-    let workspaceId: number | null = null
+    try {
+        const { userId, isAuthenticated } = getAuth(req)
+        let workspaceId: number | null = null
 
-    if (!userId) return res.status(404).json({ error: 'User not found' })
-    if (!isAuthenticated) return res.status(401).json({ error: 'User is not authenticated' })
+        if (!userId) return res.status(404).json({ error: 'User not found' })
+        if (!isAuthenticated) return res.status(401).json({ error: 'User is not authenticated' })
 
-    if (req.query.workspaceId != null) {
-        const isNumber = Number(req.query.workspaceId)
-        if (Number.isInteger(isNumber)) workspaceId = isNumber
-    }
+        if (req.query.workspaceId != null) {
+            const isNumber = Number(req.query.workspaceId)
+            if (Number.isInteger(isNumber)) workspaceId = isNumber
+        }
 
-    let isAdmin = false
+        let isAdmin = false
 
-    if (workspaceId != null) {
-        const workspace = await prisma.workspace.findUnique({
-            where: { id: workspaceId },
-            select: { adminId: true },
+        if (workspaceId != null) {
+            const workspace = await prisma.workspace.findUnique({
+                where: { id: workspaceId },
+                select: { adminId: true },
+            })
+
+            if (!workspace) return res.status(404).json({ error: 'Workspace not found' })
+
+            isAdmin = workspace.adminId === userId
+        }
+
+        res.setHeader('Content-Type', 'text/event-stream')
+        res.setHeader('Cache-Control', 'no-cache')
+        res.setHeader('Connection', 'keep-alive')
+        res.flushHeaders()
+
+        res.write(`data: ${JSON.stringify({ status: 'open' })}\n\n`)
+        const clientId = randomUUID()
+
+        addClient(clientId, {
+            res,
+            userId,
+            workspaceId,
+            isAdmin,
         })
 
-        if (!workspace) return res.status(404).json({ error: 'Workspace not found' })
-
-        isAdmin = workspace.adminId === userId
+        req.on('close', () => {
+            removeClient(clientId)
+            res.end()
+        })
+    } catch (error) {
+        console.log(error)
     }
-
-    res.setHeader('Content-Type', 'text/event-stream')
-    res.setHeader('Cache-Control', 'no-cache')
-    res.setHeader('Connection', 'keep-alive')
-    res.flushHeaders()
-
-    const clientId = randomUUID()
-
-    addClient(clientId, {
-        res,
-        userId,
-        workspaceId,
-        isAdmin,
-    })
-
-    req.on('close', () => {
-        removeClient(clientId)
-        res.end()
-    })
 })
 
 export function emitUpdateShift(workspaceId: number) {
@@ -134,12 +139,10 @@ export function emitWorkspaceCreated(userId: string) {
     })
 }
 
-export function emitUpdateMeetings(workspaceId : number) {
+export function emitUpdateMeetings(workspaceId: number) {
     broadcastToWorkspace(workspaceId, {
         type: 'meeting-updated',
     })
 }
-
-
 
 export default router

@@ -175,6 +175,9 @@ importers:
       react-native-safe-area-context:
         specifier: ^5.6.1
         version: 5.6.1(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+      react-native-sse:
+        specifier: ^1.2.1
+        version: 1.2.1
       react-native-svg:
         specifier: ^15.14.0
         version: 15.14.0(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
@@ -7689,6 +7692,9 @@ packages:
       react: '*'
       react-native: '*'
 
+  react-native-sse@1.2.1:
+    resolution: {integrity: sha512-zejanlScF+IB9tYnbdry0MT34qjBXbiV/E72qGz33W/tX1bx8MXsbB4lxiuPETc9v/008vYZ60yjIstW22VlVg==}
+
   react-native-svg@15.14.0:
     resolution: {integrity: sha512-B3gYc7WztcOT4N54AtUutbe0Nuqqh/nkresY0fAXzUHYLsWuIu/yGiCCD3DKfAs6GLv5LFtWTu7N333Q+e3bkg==}
     peerDependencies:
@@ -8381,6 +8387,7 @@ packages:
   tar@7.5.1:
     resolution: {integrity: sha512-nlGpxf+hv0v7GkWBK2V9spgactGOp0qvfWRxUMjqHyzrt3SgwE48DIv/FhqPHJYLHpgW1opq3nERbz5Anq7n1g==}
     engines: {node: '>=18'}
+    deprecated: Old versions of tar are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
 
   temp-dir@2.0.0:
     resolution: {integrity: sha512-aoBAniQmmwtcKp/7BzsH8Cxzv8OL736p7v1ihGb5e9DJ9kTwGWHrQrVB5+lfVDzfGrdRzXch+ig7LHaY1JTOrg==}
@@ -18242,6 +18249,8 @@ snapshots:
       react-native: 0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0)
       react-native-is-edge-to-edge: 1.2.1(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       warn-once: 0.1.1
+
+  react-native-sse@1.2.1: {}
 
   react-native-svg@15.14.0(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0):
     dependencies:

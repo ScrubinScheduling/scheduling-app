@@ -1,26 +1,24 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-	View,
-	Text,
-	ScrollView,
-	ActivityIndicator,
-	TouchableOpacity,
-	TextInput
-} from 'react-native';
+import EventSource, { EventSourceListener } from 'react-native-sse';
+import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CreateCard from '@/src/components/workspace/CreateWorkspaceCard';
 import type { Workspace } from '@scrubin/schemas';
-import { useApiClient } from '@/src/hooks/useApiClient';
+import { useAuth } from '@clerk/clerk-expo';
+import { useApiClient, MOBILE_BASE_URL } from '@/src/hooks/useApiClient';
 import ErrorCard from '@/src/components/ErrorCard';
 import WorkspaceCard from '@/src/components/workspace/WorkspaceCard';
 import InvatationCard from '@/src/components/workspace/InvatationInput';
 
+type MyEvent = 'workspace-created';
+
 export default function WorkspacesList() {
 	const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
-	const [isJoining, setIsJoining] = useState(false);
+	//const [isJoining, setIsJoining] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const apiClient = useApiClient();
+	const { getToken, isLoaded, isSignedIn } = useAuth();
 
 	const fetchWorkspaces = useCallback(async () => {
 		try {
@@ -35,9 +33,76 @@ export default function WorkspacesList() {
 		}
 	}, [apiClient]);
 
+	const connectSSE = async () => {
+		try {
+			if (!isLoaded || !isSignedIn) return;
+			const token = await getToken();
+			const es = new EventSource(`${MOBILE_BASE_URL}/events/stream`, {
+				headers: {
+					Authorization: `Bearer ${token}`
+				}
+			});
+
+			es.addEventListener('message', (event) => {
+				if (!event.data) return;
+				const parseData = JSON.parse(event.data);
+				if (!parseData) return;
+
+				if (parseData.status === 'open') {
+					console.log('Connection Success');
+					fetchWorkspaces();
+				} else console.log('Connection Unsuccessful');
+
+				if (parseData.type === 'workspace-created') {
+					fetchWorkspaces();
+				}
+			});
+
+			es.addEventListener('error', (event) => {
+				// This is for typical HTTP request errors
+				if (event.type === 'error') {
+					console.log('Connection Error', event.message);
+				}
+
+				// This is for internal module errors
+				if (event.type === 'exception') {
+					console.error('Internal Error:', event.message, event.error);
+				}
+			});
+
+			es.addEventListener('close', () => {
+				es.removeAllEventListeners();
+				es.close();
+			});
+
+			return () => {
+				es.removeAllEventListeners();
+				es.close();
+			};
+		} catch (error) {}
+	};
+
 	useEffect(() => {
-		fetchWorkspaces();
-	}, [fetchWorkspaces]);
+		let isAlive = true;
+		let closeSSE;
+
+		const start = async () => {
+			const cleanupFN = await connectSSE();
+			if (!isAlive) {
+				if (cleanupFN) cleanupFN();
+				return;
+			}
+
+			closeSSE = cleanupFN;
+		};
+
+		start();
+
+		return () => {
+			isAlive = false;
+			if (closeSSE) closeSSE();
+		};
+	}, [isSignedIn, isLoaded]);
 
 	return (
 		<SafeAreaView style={{ flex: 1 }} className="bg-slate-50">
