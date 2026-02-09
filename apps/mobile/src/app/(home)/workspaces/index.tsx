@@ -32,14 +32,14 @@ export default function WorkspacesList() {
 		}
 	}, [apiClient]);
 
-	
-	useFocusEffect( 
+	useFocusEffect(
 		useCallback(() => {
 			let isAlive = true; // Makes sure that the current page is still rendered
 			let es: EventSource;
 
 			const connect = async () => {
 				try {
+					setIsLoading(true);
 					// Check if your signed in or loaded before you fetch the token
 					if (!isSignedIn || !isLoaded) return;
 					const token = await getToken();
@@ -79,7 +79,6 @@ export default function WorkspacesList() {
 							}
 
 							if (event.type === 'close') {
-								console.log('Connection Closed');
 								es.removeAllEventListeners();
 								es.close();
 							}
@@ -95,6 +94,8 @@ export default function WorkspacesList() {
 				} catch (error) {
 					setError('Live Connection Failed');
 					console.log(error);
+				} finally {
+					setIsLoading(false)
 				}
 			};
 

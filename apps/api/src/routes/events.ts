@@ -114,7 +114,6 @@ router.get('/stream', async (req, res) => {
         res.write(':\n\n')
 
         const clientId = randomUUID()
-        console.log(clientId)
 
         addClient(clientId, {
             res,
