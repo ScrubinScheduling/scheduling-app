@@ -9,8 +9,7 @@ import { useApiClient, MOBILE_BASE_URL } from '@/src/hooks/useApiClient';
 import ErrorCard from '@/src/components/ErrorCard';
 import WorkspaceCard from '@/src/components/workspace/WorkspaceCard';
 import InvatationCard from '@/src/components/workspace/InvatationInput';
-
-type MyEvent = 'workspace-created';
+import { useFocusEffect } from 'expo-router';
 
 export default function WorkspacesList() {
 	const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
@@ -33,76 +32,81 @@ export default function WorkspacesList() {
 		}
 	}, [apiClient]);
 
-	const connectSSE = async () => {
-		try {
-			if (!isLoaded || !isSignedIn) return;
-			const token = await getToken();
-			const es = new EventSource(`${MOBILE_BASE_URL}/events/stream`, {
-				headers: {
-					Authorization: `Bearer ${token}`
+	
+	useFocusEffect( 
+		useCallback(() => {
+			let isAlive = true; // Makes sure that the current page is still rendered
+			let es: EventSource;
+
+			const connect = async () => {
+				try {
+					// Check if your signed in or loaded before you fetch the token
+					if (!isSignedIn || !isLoaded) return;
+					const token = await getToken();
+					if (!isAlive) return;
+
+					es = new EventSource(`${MOBILE_BASE_URL}/events/stream`, {
+						headers: {
+							Authorization: `Bearer ${token}`
+						}
+					});
+
+					const eventListener: EventSourceListener = (event) => {
+						try {
+							if (!event) return;
+
+							if (event.type === 'open') {
+								console.log('Established Connection');
+								fetchWorkspaces();
+							}
+
+							if (event.type === 'message') {
+								if (!event.data) return;
+								const message = JSON.parse(event.data);
+								if (message.type === 'workspace-created') {
+									fetchWorkspaces();
+								}
+							}
+
+							if (event.type === 'error') {
+								console.log('Connection failed', event.message);
+							}
+
+							if (event.type === 'exception') {
+								console.error('Internal Server Error:', event.message, event.error);
+								es.removeAllEventListeners();
+								es.close();
+							}
+
+							if (event.type === 'close') {
+								console.log('Connection Closed');
+								es.removeAllEventListeners();
+								es.close();
+							}
+						} catch (error) {
+							console.log('Internal SSE Error: ', error);
+						}
+					};
+
+					es.addEventListener('open', eventListener);
+					es.addEventListener('message', eventListener);
+					es.addEventListener('error', eventListener);
+					es.addEventListener('close', eventListener);
+				} catch (error) {
+					setError('Live Connection Failed');
+					console.log(error);
 				}
-			});
+			};
 
-			es.addEventListener('message', (event) => {
-				if (!event.data) return;
-				const parseData = JSON.parse(event.data);
-				if (!parseData) return;
-
-				if (parseData.status === 'open') {
-					console.log('Connection Success');
-					fetchWorkspaces();
-				} else console.log('Connection Unsuccessful');
-
-				if (parseData.type === 'workspace-created') {
-					fetchWorkspaces();
-				}
-			});
-
-			es.addEventListener('error', (event) => {
-				// This is for typical HTTP request errors
-				if (event.type === 'error') {
-					console.log('Connection Error', event.message);
-				}
-
-				// This is for internal module errors
-				if (event.type === 'exception') {
-					console.error('Internal Error:', event.message, event.error);
-				}
-			});
-
-			es.addEventListener('close', () => {
-				es.removeAllEventListeners();
-				es.close();
-			});
+			connect();
 
 			return () => {
-				es.removeAllEventListeners();
-				es.close();
+				isAlive = false;
+				console.log('Connection Closed');
+				if (es) es.close();
 			};
-		} catch (error) {}
-	};
-
-	useEffect(() => {
-		let isAlive = true;
-		let closeSSE;
-
-		const start = async () => {
-			const cleanupFN = await connectSSE();
-			if (!isAlive) {
-				if (cleanupFN) cleanupFN();
-				return;
-			}
-
-			closeSSE = cleanupFN;
-		};
-
-		start();
-
-		return () => {
-			isAlive = false;
-			if (closeSSE) closeSSE();
-		};
-	}, [isSignedIn, isLoaded]);
+		}, [isSignedIn, isLoaded])
+	);
 
 	return (
 		<SafeAreaView style={{ flex: 1 }} className="bg-slate-50">

@@ -103,13 +103,18 @@ router.get('/stream', async (req, res) => {
             isAdmin = workspace.adminId === userId
         }
 
-        res.setHeader('Content-Type', 'text/event-stream')
-        res.setHeader('Cache-Control', 'no-cache')
-        res.setHeader('Connection', 'keep-alive')
+        // Send headers with status code
+        res.writeHead(200, {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            Connection: 'keep-alive',
+        })
         res.flushHeaders()
 
-        res.write(`data: ${JSON.stringify({ status: 'open' })}\n\n`)
+        res.write(':\n\n')
+
         const clientId = randomUUID()
+        console.log(clientId)
 
         addClient(clientId, {
             res,
